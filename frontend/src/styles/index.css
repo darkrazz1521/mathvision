@@ -6,12 +6,25 @@
   * {
     border-color: #252D3B;
   }
+
+  html {
+    scroll-behavior: smooth;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
   
   body {
     background-color: #090B10;
     color: #F1F5F9;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow-x: hidden;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  #root {
+    min-height: 100vh;
+    width: 100%;
   }
 }
 
@@ -104,4 +117,21 @@
 :focus-visible {
   outline: 2px solid #8B7CFF;
   outline-offset: 1px;
+}
+
+/* Continuous scientific formula marquee */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }

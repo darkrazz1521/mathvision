@@ -128,13 +128,13 @@ export const VocabularyExplorer: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6 sm:p-8 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] shadow-2xl backdrop-blur-xl">
+    <div className="w-full max-w-6xl mx-auto relative">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-[#8B7CFF]" />
-            <h3 className="text-xl font-bold text-[#F1F5F9]">
+            <span className="w-2 h-2 rounded-full bg-[#8B7CFF]" />
+            <h3 className="text-xl sm:text-2xl font-bold text-[#F1F5F9]">
               132-Token Atomic LaTeX Vocabulary
             </h3>
           </div>
@@ -151,13 +151,13 @@ export const VocabularyExplorer: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search symbol (e.g. frac, sqrt, alpha)..."
-            className="w-full bg-[#090B10] border border-[#252D3B] focus:border-[#8B7CFF] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F1F5F9] focus:outline-none transition-colors font-mono"
+            className="w-full bg-[#10141D] border border-[#252D3B] focus:border-[#8B7CFF] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F1F5F9] focus:outline-none transition-colors font-mono"
           />
         </div>
       </div>
 
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 border-b border-[#252D3B]/70">
+      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 border-b border-[#252D3B]/40">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.key}

@@ -9,19 +9,23 @@ interface Particle {
   size: number;
   opacity: number;
   color: string;
+  layer: number; // 0: background (slow), 1: midground, 2: foreground (responsive)
+  phase: number;
 }
 
 const MATH_SYMBOLS = [
   '∫', '∑', '√', 'π', '∞', '∇', '∂', 'θ', '±', 'α',
   'λ', 'σ', 'f(x)', 'e^x', 'dx', 'lim', '≈', '≠', '≤', '≥',
-  'ℝ', '∈', '∩', '∪', 'Δ', 'μ', 'ω', 'φ', 'C', 'L',
+  'ℝ', '∈', '∩', '∪', 'Δ', 'μ', 'ω', 'φ', 'ħ', 'Ψ',
+  'dy/dx', '∇²', '∏', '⊕', '⊗', '≡', '∝', '∫∫', 'cos θ', 'sin φ'
 ];
 
 const COLORS = [
-  '#8B7CFF', // Primary accent (violet)
-  '#38BDF8', // Secondary accent (cyan)
-  '#34D399', // Success/Verification (emerald)
-  '#94A3B8', // Secondary text
+  '#8B7CFF', // Violet accent
+  '#38BDF8', // Cyan accent
+  '#34D399', // Emerald success
+  '#A78BFA', // Light purple
+  '#94A3B8', // Slate neutral
 ];
 
 export const MathConstellation: React.FC = () => {
@@ -30,106 +34,178 @@ export const MathConstellation: React.FC = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
     let animationFrameId: number;
-    let width = (canvas.width = canvas.parentElement?.clientWidth || window.innerWidth);
-    let height = (canvas.height = canvas.parentElement?.clientHeight || window.innerHeight);
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
-    // Responsive particle count based on screen width
-    const particleCount = width < 768 ? 22 : 42;
+    // Responsive particle count
+    const particleCount = width < 768 ? 26 : 52;
     const particles: Particle[] = [];
 
     for (let i = 0; i < particleCount; i++) {
+      const layer = Math.random() < 0.4 ? 0 : Math.random() < 0.75 ? 1 : 2;
+      const speedMult = layer === 0 ? 0.2 : layer === 1 ? 0.4 : 0.65;
+
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.45,
-        vy: (Math.random() - 0.5) * 0.45,
+        vx: (Math.random() - 0.5) * speedMult,
+        vy: (Math.random() - 0.5) * speedMult,
         symbol: MATH_SYMBOLS[Math.floor(Math.random() * MATH_SYMBOLS.length)],
-        size: Math.floor(Math.random() * 8) + 12,
-        opacity: Math.random() * 0.35 + 0.12,
+        size: layer === 0 ? 11 : layer === 1 ? 14 : 18,
+        opacity: layer === 0 ? 0.12 : layer === 1 ? 0.22 : 0.38,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        layer,
+        phase: Math.random() * Math.PI * 2,
       });
     }
 
     // Interactive mouse coordinates
-    const mouse = { x: -1000, y: -1000, radius: 120 };
+    const mouse = { x: -1000, y: -1000, radius: 140, active: false };
+    let scrollY = window.scrollY;
+    let scrollDelta = 0;
+    let lastScrollY = window.scrollY;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
     };
 
     const handleMouseLeave = () => {
       mouse.x = -1000;
       mouse.y = -1000;
+      mouse.active = false;
+    };
+
+    const handleScroll = () => {
+      scrollY = window.scrollY;
+      scrollDelta = (scrollY - lastScrollY) * 0.15;
+      lastScrollY = scrollY;
     };
 
     const handleResize = () => {
-      if (!canvas.parentElement) return;
-      width = canvas.width = canvas.parentElement.clientWidth;
-      height = canvas.height = canvas.parentElement.clientHeight;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     };
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    let t = 0;
 
     const render = () => {
+      t += 0.01;
+      // Damping scroll velocity
+      scrollDelta *= 0.92;
+
       ctx.clearRect(0, 0, width, height);
 
-      // Connect nearby particles with subtle gradient lines
+      // 1. Draw subtle background geometric coordinate grids and orbital rings
+      const centerX = width * 0.5;
+      const centerY = height * 0.45;
+      const orbitalRadius = Math.min(width, height) * 0.35;
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(139, 124, 255, 0.04)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 8]);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, orbitalRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.03)';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, orbitalRadius * 0.65, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // 2. Connect nearby particles with subtle gradient filaments
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
+          const pi = particles[i];
+          const pj = particles[j];
+
+          // Only connect particles in same or adjacent layers
+          if (Math.abs(pi.layer - pj.layer) > 1) continue;
+
+          const dx = pi.x - pj.x;
+          const dy = pi.y - pj.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 130) {
-            const alpha = (1 - dist / 130) * 0.12;
+          const maxDist = pi.layer === 2 ? 140 : 100;
+          if (dist < maxDist) {
+            const alpha = (1 - dist / maxDist) * (pi.layer === 2 ? 0.16 : 0.08);
             ctx.beginPath();
             ctx.strokeStyle = `rgba(139, 124, 255, ${alpha})`;
-            ctx.lineWidth = 0.75;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.lineWidth = pi.layer === 2 ? 0.8 : 0.5;
+            ctx.moveTo(pi.x, pi.y);
+            ctx.lineTo(pj.x, pj.y);
             ctx.stroke();
           }
         }
       }
 
-      // Update and render each mathematical particle
+      // 3. Update and render mathematical symbols
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Slight gentle repulsion from mouse
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < mouse.radius && dist > 0) {
-          const force = (mouse.radius - dist) / mouse.radius;
-          p.x += (dx / dist) * force * 1.5;
-          p.y += (dy / dist) * force * 1.5;
+        // Cursor attraction / gentle displacement
+        if (mouse.active) {
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < mouse.radius && dist > 0) {
+            const force = (mouse.radius - dist) / mouse.radius;
+            const pushFactor = p.layer === 2 ? 2.0 : 1.0;
+            p.x += (dx / dist) * force * pushFactor;
+            p.y += (dy / dist) * force * pushFactor;
+          }
         }
 
+        // Parallax scroll reaction
+        const layerParallax = (p.layer + 1) * 0.06;
+        p.y -= scrollDelta * layerParallax;
+
+        // Position progression
         p.x += p.vx;
         p.y += p.vy;
 
-        // Wrap around bounds
-        if (p.x < -20) p.x = width + 20;
-        if (p.x > width + 20) p.x = -20;
-        if (p.y < -20) p.y = height + 20;
-        if (p.y > height + 20) p.y = -20;
+        // Organic harmonic bobbing
+        const oscillation = Math.sin(t + p.phase) * (p.layer === 2 ? 0.2 : 0.1);
+        p.y += oscillation;
 
-        // Draw mathematical glyph
+        // Viewport wrapping
+        if (p.x < -30) p.x = width + 30;
+        if (p.x > width + 30) p.x = -30;
+        if (p.y < -30) p.y = height + 30;
+        if (p.y > height + 30) p.y = -30;
+
+        // Pulsing glow for foreground nodes
+        const dynamicAlpha = p.opacity * (0.8 + 0.2 * Math.sin(t * 1.5 + p.phase));
+
+        // Render symbol
         ctx.font = `italic ${p.size}px "KaTeX_Math", "Times New Roman", serif`;
         ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.opacity;
+        ctx.globalAlpha = dynamicAlpha;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(p.symbol, p.x, p.y);
+
+        // Subtle glowing dot at anchor
+        if (p.layer === 2) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y + p.size * 0.45, 1.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#8B7CFF';
+          ctx.globalAlpha = dynamicAlpha * 0.6;
+          ctx.fill();
+        }
+
         ctx.globalAlpha = 1.0;
       }
 
@@ -143,13 +219,14 @@ export const MathConstellation: React.FC = () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 pointer-events-none z-0 opacity-70"
+      className="fixed inset-0 pointer-events-none z-0 opacity-80"
       aria-hidden="true"
     />
   );

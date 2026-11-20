@@ -32,12 +32,15 @@ import {
   Rocket,
   Binary,
   LayoutDashboard,
+  Copy,
+  PenTool,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Tooltip } from '../ui/Tooltip';
 import { DEMO_PRESETS, DemoPreset } from '../../services/demoData';
 import { MathConstellation } from './MathConstellation';
+import { HeroTransformationJourney } from './HeroTransformationJourney';
 import { InteractiveHeroSandbox } from './InteractiveHeroSandbox';
 import { VocabularyExplorer } from './VocabularyExplorer';
 import { MobileQrModal } from '../upload/MobileQrModal';
@@ -56,23 +59,28 @@ interface HomePageProps {
   onOpenShortcuts: () => void;
 }
 
-// 5 Interconnected Scientific Domains
+// 5 Interconnected Scientific Reality Domains
 const UNIVERSE_DOMAINS = [
   {
     id: 'physics',
-    name: 'Astrophysics & Relativity',
+    name: 'Astrophysics & Spacetime',
     icon: Orbit,
     tag: 'Cosmic Scale',
     color: '#8B7CFF',
     latex: 'E = m c ^ { 2 }',
     equationName: "Einstein's Mass-Energy Equivalence",
     description:
-      'From the geometry of spacetime to the orbital trajectories of planetary bodies, gravitation is expressed through field tensors and nonlinear differential equations.',
-    connection: 'Handwritten by Einstein in 1905; transcribed and verified into LaTeX by MathVision.',
+      'From the geometry of four-dimensional spacetime to the orbital trajectories of planetary bodies, gravitation is expressed through field tensors and nonlinear differential equations.',
+    connection: 'Handwritten by Albert Einstein in 1905; transcribed and verified into LaTeX by MathVision.',
+    variables: [
+      { sym: 'E', meaning: 'Rest energy of mass' },
+      { sym: 'm', meaning: 'Invariant rest mass' },
+      { sym: 'c', meaning: 'Universal speed of light in vacuum (299,792,458 m/s)' },
+    ],
   },
   {
     id: 'quantum',
-    name: 'Quantum Mechanics',
+    name: 'Quantum Wave Mechanics',
     icon: Atom,
     tag: 'Subatomic Scale',
     color: '#38BDF8',
@@ -81,65 +89,119 @@ const UNIVERSE_DOMAINS = [
     description:
       'The probabilistic nature of electrons and subatomic particles is described by complex Hilbert spaces and Hamiltonian differential operators.',
     connection: 'Contains partial derivatives, fractions, Greek psi, and operator hats—all recognized atomically.',
+    variables: [
+      { sym: 'i', meaning: 'Imaginary unit (i² = -1)' },
+      { sym: 'ħ', meaning: 'Reduced Planck constant (h / 2π)' },
+      { sym: 'Ψ', meaning: 'Quantum state wave function' },
+      { sym: 'Ĥ', meaning: 'Hamiltonian observable operator' },
+    ],
   },
   {
     id: 'waves',
-    name: 'Electromagnetism & Optics',
+    name: 'Electrodynamics & Optics',
     icon: Radio,
     tag: 'Light & Information',
     color: '#34D399',
     latex: '\\nabla \\times \\mathbf { E } = - \\frac { \\partial \\mathbf { B } } { \\partial t }',
-    equationName: "Faraday-Maxwell Induction Law",
+    equationName: 'Faraday-Maxwell Induction Law',
     description:
       'The foundational law governing fiber optics, telecommunication satellites, electrical power grids, and radio communication.',
     connection: 'Cross products, vector fields, and time derivatives synthesized into publication-ready code.',
+    variables: [
+      { sym: '∇×', meaning: 'Curl spatial differential vector operator' },
+      { sym: 'E', meaning: 'Electric field vector intensity' },
+      { sym: 'B', meaning: 'Magnetic flux density vector' },
+    ],
   },
   {
     id: 'calculus',
     name: 'Calculus & Aerospace',
     icon: Rocket,
-    tag: 'Dynamics & Motion',
-    color: '#FBBF24',
-    latex: '\\int _ { - \\infty } ^ { \\infty } e ^ { - x ^ { 2 } } d x = \\sqrt { \\pi }',
-    equationName: 'Gaussian Integral (Normal Distribution)',
+    tag: 'Continuous Motion',
+    color: '#F59E0B',
+    latex: '\\int _ { a } ^ { b } f ^ { \\prime } ( x ) d x = f ( b ) - f ( a )',
+    equationName: 'Fundamental Theorem of Calculus',
     description:
-      'The cornerstone of probability theory, statistical mechanics, radar signal processing, and heat diffusion equations.',
-    connection: 'Infinite integral limits, exponentiation, and radical square roots verified algebraically with SymPy.',
+      'Unites differentiation and integration into a single mathematical framework, underpinning classical dynamics, fluid mechanics, and aerospace trajectories.',
+    connection: 'Subscripts, superscripts, derivative primes, and integration limits resolved into balanced trees.',
+    variables: [
+      { sym: '∫', meaning: 'Riemann continuous integration accumulator' },
+      { sym: 'f\'', meaning: 'First-order instantaneous derivative' },
+      { sym: '[a, b]', meaning: 'Definite boundary domain' },
+    ],
   },
   {
-    id: 'ai',
-    name: 'Artificial Intelligence',
+    id: 'attention',
+    name: 'Modern Attention AI',
     icon: Binary,
-    tag: 'Neural Attention',
-    color: '#FB7185',
-    latex: '\\mathrm { Attn } ( Q , K , V ) = \\mathrm { softmax } \\left( \\frac { Q K ^ { T } } { \\sqrt { d _ { k } } } \\right) V',
-    equationName: 'Scaled Dot-Product Attention',
+    tag: 'Cognitive Computing',
+    color: '#A78BFA',
+    latex: '\\mathrm { Attention } ( Q , K , V ) = \\mathrm { softmax } \\left( \\frac { Q K ^ { T } } { \\sqrt { d _ { k } } } \\right) V',
+    equationName: 'Scaled Dot-Product Attention (Vaswani et al.)',
     description:
-      'The exact cross-attention mathematical equation running inside MathVision to decode 2D visual feature grids into tokens.',
-    connection: 'The mathematical equation that enables the AI to recognize mathematical equations.',
+      'The foundational mathematical operation of modern Artificial Intelligence and Transformers—the exact architecture MathVision uses to ground mathematical symbols.',
+    connection: 'Matrix transposes, square roots, fractions, and multi-token function calls encoded with zero syntax errors.',
+    variables: [
+      { sym: 'Q, K, V', meaning: 'Query, Key, and Value projection tensors' },
+      { sym: 'dk', meaning: 'Key dimension scaling factor' },
+      { sym: 'softmax', meaning: 'Normalized probability distribution across spatial sequence' },
+    ],
   },
 ];
 
+// Interactive Floating Celestial Equations for Act I
+const FLOATING_HERO_EQUATIONS = [
+  {
+    id: 'calc',
+    latex: '\\int _ { - \\infty } ^ { \\infty } e ^ { - x ^ { 2 } } d x = \\sqrt { \\pi }',
+    name: 'Gaussian Integral',
+    category: 'Calculus',
+    coord: 'top-8 left-4 lg:left-12',
+  },
+  {
+    id: 'einstein',
+    latex: 'E = m c ^ { 2 }',
+    name: 'Mass-Energy Equivalence',
+    category: 'Relativity',
+    coord: 'top-20 right-4 lg:right-16',
+  },
+  {
+    id: 'quantum',
+    latex: 'i \\hbar \\frac { \\partial \\Psi } { \\partial t } = \\hat { H } \\Psi',
+    name: 'Schrödinger Wave',
+    category: 'Quantum',
+    coord: 'bottom-24 left-6 lg:left-20',
+  },
+  {
+    id: 'maxwell',
+    latex: '\\nabla \\times \\mathbf { E } = - \\frac { \\partial \\mathbf { B } } { \\partial t }',
+    name: 'Faraday Induction',
+    category: 'Electrodynamics',
+    coord: 'bottom-16 right-6 lg:right-24',
+  },
+];
+
+// Architectural FAQ
 const FAQS = [
   {
-    q: 'How does MathVision handle messy or slanted handwriting?',
-    a: 'MathVision utilizes a DenseNet-121 convolutional encoder with stride-8 downsampling. Dense skip connections concatenate low-level edge features with deep structural semantic maps, allowing it to preserve fine-grained pen stroke trajectories even when writing slants, overlaps, or varies in thickness. The Transformer decoder then evaluates competing hypotheses via length-normalized beam search.',
-  },
-  {
-    q: 'Can it recognize real notebook photographs with shadows and ruled lines?',
-    a: 'Yes. In photograph mode, MathVision performs morphological Gaussian background division (using a 31×31 kernel) to compute the ambient illumination gradient. Dividing the raw image by this background estimate and applying adaptive Gaussian thresholding cancels out shadows, paper speckles, and light blue ruled lines before tensor normalization.',
-  },
-  {
-    q: 'What is Cross-Attention Spatial Grounding?',
-    a: 'Unlike opaque "black-box" OCR tools, MathVision captures the cross-attention weights between decoder queries and the encoder spatial grid. For every generated LaTeX token (e.g., \\int, \\sqrt, \\pm), MathVision computes the peak coordinates on the input image, allowing users to visually inspect and verify what the model was looking at.',
+    q: 'How does MathVision differ from standard OCR (Optical Character Recognition)?',
+    a: 'Standard OCR models process text in linear 1D sequences (left-to-right). Mathematics is inherently two-dimensional, featuring superscripts, nested square roots, fractions with arbitrary numerator/denominator bounds, and complex spatial limits. MathVision combines a stride-8 DenseNet-121 convolutional encoder with a 3-layer Pre-LN Transformer decoder featuring 8 cross-attention heads to simultaneously perceive 2D spatial coordinates and generate atomic LaTeX tokens.',
   },
   {
     q: 'Why is SymPy computer algebra integration important?',
-    a: 'Syntactic validity only guarantees that curly braces and LaTeX tags are balanced. SymPy builds an actual Computer Algebra System (CAS) expression tree to verify mathematical consistency and generate canonically simplified forms side-by-side.',
+    a: 'Syntactic validity only guarantees that curly braces and LaTeX tags are balanced. SymPy builds an actual Computer Algebra System (CAS) expression tree to verify mathematical consistency and generate canonically simplified forms side-by-side with the recognized equation.',
   },
   {
-    q: 'What is the footprint and latency of the model?',
-    a: 'The combined encoder and decoder models are quantized to INT8 ONNX and occupy only 12.82 MB on disk. Inference runs in approximately 120 ms on standard multi-core consumer CPUs without requiring a dedicated GPU.',
+    q: 'How does mobile phone camera submission work?',
+    a: 'Clicking "Scan with Phone Camera" generates an encrypted temporary session with a QR code. Point your smartphone camera at the QR code to open the mobile camera interface. Photos taken on your phone are processed through a 31×31 Gaussian background division algorithm on the backend to remove shadows, wrinkles, and notebook ruled lines before feeding the cleaned ink into the neural encoder.',
+  },
+  {
+    q: 'Can MathVision run inference locally on CPU?',
+    a: 'Yes. The DenseNet-121 encoder and Transformer decoder have been quantized into INT8 ONNX binaries with a combined footprint of only 12.82 MB. Inference completes in approximately 120 ms on standard CPUs without requiring expensive GPU servers.',
+  },
+  {
+    q: 'What is the CROHME-2023 benchmark standard?',
+    a: 'CROHME (Competition on Recognition of Online Handwritten Mathematical Expressions) is the premier worldwide benchmark in mathematical computer vision. MathVision is trained and validated on the official CROHME-2023 corpus, covering 132 atomic LaTeX tokens with zero-error expression rate (ExpRate), ≤1 error rate, and Character Error Rate (CER) tracking.',
   },
 ];
 
@@ -156,9 +218,12 @@ export const HomePage: React.FC<HomePageProps> = ({
   const { success } = useToast();
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [activeDomainId, setActiveDomainId] = useState<string>('physics');
+  const [activeHeroEq, setActiveHeroEq] = useState<string>('calc');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [copiedLatex, setCopiedLatex] = useState(false);
 
-  const activeDomain = UNIVERSE_DOMAINS.find((d) => d.id === activeDomainId) || UNIVERSE_DOMAINS[0];
+  const activeDomain =
+    UNIVERSE_DOMAINS.find((d) => d.id === activeDomainId) || UNIVERSE_DOMAINS[0];
   const { html: domainRenderedMath } = renderLatexToHtml(activeDomain.latex, true);
 
   const scrollToSection = (id: string) => {
@@ -168,40 +233,33 @@ export const HomePage: React.FC<HomePageProps> = ({
     }
   };
 
-  const handlePhotoFromPhone = (dataUrl: string, filename: string) => {
+  const handlePhotoFromPhone = () => {
     success('Photo Received from Phone', 'Transferring to studio workspace for inspection.');
     setTimeout(() => {
       onLaunchWorkspace();
     }, 600);
   };
 
-  const handleOpenSandboxItem = (item: DemoPreset | string) => {
-    if (typeof item === 'string') {
-      const match = DEMO_PRESETS.find((p) => p.latex === item);
-      if (match) {
-        onLoadPreset(match);
-      } else {
-        onLaunchWorkspace();
-      }
-    } else {
-      onLoadPreset(item);
-    }
+  const handleCopyLatex = (str: string) => {
+    navigator.clipboard.writeText(str);
+    setCopiedLatex(true);
+    setTimeout(() => setCopiedLatex(false), 2000);
   };
 
   return (
     <div className="relative min-h-screen w-full color-grade-bg text-[#F1F5F9] overflow-x-hidden selection:bg-[#8B7CFF]/30 selection:text-white">
-      {/* 1. Background Interactive Mathematical Constellation */}
+      {/* 1. Fixed Background Interactive Mathematical Constellation */}
       <MathConstellation />
 
-      {/* Floating Ambient Aura Glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-[#8B7CFF]/15 blur-[150px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-[850px] right-0 w-[650px] h-[450px] bg-[#38BDF8]/10 blur-[160px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-[1800px] left-0 w-[600px] h-[500px] bg-[#34D399]/10 blur-[170px] rounded-full pointer-events-none -z-10" />
+      {/* Atmospheric Ambient Glows */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[600px] bg-[#8B7CFF]/10 blur-[170px] rounded-full pointer-events-none -z-10" />
+      <div className="fixed top-[1200px] right-0 w-[700px] h-[500px] bg-[#38BDF8]/08 blur-[180px] rounded-full pointer-events-none -z-10" />
+      <div className="fixed top-[2600px] left-0 w-[700px] h-[550px] bg-[#34D399]/08 blur-[190px] rounded-full pointer-events-none -z-10" />
 
       {/* ======================================================== */}
-      {/* 2. DEDICATED PUBLIC TOP NAVIGATION BAR                   */}
+      {/* TOP PUBLIC NAVIGATION                                   */}
       {/* ======================================================== */}
-      <nav className="sticky top-0 z-50 w-full backdrop-blur-xl bg-[#090B10]/85 border-b border-[#252D3B]/70 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-subtle">
+      <nav className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-[#090B10]/80 border-b border-[#252D3B]/50 px-4 sm:px-8 py-3 flex items-center justify-between">
         {/* Brand Logo */}
         <div
           className="flex items-center gap-3 cursor-pointer group"
@@ -225,55 +283,55 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
 
-        {/* Public Story Navigation Links */}
+        {/* Public Narrative Links */}
         <div className="hidden lg:flex items-center gap-6 text-xs text-[#94A3B8]">
           <button
-            onClick={() => scrollToSection('math-universe')}
+            onClick={() => scrollToSection('act-universe')}
             className="hover:text-[#F1F5F9] transition-colors"
           >
             Universe of Math
           </button>
           <button
-            onClick={() => scrollToSection('interactive-sandbox')}
+            onClick={() => scrollToSection('act-human-medium')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
+            Human Inscription
+          </button>
+          <button
+            onClick={() => scrollToSection('act-transformation')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
+            Neural Engine
+          </button>
+          <button
+            onClick={() => scrollToSection('act-fabric')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
+            Fabric of Reality
+          </button>
+          <button
+            onClick={() => scrollToSection('act-sandbox')}
             className="hover:text-[#F1F5F9] transition-colors"
           >
             Live Sandbox
           </button>
           <button
-            onClick={() => scrollToSection('architecture')}
+            onClick={() => scrollToSection('act-benchmarks')}
             className="hover:text-[#F1F5F9] transition-colors"
           >
-            Neural Vision
+            Benchmarks & Vocab
           </button>
           <button
-            onClick={() => scrollToSection('explainability')}
-            className="hover:text-[#F1F5F9] transition-colors"
-          >
-            Attention Reticles
-          </button>
-          <button
-            onClick={() => scrollToSection('benchmarks')}
-            className="hover:text-[#F1F5F9] transition-colors"
-          >
-            CROHME-23
-          </button>
-          <button
-            onClick={() => scrollToSection('vocabulary')}
-            className="hover:text-[#F1F5F9] transition-colors"
-          >
-            132-Token Vocab
-          </button>
-          <button
-            onClick={() => scrollToSection('faq')}
+            onClick={() => scrollToSection('act-faq')}
             className="hover:text-[#F1F5F9] transition-colors"
           >
             FAQ
           </button>
         </div>
 
-        {/* Right Action Buttons */}
+        {/* Right Action Array */}
         <div className="flex items-center gap-2.5">
-          {/* Render Backend Live Pill */}
+          {/* Server Connection Pill */}
           <button
             onClick={onOpenSettings}
             className={cn(
@@ -311,7 +369,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <span>Dashboard</span>
           </button>
 
-          {/* Launch Studio Workspace */}
+          {/* Launch Studio IDE */}
           <Button
             variant="primary"
             size="sm"
@@ -324,55 +382,90 @@ export const HomePage: React.FC<HomePageProps> = ({
       </nav>
 
       {/* ======================================================== */}
-      {/* 3. HERO: THE UNIVERSAL LANGUAGE OF REALITY              */}
+      {/* ACT I — THE UNIVERSE OF MATHEMATICS (OPEN HERO)          */}
       {/* ======================================================== */}
-      <section className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-16 flex flex-col items-center text-center">
-        {/* Subtle Pill Tag */}
+      <section
+        id="act-universe"
+        className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-20 flex flex-col items-center text-center scroll-mt-20"
+      >
+        {/* Floating Celestial Equations (Orbiting the Hero with Parallax) */}
+        <div className="absolute inset-0 pointer-events-none hidden xl:block overflow-hidden">
+          {FLOATING_HERO_EQUATIONS.map((eq) => {
+            const { html } = renderLatexToHtml(eq.latex, false);
+            const isSelected = activeHeroEq === eq.id;
+            return (
+              <div
+                key={eq.id}
+                className={cn(
+                  'absolute pointer-events-auto cursor-pointer p-3 rounded-2xl border backdrop-blur-xl transition-all duration-300 select-none group',
+                  eq.coord,
+                  isSelected
+                    ? 'bg-[#151B27] border-[#8B7CFF] shadow-glow-accent scale-105'
+                    : 'bg-[#10141D]/60 border-[#252D3B]/60 hover:border-[#8B7CFF]/50 hover:bg-[#151B27]/80'
+                )}
+                onClick={() => setActiveHeroEq(eq.id)}
+              >
+                <div className="text-[10px] font-mono text-[#8B7CFF] mb-1 font-semibold flex items-center justify-between gap-3">
+                  <span>{eq.category}</span>
+                  <span className="text-[#64748B] group-hover:text-[#F1F5F9] transition-colors">
+                    {eq.name}
+                  </span>
+                </div>
+                <div
+                  className="font-math text-sm text-[#F1F5F9]"
+                  dangerouslySetInnerHTML={{ __html: html }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Philosophy Monospace Index Tag */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#151B27]/90 border border-[#8B7CFF]/40 text-[#8B7CFF] text-xs font-mono mb-6 shadow-glow-accent/30 backdrop-blur-md"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#151B27]/80 border border-[#8B7CFF]/40 text-[#8B7CFF] text-xs font-mono mb-8 backdrop-blur-md shadow-glow-accent/20"
         >
-          <Zap className="w-3.5 h-3.5 text-[#38BDF8]" />
-          <span>The Universal Language of Reality • AI Handwritten Expression Recognition</span>
+          <Orbit className="w-3.5 h-3.5 text-[#38BDF8]" />
+          <span>ACT I • The Universal Operating System of Reality</span>
         </motion.div>
 
-        {/* Main Headline */}
+        {/* Monumental Editorial Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F1F5F9] max-w-5xl leading-[1.06]"
+          className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-[#F1F5F9] max-w-6xl leading-[1.02]"
         >
-          Everything in the Universe is Connected Through{' '}
+          Everything in the Universe is Inscribed in{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B7CFF] via-[#38BDF8] to-[#34D399]">
             Mathematics.
           </span>
         </motion.h1>
 
-        {/* Subhead description */}
+        {/* Narrative Subhead */}
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-6 text-base sm:text-lg text-[#94A3B8] max-w-3xl leading-relaxed"
+          className="mt-8 text-base sm:text-xl text-[#94A3B8] max-w-3xl leading-relaxed font-normal"
         >
-          From the orbital mechanics of deep space to the quantum architecture of neural networks, handwriting has been humanity&apos;s oldest mathematical medium. MathVision is the bridge—transforming freehand ink and notebook photographs into living, verified LaTeX code.
+          From the nonlinear tensor curvature of general relativity to the self-attention weights of deep Transformer decoders, mathematics is the foundational code of reality. MathVision bridges human freehand intuition with verified Computer Algebra systems.
         </motion.p>
 
-        {/* Call-to-actions */}
+        {/* Hero Actions */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-8 flex flex-wrap items-center justify-center gap-3.5"
+          className="mt-10 flex flex-wrap items-center justify-center gap-4"
         >
           <Button
             variant="primary"
             size="lg"
             onClick={onLaunchWorkspace}
-            className="shadow-glow-accent px-8 text-sm font-semibold"
+            className="shadow-glow-accent px-8 py-3.5 text-sm font-semibold rounded-2xl"
             shortcut="Ctrl+Enter"
             icon={<ArrowRight className="w-4 h-4" />}
           >
@@ -384,65 +477,268 @@ export const HomePage: React.FC<HomePageProps> = ({
             size="lg"
             onClick={() => setIsQrModalOpen(true)}
             icon={<Smartphone className="w-4 h-4 text-[#38BDF8]" />}
-            className="border-[#252D3B] hover:border-[#38BDF8]/50"
+            className="border-[#252D3B] hover:border-[#38BDF8]/50 rounded-2xl"
           >
             Scan with Phone Camera
           </Button>
 
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => scrollToSection('math-universe')}
-            icon={<Orbit className="w-4 h-4 text-[#8B7CFF]" />}
+          <button
+            onClick={() => scrollToSection('act-transformation')}
+            className="px-6 py-3 text-xs font-mono font-medium text-[#94A3B8] hover:text-[#F1F5F9] transition-colors flex items-center gap-1.5"
           >
-            Explore Mathematical Fabric
-          </Button>
+            <span>Explore the Neural Engine</span>
+            <span className="text-[#8B7CFF]">↓</span>
+          </button>
         </motion.div>
 
-        {/* Telemetry metrics strip */}
+        {/* High-Impact Numerical Telemetry Bar (Open Editorial, NOT Boxed Cards) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl w-full"
+          className="mt-16 w-full max-w-4xl pt-8 border-t border-[#252D3B]/50 grid grid-cols-2 sm:grid-cols-4 gap-8 text-center"
         >
-          <div className="p-4 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#8B7CFF]/40 transition-colors">
-            <span className="text-xl font-bold font-mono text-[#8B7CFF]">12.82 MB</span>
-            <span className="text-[11px] text-[#94A3B8] block mt-0.5">INT8 Footprint</span>
+          <div>
+            <span className="text-3xl sm:text-4xl font-black font-mono text-[#8B7CFF] block">
+              12.82 MB
+            </span>
+            <span className="text-xs text-[#94A3B8] mt-1 block font-sans">
+              INT8 ONNX Footprint
+            </span>
           </div>
-          <div className="p-4 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#38BDF8]/40 transition-colors">
-            <span className="text-xl font-bold font-mono text-[#38BDF8]">132 Tokens</span>
-            <span className="text-[11px] text-[#94A3B8] block mt-0.5">Atomic Vocabulary</span>
+          <div>
+            <span className="text-3xl sm:text-4xl font-black font-mono text-[#38BDF8] block">
+              132 Tokens
+            </span>
+            <span className="text-xs text-[#94A3B8] mt-1 block font-sans">
+              Atomic LaTeX Space
+            </span>
           </div>
-          <div className="p-4 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#34D399]/40 transition-colors">
-            <span className="text-xl font-bold font-mono text-[#34D399]">~120 ms</span>
-            <span className="text-[11px] text-[#94A3B8] block mt-0.5">CPU Latency</span>
+          <div>
+            <span className="text-3xl sm:text-4xl font-black font-mono text-[#34D399] block">
+              ~120 ms
+            </span>
+            <span className="text-xs text-[#94A3B8] mt-1 block font-sans">
+              Pure CPU Inference
+            </span>
           </div>
-          <div className="p-4 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-amber-400/40 transition-colors">
-            <span className="text-xl font-bold font-mono text-amber-400">CROHME-23</span>
-            <span className="text-[11px] text-[#94A3B8] block mt-0.5">Benchmark Tested</span>
+          <div>
+            <span className="text-3xl sm:text-4xl font-black font-mono text-amber-400 block">
+              CROHME-23
+            </span>
+            <span className="text-xs text-[#94A3B8] mt-1 block font-sans">
+              Benchmark Verified
+            </span>
           </div>
         </motion.div>
       </section>
 
+      {/* Living Equation Ticker Marquee Ribbon */}
+      <div className="relative z-10 w-full py-3.5 overflow-hidden border-y border-[#252D3B]/40 bg-[#090B10]/60 backdrop-blur-md select-none">
+        <div className="animate-marquee space-x-12 text-xs font-mono text-[#64748B]">
+          <span>•</span>
+          <span className="text-[#8B7CFF] font-semibold">\int_{'{-\\infty}'}^{'{\\infty}'} e^{'-x^2'} dx = \sqrt{'{'}\pi{'}'}</span>
+          <span>•</span>
+          <span className="text-[#38BDF8]">i \hbar \frac{'{'}\partial{'}'}{'{'}\partial t{'}'}\Psi = \hat{'{'}H{'}'}\Psi</span>
+          <span>•</span>
+          <span className="text-[#34D399]">E = m c^2</span>
+          <span>•</span>
+          <span className="text-amber-400">\nabla \times \mathbf{'{'}E{'}'} = -\frac{'{'}\partial \mathbf{'{'}B{'}'}{'}'}{'{'}\partial t{'}'}</span>
+          <span>•</span>
+          <span className="text-purple-400">\mathcal{'{'}F{'}'}(\omega) = \int_{'{-\\infty}'}^{'{\\infty}'} f(t) e^{'-i\\omega t'} dt</span>
+          <span>•</span>
+          <span className="text-pink-400">e^{'{i\\pi}'} + 1 = 0</span>
+          <span>•</span>
+          <span className="text-emerald-400">\sum_{'{n=1}'}^{'{\\infty}'} \frac{'{1}'}{'{n^2}'} = \frac{'{'}\pi^2{'}'}{'{6}'}</span>
+          <span>•</span>
+          <span className="text-sky-400">\mathrm{'{'}Attention{'}'}(Q,K,V) = \mathrm{'{'}softmax{'}'}\left(\frac{'{QK^T}'}{'{\\sqrt{d_k}}'}\right)V</span>
+          <span>•</span>
+          {/* Duplicate set for seamless infinite loop */}
+          <span className="text-[#8B7CFF] font-semibold">\int_{'{-\\infty}'}^{'{\\infty}'} e^{'-x^2'} dx = \sqrt{'{'}\pi{'}'}</span>
+          <span>•</span>
+          <span className="text-[#38BDF8]">i \hbar \frac{'{'}\partial{'}'}{'{'}\partial t{'}'}\Psi = \hat{'{'}H{'}'}\Psi</span>
+          <span>•</span>
+          <span className="text-[#34D399]">E = m c^2</span>
+          <span>•</span>
+          <span className="text-amber-400">\nabla \times \mathbf{'{'}E{'}'} = -\frac{'{'}\partial \mathbf{'{'}B{'}'}{'}'}{'{'}\partial t{'}'}</span>
+          <span>•</span>
+          <span className="text-purple-400">\mathcal{'{'}F{'}'}(\omega) = \int_{'{-\\infty}'}^{'{\\infty}'} f(t) e^{'-i\\omega t'} dt</span>
+          <span>•</span>
+          <span className="text-pink-400">e^{'{i\\pi}'} + 1 = 0</span>
+          <span>•</span>
+          <span className="text-emerald-400">\sum_{'{n=1}'}^{'{\\infty}'} \frac{'{1}'}{'{n^2}'} = \frac{'{'}\pi^2{'}'}{'{6}'}</span>
+          <span>•</span>
+          <span className="text-sky-400">\mathrm{'{'}Attention{'}'}(Q,K,V) = \mathrm{'{'}softmax{'}'}\left(\frac{'{QK^T}'}{'{\\sqrt{d_k}}'}\right)V</span>
+          <span>•</span>
+        </div>
+      </div>
+
       {/* ======================================================== */}
-      {/* 4. THE MATHEMATICAL FABRIC OF THE UNIVERSE (INTERACTIVE) */}
+      {/* ACT II — THE LANGUAGE OF HUMAN THINKING (INK & PAPER)    */}
       {/* ======================================================== */}
-      <section id="math-universe" className="relative z-10 max-w-6xl mx-auto px-6 py-16 scroll-mt-20">
-        <div className="flex flex-col items-center mb-10 text-center">
-          <Badge variant="accent" size="sm">
-            Visual Storytelling
-          </Badge>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2">
-            The Mathematical Fabric of Reality
+      <section
+        id="act-human-medium"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Left Column: Human Storytelling Editorial */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="inline-flex items-center gap-2 text-xs font-mono text-[#8B7CFF] font-semibold">
+              <span>// ACT II — THE HUMAN MEDIUM</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-5xl font-black text-[#F1F5F9] leading-tight tracking-tight">
+              The Pen is Humanity&apos;s Native Mathematical Interface.
+            </h2>
+
+            <p className="text-sm sm:text-base text-[#94A3B8] leading-relaxed">
+              For four centuries, every foundational breakthrough in physics and mathematics was inscribed by hand on scratch paper—from Newton&apos;s quills in Cambridge to Einstein&apos;s chalkboard in Princeton and Ramanujan&apos;s notebooks in Madras.
+            </p>
+
+            <p className="text-sm text-[#94A3B8] leading-relaxed">
+              Yet traditional computer vision fails at handwritten mathematics. Inky loops, overlapping fractions, horizontal division lines, and subtle exponents create high structural ambiguity that standard optical character recognition cannot decipher.
+            </p>
+
+            <div className="pt-4 border-t border-[#252D3B]/60 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#8B7CFF]/15 text-[#8B7CFF] flex items-center justify-center shrink-0 mt-1">
+                  <PenTool className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#F1F5F9]">
+                    Digital Ink Trajectory (x, y, t)
+                  </h4>
+                  <p className="text-xs text-[#94A3B8] mt-0.5">
+                    120 Hz Bezier curve capture preserving stroke velocity and pressure.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[#38BDF8]/15 text-[#38BDF8] flex items-center justify-center shrink-0 mt-1">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#F1F5F9]">
+                    31×31 Gaussian Shadow Division
+                  </h4>
+                  <p className="text-xs text-[#94A3B8] mt-0.5">
+                    Morphological background division cancels lighting gradients and blue notebook lines.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Open Interactive Ink-to-LaTeX Transformation Stage */}
+          <div className="lg:col-span-7 relative">
+            <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-[#151B27]/80 to-[#10141D]/90 border border-[#252D3B] shadow-2xl relative overflow-hidden backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#252D3B]/50">
+                <span className="text-xs font-mono text-[#8B7CFF] font-semibold">
+                  MORPHOLOGICAL INK CONVERSION
+                </span>
+                <span className="text-xs font-mono text-[#34D399]">LIVE TRANSLATION</span>
+              </div>
+
+              {/* Visual Stroke Demonstration */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
+                {/* Left: Freehand Handwritten SVG Path */}
+                <div className="flex flex-col items-center">
+                  <span className="text-[11px] font-mono text-[#94A3B8] mb-2 uppercase">
+                    Freehand Ink Inscription
+                  </span>
+                  <div className="w-full h-32 rounded-2xl bg-[#090B10] border border-[#252D3B] p-4 flex items-center justify-center relative shadow-inner">
+                    <svg
+                      viewBox="0 0 220 100"
+                      className="w-full h-full stroke-[#F1F5F9] fill-none stroke-[2.5] stroke-linecap-round stroke-linejoin-round"
+                    >
+                      <motion.path
+                        d="M 25 30 L 45 30 M 25 30 L 25 70 L 45 70 M 25 50 L 40 50 M 60 46 L 80 46 M 60 56 L 80 56 M 95 65 L 95 48 C 95 40, 105 40, 105 48 L 105 65 M 105 48 C 105 40, 115 40, 115 48 L 115 65 M 130 55 C 130 42, 145 42, 145 52 M 155 35 C 155 25, 168 25, 168 35 C 168 45, 155 50, 170 50"
+                        initial={{ pathLength: 0 } as any}
+                        animate={{ pathLength: 1 } as any}
+                        transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1.5 }}
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Right: KaTeX Verified Preview */}
+                <div className="flex flex-col items-center">
+                  <span className="text-[11px] font-mono text-[#34D399] mb-2 uppercase">
+                    Synthesized LaTeX Form
+                  </span>
+                  <div className="w-full h-32 rounded-2xl bg-[#090B10] border border-[#252D3B] p-4 flex flex-col items-center justify-center relative shadow-inner">
+                    <div
+                      className="font-math text-2xl text-[#F1F5F9]"
+                      dangerouslySetInnerHTML={{
+                        __html: renderLatexToHtml('E = m c ^ { 2 }', true).html,
+                      }}
+                    />
+                    <code className="text-[11px] font-mono text-[#8B7CFF] mt-2">
+                      E = m c ^ {'{2}'}
+                    </code>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[#252D3B]/50 flex items-center justify-between text-xs text-[#94A3B8]">
+                <span>Automated symbol segmentation & spatial hierarchy</span>
+                <span className="text-emerald-400 font-mono">0.0% Syntax Error</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ======================================================== */}
+      {/* ACT III — THE FIVE-STAGE TRANSFORMATION STAGE            */}
+      {/* ======================================================== */}
+      <section
+        id="act-transformation"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-20 scroll-mt-20"
+      >
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="text-xs font-mono text-[#8B7CFF] font-semibold mb-2">
+            // ACT III — THE INTELLIGENCE OF MATHVISION
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-black text-[#F1F5F9] tracking-tight">
+            The Neural Transformation Stage.
           </h2>
           <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl mt-2 leading-relaxed">
-            The equations recognized by MathVision are the exact same laws that govern the cosmos, electromagnetism, and the neural attention weights of modern AI.
+            Witness how freehand raw ink flows through stride-8 feature convolutions, multi-head attention grounding, beam search decoding, and Computer Algebra verification.
           </p>
         </div>
 
-        {/* Domain Switcher Tabs */}
-        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-6">
+        {/* Live Transformation Journey Engine */}
+        <HeroTransformationJourney
+          onLaunchWithEquation={(latex) => {
+            const match = DEMO_PRESETS.find((p) => p.latex === latex) || DEMO_PRESETS[0];
+            onLoadPreset(match);
+          }}
+        />
+      </section>
+
+      {/* ======================================================== */}
+      {/* ACT IV — THE MATHEMATICAL FABRIC OF REALITY              */}
+      {/* ======================================================== */}
+      <section
+        id="act-fabric"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20"
+      >
+        <div className="flex flex-col items-center text-center mb-12">
+          <div className="text-xs font-mono text-[#38BDF8] font-semibold mb-2">
+            // ACT IV — THE UNIVERSAL CONNECTIVITY
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-black text-[#F1F5F9] tracking-tight">
+            The Mathematical Fabric of Reality.
+          </h2>
+          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-2xl mt-3 leading-relaxed">
+            The equations recognized by MathVision are the identical foundational laws that govern the cosmos, electromagnetic waves, quantum probability fields, and the attention weights of modern AI.
+          </p>
+        </div>
+
+        {/* Domain Tab Selector (Minimal Hairline Tabs) */}
+        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-8">
           {UNIVERSE_DOMAINS.map((domain) => {
             const Icon = domain.icon;
             const isSelected = domain.id === activeDomainId;
@@ -451,10 +747,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                 key={domain.id}
                 onClick={() => setActiveDomainId(domain.id)}
                 className={cn(
-                  'px-4 py-2 text-xs font-semibold rounded-xl border transition-all flex items-center gap-2 shrink-0 select-none',
+                  'px-4 py-2.5 text-xs font-semibold rounded-2xl border transition-all flex items-center gap-2 shrink-0 select-none',
                   isSelected
                     ? 'bg-[#151B27] text-white border-[#8B7CFF] shadow-glow-accent/30 font-bold scale-105'
-                    : 'bg-[#10141D] text-[#94A3B8] border-[#252D3B] hover:text-[#F1F5F9] hover:bg-[#151B27]'
+                    : 'bg-[#10141D]/60 text-[#94A3B8] border-[#252D3B]/80 hover:text-[#F1F5F9] hover:bg-[#151B27]/60'
                 )}
               >
                 <Icon className="w-4 h-4" style={{ color: domain.color }} />
@@ -464,54 +760,94 @@ export const HomePage: React.FC<HomePageProps> = ({
           })}
         </div>
 
-        {/* Active Domain Spotlight Display */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] shadow-2xl backdrop-blur-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Left Details (6 cols) */}
-          <div className="lg:col-span-6 space-y-4">
+        {/* Asymmetric Exhibition Display (Open Layout, NO Nested Cards) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          {/* Left: Scientific Context (6 cols) */}
+          <div className="lg:col-span-6 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#151B27] border border-[#252D3B]">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeDomain.color }} />
               <span style={{ color: activeDomain.color }}>{activeDomain.tag}</span>
             </div>
 
-            <h3 className="text-2xl font-bold text-[#F1F5F9]">
+            <h3 className="text-3xl sm:text-4xl font-extrabold text-[#F1F5F9]">
               {activeDomain.equationName}
             </h3>
 
-            <p className="text-sm text-[#94A3B8] leading-relaxed">
+            <p className="text-sm sm:text-base text-[#94A3B8] leading-relaxed">
               {activeDomain.description}
             </p>
 
-            <div className="p-4 rounded-2xl bg-[#090B10] border border-[#252D3B] text-xs text-[#CBD5E1] space-y-1">
-              <span className="font-semibold text-[#8B7CFF] block">Why It Matters for AI Recognition:</span>
+            {/* Variable Definition Matrix */}
+            <div className="space-y-2 pt-2 border-t border-[#252D3B]/60">
+              <span className="text-xs font-mono text-[#8B7CFF] font-semibold block uppercase">
+                Symbolic Variable Decomposition:
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {activeDomain.variables.map((v, i) => (
+                  <div key={i} className="flex items-center gap-2 text-[#94A3B8]">
+                    <code className="font-mono text-emerald-400 font-bold bg-[#151B27] px-1.5 py-0.5 rounded border border-[#252D3B]">
+                      {v.sym}
+                    </code>
+                    <span className="truncate">{v.meaning}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#090B10] border border-[#252D3B] text-xs space-y-1">
+              <span className="font-semibold text-[#8B7CFF] block">
+                Why It Matters for AI Recognition:
+              </span>
               <p className="text-[#94A3B8]">{activeDomain.connection}</p>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex items-center gap-4">
               <Button
                 variant="primary"
                 size="md"
                 onClick={() => {
-                  const match = DEMO_PRESETS.find((p) => p.latex === activeDomain.latex) || DEMO_PRESETS[0];
+                  const match =
+                    DEMO_PRESETS.find((p) => p.latex === activeDomain.latex) ||
+                    DEMO_PRESETS[0];
                   onLoadPreset(match);
                 }}
                 icon={<ArrowRight className="w-4 h-4" />}
               >
                 Inspect This Equation in Studio
               </Button>
+
+              <button
+                onClick={() => handleCopyLatex(activeDomain.latex)}
+                className="text-xs font-mono text-[#94A3B8] hover:text-[#F1F5F9] flex items-center gap-1.5 transition-colors"
+              >
+                {copiedLatex ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-400">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy LaTeX</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Right Rendered Live Math & LaTeX Source (6 cols) */}
+          {/* Right: Grand KaTeX Mathematical Exhibit (6 cols) */}
           <div className="lg:col-span-6 flex flex-col gap-4">
-            {/* Rendered Math Box */}
-            <div className="p-8 rounded-2xl bg-[#090B10] border border-[#252D3B] min-h-[160px] flex items-center justify-center shadow-inner overflow-x-auto">
+            <div className="p-10 rounded-3xl bg-[#090B10] border border-[#252D3B] min-h-[220px] flex items-center justify-center shadow-2xl relative overflow-x-auto">
               <div
-                className="font-math text-[#F1F5F9] text-2xl sm:text-3xl text-center select-text"
+                className="font-math text-[#F1F5F9] text-3xl sm:text-4xl text-center select-text"
                 dangerouslySetInnerHTML={{ __html: domainRenderedMath }}
               />
+              <div className="absolute bottom-3 right-4 text-[10px] font-mono text-[#64748B] uppercase tracking-wider">
+                KaTeX Precision Render
+              </div>
             </div>
 
-            {/* LaTeX Source Card */}
+            {/* Source Syntax Strip */}
             <div className="p-4 rounded-2xl bg-[#151B27] border border-[#252D3B] flex items-center justify-between">
               <div className="flex items-center gap-2.5 overflow-hidden">
                 <Code className="w-4 h-4 text-[#8B7CFF] shrink-0" />
@@ -520,7 +856,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </code>
               </div>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 shrink-0 border border-emerald-500/30">
-                Verified LaTeX
+                Validated
               </span>
             </div>
           </div>
@@ -528,270 +864,134 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 5. INTERACTIVE LIVE HERO SANDBOX COMPONENT               */}
+      {/* ACT V — REAL-TIME INTERACTIVE EXPERIMENTATION LAB        */}
       {/* ======================================================== */}
-      <section id="interactive-sandbox" className="relative z-10 max-w-6xl mx-auto px-6 py-14 scroll-mt-20">
-        <div className="flex flex-col items-center mb-8 text-center">
-          <Badge variant="cyan" size="sm" dot>
-            Real-Time Interactive Playground
-          </Badge>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2 tracking-tight">
-            Experience the Recognition Engine
+      <section
+        id="act-sandbox"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-24 scroll-mt-20"
+      >
+        <div className="flex flex-col items-center text-center mb-10">
+          <div className="text-xs font-mono text-[#34D399] font-semibold mb-2">
+            // ACT V — REAL-TIME EXPERIMENTATION
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-black text-[#F1F5F9] tracking-tight">
+            Write. Ground. Verify.
           </h2>
-          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-lg mt-2">
-            Draw custom equations on digital canvas, inspect cross-attention spatial grounding reticles, or slide through notebook photo shadow cancellation.
+          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl mt-2 leading-relaxed">
+            Test the engine live: draw equations on the canvas, inspect cross-attention spatial grounding coordinates, or slide through notebook photo background division.
           </p>
         </div>
 
         <InteractiveHeroSandbox
-          onOpenInStudio={handleOpenSandboxItem}
+          onOpenInStudio={(item) => {
+            if (typeof item === 'string') {
+              const match = DEMO_PRESETS.find((p) => p.latex === item);
+              if (match) onLoadPreset(match);
+              else onLaunchWorkspace();
+            } else {
+              onLoadPreset(item);
+            }
+          }}
           isBackendConnected={isBackendConnected}
         />
       </section>
 
       {/* ======================================================== */}
-      {/* 6. NEURAL VISION ARCHITECTURE & TENSOR FLOW             */}
+      {/* ACT VI — MATHEMATICAL RIGOR, BENCHMARKS & VOCABULARY     */}
       {/* ======================================================== */}
-      <section id="architecture" className="relative z-10 max-w-6xl mx-auto px-6 py-16 scroll-mt-20">
-        <div className="p-8 sm:p-10 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] shadow-2xl relative overflow-hidden backdrop-blur-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div>
-              <Badge variant="accent" size="sm">
-                Tensor Processing Pipeline
-              </Badge>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#F1F5F9] mt-2">
-                Five-Stage Neural Processing Pipeline
-              </h2>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onOpenModelSpecs}
-              icon={<Cpu className="w-4 h-4 text-[#8B7CFF]" />}
-            >
-              Full Technical Spec
-            </Button>
+      <section
+        id="act-benchmarks"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20"
+      >
+        <div className="flex flex-col items-center text-center mb-14">
+          <div className="text-xs font-mono text-amber-400 font-semibold mb-2">
+            // ACT VI — EMPIRICAL BENCHMARKS & 132-TOKEN VOCABULARY
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5">
-            {[
-              {
-                num: '01',
-                title: 'Dual Input Ingestion',
-                sub: 'Ink Vectors or Photo',
-                desc: 'Captures pointer curves with pressure dynamics or uploads real-world notebook paper photographs.',
-              },
-              {
-                num: '02',
-                title: 'Morphological Division',
-                sub: 'cv2.divide() Shadow Mask',
-                desc: '31×31 Gaussian background estimation cancels shadows and isolates ink strokes from blue ruled lines.',
-              },
-              {
-                num: '03',
-                title: 'DenseNet-121 Encoder',
-                sub: 'Stride-8 Feature Map',
-                desc: 'Downsamples ink image to H/8 × W/8 feature grid, creating rich 256-dim spatial memory representations.',
-              },
-              {
-                num: '04',
-                title: 'Transformer Decoder',
-                sub: 'Pre-LN 3-Layer + Beam 3',
-                desc: 'Emits 132 atomic LaTeX tokens using cross-attention grounding and length-normalized beam search.',
-              },
-              {
-                num: '05',
-                title: 'SymPy CAS Verification',
-                sub: 'Algebraic Parse Tree',
-                desc: 'Tests syntactic brace balance, builds SymPy expression trees, and renders canonical simplified mathematics.',
-              },
-            ].map((step, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col p-5 rounded-2xl bg-[#090B10] border border-[#252D3B] relative group hover:border-[#8B7CFF]/50 transition-all shadow-subtle"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono text-xs font-extrabold text-[#8B7CFF]">
-                    {step.num}
-                  </span>
-                  <span className="text-[10px] font-mono text-[#94A3B8]">{step.sub}</span>
-                </div>
-                <span className="text-xs font-bold text-[#F1F5F9] mb-1.5">
-                  {step.title}
-                </span>
-                <p className="text-[11px] text-[#94A3B8] leading-relaxed">
-                  {step.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ======================================================== */}
-      {/* 7. FOUR SCIENTIFIC PILLARS (BENTO GRID)                 */}
-      {/* ======================================================== */}
-      <section id="explainability" className="relative z-10 max-w-6xl mx-auto px-6 py-12 scroll-mt-20">
-        <div className="flex flex-col items-center mb-12 text-center">
-          <Badge variant="success" size="sm">
-            Core Scientific Capabilities
-          </Badge>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2">
-            Engineered for Mathematical Rigor
+          <h2 className="text-3xl sm:text-5xl font-black text-[#F1F5F9] tracking-tight">
+            CROHME-2023 Validation Metrics.
           </h2>
-          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mt-2">
-            Bridging handwritten perceptual drawing with deep spatial attention and computer algebra systems.
+          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-lg mt-3 leading-relaxed">
+            Evaluated on official international competition validation splits under pure INT8 CPU inference.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Bento Card 1: Dual Modality Ingestion */}
-          <div className="p-7 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] hover:border-[#8B7CFF]/50 transition-all shadow-elevated group">
-            <div className="w-11 h-11 rounded-2xl bg-[#8B7CFF]/15 text-[#8B7CFF] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-              <Pen className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-[#F1F5F9] mb-2 flex items-center justify-between">
-              <span>Dual Modality Ingestion</span>
-              <span className="text-xs text-[#94A3B8] font-mono">Digital Ink & Paper Photo</span>
-            </h3>
-            <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Seamlessly switch between high-DPI digital ink with pressure curves and real-world notebook photograph ingestion. Uses morphological Gaussian background division to isolate dark ink strokes from ruled notebook paper, ink bleed, and hand shadows.
-            </p>
-          </div>
-
-          {/* Bento Card 2: DenseNet-121 + Transformer */}
-          <div className="p-7 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] hover:border-[#38BDF8]/50 transition-all shadow-elevated group">
-            <div className="w-11 h-11 rounded-2xl bg-[#38BDF8]/15 text-[#38BDF8] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-              <Cpu className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-[#F1F5F9] mb-2 flex items-center justify-between">
-              <span>DenseNet-121 + Pre-LN Transformer</span>
-              <span className="text-xs text-[#94A3B8] font-mono">Beam Search Decoding</span>
-            </h3>
-            <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Stride-8 convolutional encoder captures intricate 2D pen strokes into 256-dimensional feature representations. A 3-layer Pre-LN Transformer decoder with 8 cross-attention heads generates valid LaTeX sequences via length-normalized beam search.
-            </p>
-          </div>
-
-          {/* Bento Card 3: Cross-Attention Spatial Grounding */}
-          <div className="p-7 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] hover:border-[#34D399]/50 transition-all shadow-elevated group">
-            <div className="w-11 h-11 rounded-2xl bg-[#34D399]/15 text-[#34D399] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-              <BrainCircuit className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-[#F1F5F9] mb-2 flex items-center justify-between">
-              <span>Cross-Attention Spatial Grounding</span>
-              <span className="text-xs text-[#94A3B8] font-mono">Interactive Reticles</span>
-            </h3>
-            <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Every emitted LaTeX symbol is mapped back to its normalized spatial attention coordinates on the input. Inspect peak reticles, top-3 alternatives (e.g. distinguishing <code>\pm</code> from <code>+</code>), and execute one-click corrections directly in the studio.
-            </p>
-          </div>
-
-          {/* Bento Card 4: SymPy Computer Algebra System */}
-          <div className="p-7 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] hover:border-amber-400/50 transition-all shadow-elevated group">
-            <div className="w-11 h-11 rounded-2xl bg-amber-400/15 text-amber-400 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-[#F1F5F9] mb-2 flex items-center justify-between">
-              <span>SymPy Symbolic Verification</span>
-              <span className="text-xs text-[#94A3B8] font-mono">CAS Integration</span>
-            </h3>
-            <p className="text-xs text-[#94A3B8] leading-relaxed">
-              Distinguishes superficial syntax validity from deep symbolic equivalence. Integrates Python SymPy 1.13 to parse algebraic expression trees and render canonically simplified mathematical forms side-by-side with recognized LaTeX.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ======================================================== */}
-      {/* 8. CROHME BENCHMARK METRICS                              */}
-      {/* ======================================================== */}
-      <section id="benchmarks" className="relative z-10 max-w-5xl mx-auto px-6 py-14 text-center scroll-mt-20">
-        <Badge variant="accent" size="sm">
-          Empirical Validation
-        </Badge>
-        <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2">
-          CROHME-2023 Validation Metrics
-        </h2>
-        <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mx-auto mt-2 mb-8">
-          Evaluated against the official competition validation splits.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-6 rounded-3xl bg-[#10141D] border border-[#252D3B] text-center shadow-subtle hover:border-[#8B7CFF]/50 transition-colors">
-            <span className="text-xs text-[#94A3B8] uppercase tracking-wider font-semibold">
+        {/* Large-Scale Typographic Numerical Display (NO Generic Stat Cards) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 text-center pb-16 border-b border-[#252D3B]/60">
+          <div>
+            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-bold">
               Expression Rate (ExpRate)
             </span>
-            <span className="text-4xl font-extrabold font-mono text-[#8B7CFF] block mt-2">
+            <span className="text-6xl sm:text-7xl font-black font-mono text-[#8B7CFF] block mt-3">
               32.84%
             </span>
-            <span className="text-[11px] text-[#64748B] block mt-1">
+            <span className="text-xs text-[#64748B] block mt-2">
               Exact match zero-error mathematical expressions
             </span>
           </div>
 
-          <div className="p-6 rounded-3xl bg-[#10141D] border border-[#252D3B] text-center shadow-subtle hover:border-[#38BDF8]/50 transition-colors">
-            <span className="text-xs text-[#94A3B8] uppercase tracking-wider font-semibold">
+          <div>
+            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-bold">
               ≤ 1 Error Rate
             </span>
-            <span className="text-4xl font-extrabold font-mono text-[#38BDF8] block mt-2">
+            <span className="text-6xl sm:text-7xl font-black font-mono text-[#38BDF8] block mt-3">
               41.42%
             </span>
-            <span className="text-[11px] text-[#64748B] block mt-1">
-              At most one token correction needed
+            <span className="text-xs text-[#64748B] block mt-2">
+              At most one single token correction required
             </span>
           </div>
 
-          <div className="p-6 rounded-3xl bg-[#10141D] border border-[#252D3B] text-center shadow-subtle hover:border-amber-400/50 transition-colors">
-            <span className="text-xs text-[#94A3B8] uppercase tracking-wider font-semibold">
-              Character Error (CER)
+          <div>
+            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-bold">
+              Character Error Rate (CER)
             </span>
-            <span className="text-4xl font-extrabold font-mono text-amber-400 block mt-2">
+            <span className="text-6xl sm:text-7xl font-black font-mono text-amber-400 block mt-3">
               40.88%
             </span>
-            <span className="text-[11px] text-[#64748B] block mt-1">
+            <span className="text-xs text-[#64748B] block mt-2">
               Average symbol Levenshtein edit distance
             </span>
           </div>
         </div>
+
+        {/* 132-Token Atomic Vocabulary Matrix */}
+        <div className="pt-16">
+          <VocabularyExplorer />
+        </div>
       </section>
 
       {/* ======================================================== */}
-      {/* 9. 132-TOKEN VOCABULARY EXPLORER                        */}
+      {/* ACT VII — ARCHITECTURAL FAQ & TECHNICAL TRANSPARENCY     */}
       {/* ======================================================== */}
-      <section id="vocabulary" className="relative z-10 max-w-6xl mx-auto px-6 py-12 scroll-mt-20">
-        <VocabularyExplorer />
-      </section>
-
-      {/* ======================================================== */}
-      {/* 10. ARCHITECTURE & TECHNICAL FAQ                        */}
-      {/* ======================================================== */}
-      <section id="faq" className="relative z-10 max-w-4xl mx-auto px-6 py-16 scroll-mt-20">
-        <div className="flex flex-col items-center mb-10 text-center">
-          <Badge variant="cyan" size="sm">
-            Architecture & FAQ
-          </Badge>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2">
+      <section
+        id="act-faq"
+        className="relative z-10 max-w-4xl mx-auto px-6 py-20 scroll-mt-20"
+      >
+        <div className="flex flex-col items-center text-center mb-12">
+          <div className="text-xs font-mono text-[#38BDF8] font-semibold mb-2">
+            // ACT VII — ARCHITECTURAL TRANSPARENCY
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#F1F5F9]">
             Frequently Asked Questions
           </h2>
           <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mt-2">
-            Understanding the underlying model architecture, preprocessing, and deployment.
+            Technical answers regarding our DenseNet-121 encoder, Transformer decoder, and SymPy CAS integration.
           </p>
         </div>
 
-        <div className="space-y-3">
+        {/* Minimal Hairline Accordion (Zero Heavy Card Boxes) */}
+        <div className="divide-y divide-[#252D3B]/60 border-y border-[#252D3B]/60">
           {FAQS.map((faq, idx) => {
             const isOpen = expandedFaq === idx;
             return (
-              <div
-                key={idx}
-                className="rounded-2xl bg-[#10141D]/90 border border-[#252D3B] overflow-hidden transition-all"
-              >
+              <div key={idx} className="py-4">
                 <button
                   onClick={() => setExpandedFaq(isOpen ? null : idx)}
-                  className="w-full p-5 flex items-center justify-between text-left gap-4 hover:bg-[#151B27]/50 transition-colors"
+                  className="w-full py-2 flex items-center justify-between text-left gap-4 hover:text-[#8B7CFF] transition-colors group"
                 >
-                  <span className="text-sm font-semibold text-[#F1F5F9]">{faq.q}</span>
+                  <span className="text-base font-semibold text-[#F1F5F9] group-hover:text-[#8B7CFF] transition-colors">
+                    {faq.q}
+                  </span>
                   <ChevronDown
                     className={cn(
                       'w-4 h-4 text-[#8B7CFF] shrink-0 transition-transform duration-200',
@@ -806,7 +1006,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="px-5 pb-5 text-xs text-[#94A3B8] leading-relaxed border-t border-[#252D3B]/50 pt-3"
+                      className="pt-2 pb-3 text-sm text-[#94A3B8] leading-relaxed font-normal"
                     >
                       {faq.a}
                     </motion.div>
@@ -819,29 +1019,29 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 11. INSPIRING STUDIO LAUNCH PORTAL                      */}
+      {/* ACT VIII — THE STUDIO PORTAL (GRAND FINALE)              */}
       {/* ======================================================== */}
-      <section className="relative z-10 max-w-6xl mx-auto px-6 py-14">
-        <div className="relative p-8 sm:p-14 rounded-3xl bg-gradient-to-br from-[#10141D] via-[#151B27] to-[#10141D] border border-[#8B7CFF]/30 shadow-glow-hero overflow-hidden text-center flex flex-col items-center">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-40 bg-[#8B7CFF]/20 blur-[90px] rounded-full pointer-events-none" />
+      <section className="relative z-10 max-w-7xl mx-auto px-6 py-24">
+        <div className="relative p-10 sm:p-16 rounded-3xl bg-gradient-to-b from-[#151B27]/80 to-[#10141D] border border-[#8B7CFF]/40 shadow-glow-hero overflow-hidden text-center flex flex-col items-center">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-48 bg-[#8B7CFF]/20 blur-[110px] rounded-full pointer-events-none" />
 
           <Badge variant="accent" size="sm" dot>
             Production-Ready AI Workspace
           </Badge>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-[#F1F5F9] mt-3 max-w-2xl leading-tight">
-            Ready to Accelerate Your Mathematical Workflow?
+          <h2 className="text-3xl sm:text-6xl font-black text-[#F1F5F9] mt-4 max-w-3xl leading-tight tracking-tight">
+            Accelerate Your Mathematical Workflow.
           </h2>
-          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-lg mt-3 leading-relaxed">
-            Write on canvas, snap a notebook photo from your phone, or paste an equation. Watch MathVision turn ink into publication-ready LaTeX in milliseconds.
+          <p className="text-sm sm:text-base text-[#94A3B8] max-w-xl mt-4 leading-relaxed">
+            Write equations with digital stylus, snap notebook photographs with your phone, or explore token cross-attention grounding in real time.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Button
               variant="primary"
               size="lg"
               onClick={onLaunchWorkspace}
               icon={<ArrowRight className="w-4 h-4" />}
-              className="px-8 shadow-glow-accent"
+              className="px-8 py-3.5 shadow-glow-accent text-sm font-semibold rounded-2xl"
             >
               Enter Studio Workspace
             </Button>
@@ -850,6 +1050,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               size="lg"
               onClick={() => setIsQrModalOpen(true)}
               icon={<Smartphone className="w-4 h-4 text-[#38BDF8]" />}
+              className="rounded-2xl"
             >
               Scan Phone Camera
             </Button>
@@ -858,6 +1059,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               size="lg"
               onClick={onOpenDashboard}
               icon={<LayoutDashboard className="w-4 h-4 text-[#8B7CFF]" />}
+              className="rounded-2xl"
             >
               View Dashboard
             </Button>
@@ -866,36 +1068,36 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 12. FOOTER                                               */}
+      {/* EDITORIAL FOOTER                                         */}
       {/* ======================================================== */}
-      <footer className="relative z-10 border-t border-[#252D3B] bg-[#090B10] px-6 py-10">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      <footer className="relative z-10 border-t border-[#252D3B]/60 bg-[#090B10] px-6 py-12">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="MathVision Logo" className="w-8 h-8 rounded-lg" />
             <div>
               <span className="font-bold text-sm text-[#F1F5F9]">MathVision Platform</span>
-              <p className="text-[11px] text-[#64748B]">
-                Advanced AI Handwritten Mathematical Expression Recognition IDE
+              <p className="text-xs text-[#64748B]">
+                Handwritten Mathematical Expression Recognition (HMER) IDE
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-[#94A3B8]">
+          <div className="flex items-center gap-6 text-xs text-[#94A3B8]">
             <button
               onClick={onOpenShortcuts}
-              className="hover:text-[#F1F5F9] transition-colors flex items-center gap-1"
+              className="hover:text-[#F1F5F9] transition-colors flex items-center gap-1.5"
             >
               <Keyboard className="w-3.5 h-3.5" /> Shortcuts
             </button>
             <button
               onClick={onOpenDocs}
-              className="hover:text-[#F1F5F9] transition-colors flex items-center gap-1"
+              className="hover:text-[#F1F5F9] transition-colors flex items-center gap-1.5"
             >
               <BookOpen className="w-3.5 h-3.5" /> Documentation
             </button>
             <button
               onClick={onOpenSettings}
-              className="hover:text-[#F1F5F9] transition-colors flex items-center gap-1"
+              className="hover:text-[#F1F5F9] transition-colors flex items-center gap-1.5"
             >
               <Server className="w-3.5 h-3.5" /> Settings & Backend
             </button>
@@ -912,7 +1114,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </footer>
 
-      {/* Mobile QR Camera Sync Modal Triggered from Homepage */}
+      {/* Mobile QR Camera Sync Modal */}
       <MobileQrModal
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
