@@ -40,7 +40,8 @@ import { Badge } from '../ui/Badge';
 import { Tooltip } from '../ui/Tooltip';
 import { DEMO_PRESETS, DemoPreset } from '../../services/demoData';
 import { MathConstellation } from './MathConstellation';
-import { HeroTransformationJourney } from './HeroTransformationJourney';
+import { MathHero3D } from './MathHero3D';
+import { LiveNeuralPipeline } from './LiveNeuralPipeline';
 import { InteractiveHeroSandbox } from './InteractiveHeroSandbox';
 import { VocabularyExplorer } from './VocabularyExplorer';
 import { MobileQrModal } from '../upload/MobileQrModal';
@@ -454,12 +455,22 @@ export const HomePage: React.FC<HomePageProps> = ({
           From the nonlinear tensor curvature of general relativity to the self-attention weights of deep Transformer decoders, mathematics is the foundational code of reality. MathVision bridges human freehand intuition with verified Computer Algebra systems.
         </motion.p>
 
+        {/* Real-Time Interactive 3D WebGL Mathematical Geometry Centerpiece */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.25 }}
+          className="w-full max-w-4xl my-4"
+        >
+          <MathHero3D />
+        </motion.div>
+
         {/* Hero Actions */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-4"
+          className="mt-6 flex flex-wrap items-center justify-center gap-4"
         >
           <Button
             variant="primary"
@@ -697,21 +708,8 @@ export const HomePage: React.FC<HomePageProps> = ({
         id="act-transformation"
         className="relative z-10 max-w-7xl mx-auto px-6 py-20 scroll-mt-20"
       >
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="text-xs font-mono text-[#8B7CFF] font-semibold mb-2">
-            // ACT III — THE INTELLIGENCE OF MATHVISION
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-[#F1F5F9] tracking-tight">
-            The Neural Transformation Stage.
-          </h2>
-          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl mt-2 leading-relaxed">
-            Witness how freehand raw ink flows through stride-8 feature convolutions, multi-head attention grounding, beam search decoding, and Computer Algebra verification.
-          </p>
-        </div>
-
-        {/* Live Transformation Journey Engine */}
-        <HeroTransformationJourney
-          onLaunchWithEquation={(latex) => {
+        <LiveNeuralPipeline
+          onOpenWorkspaceWithEquation={(latex) => {
             const match = DEMO_PRESETS.find((p) => p.latex === latex) || DEMO_PRESETS[0];
             onLoadPreset(match);
           }}
