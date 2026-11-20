@@ -39,8 +39,13 @@ VOCAB  = vocab_data["vocab"]
 TOK2ID = vocab_data["tok2id"]
 PAD_ID, SOS_ID, EOS_ID, UNK_ID = TOK2ID["<PAD>"], TOK2ID["<SOS>"], TOK2ID["<EOS>"], TOK2ID["<UNK>"]
 
-enc_sess = ort.InferenceSession(ENC_PATH, providers=["CPUExecutionProvider"])
-dec_sess = ort.InferenceSession(DEC_PATH, providers=["CPUExecutionProvider"])
+opts = ort.SessionOptions()
+opts.intra_op_num_threads = 2
+opts.inter_op_num_threads = 1
+opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+enc_sess = ort.InferenceSession(ENC_PATH, sess_options=opts, providers=["CPUExecutionProvider"])
+dec_sess = ort.InferenceSession(DEC_PATH, sess_options=opts, providers=["CPUExecutionProvider"])
 
 # 2. Dual-Mode Image Preprocessing (Returns model tensor + displayable base64 PNG)
 def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 96):
@@ -48,6 +53,12 @@ def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 9
     img = cv2.imdecode(arr, cv2.IMREAD_GRAYSCALE)
     if img is None:
         raise ValueError("Invalid image file.")
+
+    max_dim = 1200
+    h0, w0 = img.shape
+    if max(h0, w0) > max_dim:
+        scale0 = max_dim / max(h0, w0)
+        img = cv2.resize(img, (int(w0 * scale0), int(h0 * scale0)), interpolation=cv2.INTER_AREA)
 
     if mode == "photo":
         # Remove uneven lighting / shadows via morphological background division
