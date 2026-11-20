@@ -26,6 +26,12 @@ import {
   HelpCircle,
   FileText,
   Terminal,
+  Orbit,
+  Atom,
+  Radio,
+  Rocket,
+  Binary,
+  LayoutDashboard,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -35,11 +41,13 @@ import { MathConstellation } from './MathConstellation';
 import { InteractiveHeroSandbox } from './InteractiveHeroSandbox';
 import { VocabularyExplorer } from './VocabularyExplorer';
 import { MobileQrModal } from '../upload/MobileQrModal';
+import { renderLatexToHtml } from '../../utils/latex';
 import { useToast } from '../ui/Toast';
 import { cn } from '../../utils/cn';
 
 interface HomePageProps {
   onLaunchWorkspace: () => void;
+  onOpenDashboard: () => void;
   onLoadPreset: (preset: DemoPreset) => void;
   isBackendConnected: boolean;
   onOpenSettings: () => void;
@@ -48,14 +56,78 @@ interface HomePageProps {
   onOpenShortcuts: () => void;
 }
 
+// 5 Interconnected Scientific Domains
+const UNIVERSE_DOMAINS = [
+  {
+    id: 'physics',
+    name: 'Astrophysics & Relativity',
+    icon: Orbit,
+    tag: 'Cosmic Scale',
+    color: '#8B7CFF',
+    latex: 'E = m c ^ { 2 }',
+    equationName: "Einstein's Mass-Energy Equivalence",
+    description:
+      'From the geometry of spacetime to the orbital trajectories of planetary bodies, gravitation is expressed through field tensors and nonlinear differential equations.',
+    connection: 'Handwritten by Einstein in 1905; transcribed and verified into LaTeX by MathVision.',
+  },
+  {
+    id: 'quantum',
+    name: 'Quantum Mechanics',
+    icon: Atom,
+    tag: 'Subatomic Scale',
+    color: '#38BDF8',
+    latex: 'i \\hbar \\frac { \\partial } { \\partial t } \\Psi = \\hat { H } \\Psi',
+    equationName: 'Schrödinger Wave Equation',
+    description:
+      'The probabilistic nature of electrons and subatomic particles is described by complex Hilbert spaces and Hamiltonian differential operators.',
+    connection: 'Contains partial derivatives, fractions, Greek psi, and operator hats—all recognized atomically.',
+  },
+  {
+    id: 'waves',
+    name: 'Electromagnetism & Optics',
+    icon: Radio,
+    tag: 'Light & Information',
+    color: '#34D399',
+    latex: '\\nabla \\times \\mathbf { E } = - \\frac { \\partial \\mathbf { B } } { \\partial t }',
+    equationName: "Faraday-Maxwell Induction Law",
+    description:
+      'The foundational law governing fiber optics, telecommunication satellites, electrical power grids, and radio communication.',
+    connection: 'Cross products, vector fields, and time derivatives synthesized into publication-ready code.',
+  },
+  {
+    id: 'calculus',
+    name: 'Calculus & Aerospace',
+    icon: Rocket,
+    tag: 'Dynamics & Motion',
+    color: '#FBBF24',
+    latex: '\\int _ { - \\infty } ^ { \\infty } e ^ { - x ^ { 2 } } d x = \\sqrt { \\pi }',
+    equationName: 'Gaussian Integral (Normal Distribution)',
+    description:
+      'The cornerstone of probability theory, statistical mechanics, radar signal processing, and heat diffusion equations.',
+    connection: 'Infinite integral limits, exponentiation, and radical square roots verified algebraically with SymPy.',
+  },
+  {
+    id: 'ai',
+    name: 'Artificial Intelligence',
+    icon: Binary,
+    tag: 'Neural Attention',
+    color: '#FB7185',
+    latex: '\\mathrm { Attn } ( Q , K , V ) = \\mathrm { softmax } \\left( \\frac { Q K ^ { T } } { \\sqrt { d _ { k } } } \\right) V',
+    equationName: 'Scaled Dot-Product Attention',
+    description:
+      'The exact cross-attention mathematical equation running inside MathVision to decode 2D visual feature grids into tokens.',
+    connection: 'The mathematical equation that enables the AI to recognize mathematical equations.',
+  },
+];
+
 const FAQS = [
   {
-    q: 'How does MathVision handle messy or distorted handwriting?',
-    a: 'MathVision utilizes a DenseNet-121 convolutional backbone with stride-8 downsampling. This dense feature connectivity preserves fine-grained stroke trajectories even when lines overlap or handwriting slants. The Transformer decoder then applies beam search with a width of 3 to evaluate competing token sequences.',
+    q: 'How does MathVision handle messy or slanted handwriting?',
+    a: 'MathVision utilizes a DenseNet-121 convolutional encoder with stride-8 downsampling. Dense skip connections concatenate low-level edge features with deep structural semantic maps, allowing it to preserve fine-grained pen stroke trajectories even when writing slants, overlaps, or varies in thickness. The Transformer decoder then evaluates competing hypotheses via length-normalized beam search.',
   },
   {
     q: 'Can it recognize real notebook photographs with shadows and ruled lines?',
-    a: 'Yes. In photograph mode, MathVision performs morphological Gaussian background division (using a 31×31 kernel) to compute the ambient illumination gradient. By dividing the raw image by this background estimate and applying adaptive Gaussian thresholding, paper grain, shadows, and light blue ruled lines are canceled out before tensor normalization.',
+    a: 'Yes. In photograph mode, MathVision performs morphological Gaussian background division (using a 31×31 kernel) to compute the ambient illumination gradient. Dividing the raw image by this background estimate and applying adaptive Gaussian thresholding cancels out shadows, paper speckles, and light blue ruled lines before tensor normalization.',
   },
   {
     q: 'What is Cross-Attention Spatial Grounding?',
@@ -73,6 +145,7 @@ const FAQS = [
 
 export const HomePage: React.FC<HomePageProps> = ({
   onLaunchWorkspace,
+  onOpenDashboard,
   onLoadPreset,
   isBackendConnected,
   onOpenSettings,
@@ -82,13 +155,24 @@ export const HomePage: React.FC<HomePageProps> = ({
 }) => {
   const { success } = useToast();
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [activeDomainId, setActiveDomainId] = useState<string>('physics');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
+  const activeDomain = UNIVERSE_DOMAINS.find((d) => d.id === activeDomainId) || UNIVERSE_DOMAINS[0];
+  const { html: domainRenderedMath } = renderLatexToHtml(activeDomain.latex, true);
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const handlePhotoFromPhone = (dataUrl: string, filename: string) => {
-    success('Photo Received from Phone', 'Transferring directly to studio workspace for recognition.');
+    success('Photo Received from Phone', 'Transferring to studio workspace for inspection.');
     setTimeout(() => {
       onLaunchWorkspace();
-    }, 800);
+    }, 600);
   };
 
   const handleOpenSandboxItem = (item: DemoPreset | string) => {
@@ -105,19 +189,19 @@ export const HomePage: React.FC<HomePageProps> = ({
   };
 
   return (
-    <div className="relative min-h-screen w-full color-grade-bg text-[#F1F5F9] overflow-y-auto selection:bg-[#8B7CFF]/30 selection:text-white">
+    <div className="relative min-h-screen w-full color-grade-bg text-[#F1F5F9] overflow-x-hidden selection:bg-[#8B7CFF]/30 selection:text-white">
       {/* 1. Background Interactive Mathematical Constellation */}
       <MathConstellation />
 
       {/* Floating Ambient Aura Glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[#8B7CFF]/15 blur-[140px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-[800px] right-10 w-[600px] h-[400px] bg-[#38BDF8]/10 blur-[150px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-[1600px] left-10 w-[550px] h-[450px] bg-[#34D399]/10 blur-[160px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-[#8B7CFF]/15 blur-[150px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-[850px] right-0 w-[650px] h-[450px] bg-[#38BDF8]/10 blur-[160px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-[1800px] left-0 w-[600px] h-[500px] bg-[#34D399]/10 blur-[170px] rounded-full pointer-events-none -z-10" />
 
       {/* ======================================================== */}
-      {/* 2. TOP STICKY NAVIGATION BAR                            */}
+      {/* 2. DEDICATED PUBLIC TOP NAVIGATION BAR                   */}
       {/* ======================================================== */}
-      <nav className="sticky top-0 z-40 w-full backdrop-blur-xl bg-[#090B10]/85 border-b border-[#252D3B]/70 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-subtle">
+      <nav className="sticky top-0 z-50 w-full backdrop-blur-xl bg-[#090B10]/85 border-b border-[#252D3B]/70 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-subtle">
         {/* Brand Logo */}
         <div
           className="flex items-center gap-3 cursor-pointer group"
@@ -141,31 +225,55 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         </div>
 
-        {/* Center Nav Links */}
+        {/* Public Story Navigation Links */}
         <div className="hidden lg:flex items-center gap-6 text-xs text-[#94A3B8]">
-          <a href="#interactive-sandbox" className="hover:text-[#F1F5F9] transition-colors">
+          <button
+            onClick={() => scrollToSection('math-universe')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
+            Universe of Math
+          </button>
+          <button
+            onClick={() => scrollToSection('interactive-sandbox')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
             Live Sandbox
-          </a>
-          <a href="#architecture" className="hover:text-[#F1F5F9] transition-colors">
-            Neural Pipeline
-          </a>
-          <a href="#explainability" className="hover:text-[#F1F5F9] transition-colors">
-            Spatial Grounding
-          </a>
-          <a href="#benchmarks" className="hover:text-[#F1F5F9] transition-colors">
-            CROHME-23 Metrics
-          </a>
-          <a href="#vocabulary" className="hover:text-[#F1F5F9] transition-colors">
+          </button>
+          <button
+            onClick={() => scrollToSection('architecture')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
+            Neural Vision
+          </button>
+          <button
+            onClick={() => scrollToSection('explainability')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
+            Attention Reticles
+          </button>
+          <button
+            onClick={() => scrollToSection('benchmarks')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
+            CROHME-23
+          </button>
+          <button
+            onClick={() => scrollToSection('vocabulary')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
             132-Token Vocab
-          </a>
-          <a href="#faq" className="hover:text-[#F1F5F9] transition-colors">
-            Architecture FAQ
-          </a>
+          </button>
+          <button
+            onClick={() => scrollToSection('faq')}
+            className="hover:text-[#F1F5F9] transition-colors"
+          >
+            FAQ
+          </button>
         </div>
 
         {/* Right Action Buttons */}
         <div className="flex items-center gap-2.5">
-          {/* FastAPI Render Live Status Pill */}
+          {/* Render Backend Live Pill */}
           <button
             onClick={onOpenSettings}
             className={cn(
@@ -185,7 +293,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <span>{isBackendConnected ? 'Render Online' : 'Simulation Mode'}</span>
           </button>
 
-          {/* Quick Phone Camera QR Trigger */}
+          {/* Phone QR Trigger */}
           <button
             onClick={() => setIsQrModalOpen(true)}
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#151B27] border border-[#252D3B] text-xs font-medium text-[#38BDF8] hover:border-[#38BDF8]/50 hover:bg-[#1E2536] transition-colors"
@@ -194,22 +302,31 @@ export const HomePage: React.FC<HomePageProps> = ({
             <span>Scan Phone QR</span>
           </button>
 
-          {/* Enter Studio Button */}
+          {/* App Dashboard Link */}
+          <button
+            onClick={onOpenDashboard}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#151B27] border border-[#252D3B] text-xs font-medium text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#1E2536] transition-colors"
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span>Dashboard</span>
+          </button>
+
+          {/* Launch Studio Workspace */}
           <Button
             variant="primary"
             size="sm"
             onClick={onLaunchWorkspace}
             icon={<Sparkles className="w-4 h-4 text-white" />}
           >
-            Enter Studio
+            Launch Studio IDE
           </Button>
         </div>
       </nav>
 
       {/* ======================================================== */}
-      {/* 3. HERO SECTION                                          */}
+      {/* 3. HERO: THE UNIVERSAL LANGUAGE OF REALITY              */}
       {/* ======================================================== */}
-      <section className="relative z-10 max-w-6xl mx-auto px-6 pt-16 pb-12 flex flex-col items-center text-center">
+      <section className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-16 flex flex-col items-center text-center">
         {/* Subtle Pill Tag */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -218,7 +335,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#151B27]/90 border border-[#8B7CFF]/40 text-[#8B7CFF] text-xs font-mono mb-6 shadow-glow-accent/30 backdrop-blur-md"
         >
           <Zap className="w-3.5 h-3.5 text-[#38BDF8]" />
-          <span>DenseNet-121 Encoder • 3-Layer Pre-LN Transformer • 12.82 MB Model</span>
+          <span>The Universal Language of Reality • AI Handwritten Expression Recognition</span>
         </motion.div>
 
         {/* Main Headline */}
@@ -226,11 +343,11 @@ export const HomePage: React.FC<HomePageProps> = ({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-[#F1F5F9] max-w-5xl leading-[1.08]"
+          className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F1F5F9] max-w-5xl leading-[1.06]"
         >
-          Handwritten Mathematics, Converted into{' '}
+          Everything in the Universe is Connected Through{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B7CFF] via-[#38BDF8] to-[#34D399]">
-            Living, Verified LaTeX.
+            Mathematics.
           </span>
         </motion.h1>
 
@@ -241,10 +358,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-6 text-base sm:text-lg text-[#94A3B8] max-w-3xl leading-relaxed"
         >
-          An AI-powered scientific workspace designed for researchers, engineers, and students.
-          Transcribe digital handwriting and paper notebook photographs into verified LaTeX with{' '}
-          <strong className="text-[#F1F5F9]">cross-attention spatial grounding</strong> and{' '}
-          <strong className="text-[#F1F5F9]">SymPy algebraic verification</strong>.
+          From the orbital mechanics of deep space to the quantum architecture of neural networks, handwriting has been humanity&apos;s oldest mathematical medium. MathVision is the bridge—transforming freehand ink and notebook photographs into living, verified LaTeX code.
         </motion.p>
 
         {/* Call-to-actions */}
@@ -258,11 +372,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             variant="primary"
             size="lg"
             onClick={onLaunchWorkspace}
-            className="shadow-glow-accent px-7 text-sm font-semibold"
+            className="shadow-glow-accent px-8 text-sm font-semibold"
             shortcut="Ctrl+Enter"
             icon={<ArrowRight className="w-4 h-4" />}
           >
-            Launch Studio Workspace
+            Enter Studio Workspace
           </Button>
 
           <Button
@@ -278,13 +392,10 @@ export const HomePage: React.FC<HomePageProps> = ({
           <Button
             variant="outline"
             size="lg"
-            onClick={() => {
-              const el = document.getElementById('interactive-sandbox');
-              el?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            icon={<BrainCircuit className="w-4 h-4 text-[#8B7CFF]" />}
+            onClick={() => scrollToSection('math-universe')}
+            icon={<Orbit className="w-4 h-4 text-[#8B7CFF]" />}
           >
-            Try Live Sandbox
+            Explore Mathematical Fabric
           </Button>
         </motion.div>
 
@@ -293,21 +404,21 @@ export const HomePage: React.FC<HomePageProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl w-full"
+          className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl w-full"
         >
-          <div className="p-3.5 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#8B7CFF]/40 transition-colors">
+          <div className="p-4 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#8B7CFF]/40 transition-colors">
             <span className="text-xl font-bold font-mono text-[#8B7CFF]">12.82 MB</span>
             <span className="text-[11px] text-[#94A3B8] block mt-0.5">INT8 Footprint</span>
           </div>
-          <div className="p-3.5 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#38BDF8]/40 transition-colors">
+          <div className="p-4 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#38BDF8]/40 transition-colors">
             <span className="text-xl font-bold font-mono text-[#38BDF8]">132 Tokens</span>
             <span className="text-[11px] text-[#94A3B8] block mt-0.5">Atomic Vocabulary</span>
           </div>
-          <div className="p-3.5 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#34D399]/40 transition-colors">
+          <div className="p-4 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-[#34D399]/40 transition-colors">
             <span className="text-xl font-bold font-mono text-[#34D399]">~120 ms</span>
             <span className="text-[11px] text-[#94A3B8] block mt-0.5">CPU Latency</span>
           </div>
-          <div className="p-3.5 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-amber-400/40 transition-colors">
+          <div className="p-4 rounded-2xl bg-[#10141D]/90 border border-[#252D3B] text-center shadow-subtle hover:border-amber-400/40 transition-colors">
             <span className="text-xl font-bold font-mono text-amber-400">CROHME-23</span>
             <span className="text-[11px] text-[#94A3B8] block mt-0.5">Benchmark Tested</span>
           </div>
@@ -315,18 +426,120 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 4. INTERACTIVE LIVE SANDBOX COMPONENT                    */}
+      {/* 4. THE MATHEMATICAL FABRIC OF THE UNIVERSE (INTERACTIVE) */}
       {/* ======================================================== */}
-      <section id="interactive-sandbox" className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <section id="math-universe" className="relative z-10 max-w-6xl mx-auto px-6 py-16 scroll-mt-20">
+        <div className="flex flex-col items-center mb-10 text-center">
+          <Badge variant="accent" size="sm">
+            Visual Storytelling
+          </Badge>
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2">
+            The Mathematical Fabric of Reality
+          </h2>
+          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl mt-2 leading-relaxed">
+            The equations recognized by MathVision are the exact same laws that govern the cosmos, electromagnetism, and the neural attention weights of modern AI.
+          </p>
+        </div>
+
+        {/* Domain Switcher Tabs */}
+        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-6">
+          {UNIVERSE_DOMAINS.map((domain) => {
+            const Icon = domain.icon;
+            const isSelected = domain.id === activeDomainId;
+            return (
+              <button
+                key={domain.id}
+                onClick={() => setActiveDomainId(domain.id)}
+                className={cn(
+                  'px-4 py-2 text-xs font-semibold rounded-xl border transition-all flex items-center gap-2 shrink-0 select-none',
+                  isSelected
+                    ? 'bg-[#151B27] text-white border-[#8B7CFF] shadow-glow-accent/30 font-bold scale-105'
+                    : 'bg-[#10141D] text-[#94A3B8] border-[#252D3B] hover:text-[#F1F5F9] hover:bg-[#151B27]'
+                )}
+              >
+                <Icon className="w-4 h-4" style={{ color: domain.color }} />
+                <span>{domain.name}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Active Domain Spotlight Display */}
+        <div className="p-8 sm:p-10 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] shadow-2xl backdrop-blur-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left Details (6 cols) */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#151B27] border border-[#252D3B]">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeDomain.color }} />
+              <span style={{ color: activeDomain.color }}>{activeDomain.tag}</span>
+            </div>
+
+            <h3 className="text-2xl font-bold text-[#F1F5F9]">
+              {activeDomain.equationName}
+            </h3>
+
+            <p className="text-sm text-[#94A3B8] leading-relaxed">
+              {activeDomain.description}
+            </p>
+
+            <div className="p-4 rounded-2xl bg-[#090B10] border border-[#252D3B] text-xs text-[#CBD5E1] space-y-1">
+              <span className="font-semibold text-[#8B7CFF] block">Why It Matters for AI Recognition:</span>
+              <p className="text-[#94A3B8]">{activeDomain.connection}</p>
+            </div>
+
+            <div className="pt-2">
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  const match = DEMO_PRESETS.find((p) => p.latex === activeDomain.latex) || DEMO_PRESETS[0];
+                  onLoadPreset(match);
+                }}
+                icon={<ArrowRight className="w-4 h-4" />}
+              >
+                Inspect This Equation in Studio
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Rendered Live Math & LaTeX Source (6 cols) */}
+          <div className="lg:col-span-6 flex flex-col gap-4">
+            {/* Rendered Math Box */}
+            <div className="p-8 rounded-2xl bg-[#090B10] border border-[#252D3B] min-h-[160px] flex items-center justify-center shadow-inner overflow-x-auto">
+              <div
+                className="font-math text-[#F1F5F9] text-2xl sm:text-3xl text-center select-text"
+                dangerouslySetInnerHTML={{ __html: domainRenderedMath }}
+              />
+            </div>
+
+            {/* LaTeX Source Card */}
+            <div className="p-4 rounded-2xl bg-[#151B27] border border-[#252D3B] flex items-center justify-between">
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <Code className="w-4 h-4 text-[#8B7CFF] shrink-0" />
+                <code className="text-xs font-mono text-[#38BDF8] truncate">
+                  {activeDomain.latex}
+                </code>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 shrink-0 border border-emerald-500/30">
+                Verified LaTeX
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ======================================================== */}
+      {/* 5. INTERACTIVE LIVE HERO SANDBOX COMPONENT               */}
+      {/* ======================================================== */}
+      <section id="interactive-sandbox" className="relative z-10 max-w-6xl mx-auto px-6 py-14 scroll-mt-20">
         <div className="flex flex-col items-center mb-8 text-center">
           <Badge variant="cyan" size="sm" dot>
             Real-Time Interactive Playground
           </Badge>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#F1F5F9] mt-2 tracking-tight">
-            Experience the Engine Right in Your Browser
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2 tracking-tight">
+            Experience the Recognition Engine
           </h2>
-          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-lg mt-1.5">
-            Draw custom equations, inspect cross-attention spatial grounding reticles, or slide through notebook photo shadow cancellation.
+          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-lg mt-2">
+            Draw custom equations on digital canvas, inspect cross-attention spatial grounding reticles, or slide through notebook photo shadow cancellation.
           </p>
         </div>
 
@@ -337,9 +550,9 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 5. NEURAL PIPELINE WALKTHROUGH                          */}
+      {/* 6. NEURAL VISION ARCHITECTURE & TENSOR FLOW             */}
       {/* ======================================================== */}
-      <section id="architecture" className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+      <section id="architecture" className="relative z-10 max-w-6xl mx-auto px-6 py-16 scroll-mt-20">
         <div className="p-8 sm:p-10 rounded-3xl bg-[#10141D]/90 border border-[#252D3B] shadow-2xl relative overflow-hidden backdrop-blur-xl">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -347,7 +560,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 Tensor Processing Pipeline
               </Badge>
               <h2 className="text-2xl sm:text-3xl font-bold text-[#F1F5F9] mt-2">
-                Five-Stage End-to-End Recognition Architecture
+                Five-Stage Neural Processing Pipeline
               </h2>
             </div>
             <Button
@@ -356,7 +569,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               onClick={onOpenModelSpecs}
               icon={<Cpu className="w-4 h-4 text-[#8B7CFF]" />}
             >
-              Technical Specification
+              Full Technical Spec
             </Button>
           </div>
 
@@ -416,17 +629,17 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 6. FOUR PILLARS / BENTO GRID FEATURES                   */}
+      {/* 7. FOUR SCIENTIFIC PILLARS (BENTO GRID)                 */}
       {/* ======================================================== */}
-      <section id="explainability" className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <section id="explainability" className="relative z-10 max-w-6xl mx-auto px-6 py-12 scroll-mt-20">
         <div className="flex flex-col items-center mb-12 text-center">
           <Badge variant="success" size="sm">
             Core Scientific Capabilities
           </Badge>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#F1F5F9] mt-2">
-            Engineered for Mathematical Precision
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2">
+            Engineered for Mathematical Rigor
           </h2>
-          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mt-1.5">
+          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mt-2">
             Bridging handwritten perceptual drawing with deep spatial attention and computer algebra systems.
           </p>
         </div>
@@ -491,16 +704,16 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 7. CROHME BENCHMARK METRICS                              */}
+      {/* 8. CROHME BENCHMARK METRICS                              */}
       {/* ======================================================== */}
-      <section id="benchmarks" className="relative z-10 max-w-5xl mx-auto px-6 py-14 text-center">
+      <section id="benchmarks" className="relative z-10 max-w-5xl mx-auto px-6 py-14 text-center scroll-mt-20">
         <Badge variant="accent" size="sm">
           Empirical Validation
         </Badge>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-[#F1F5F9] mt-2">
+        <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2">
           CROHME-2023 Validation Metrics
         </h2>
-        <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mx-auto mt-1.5 mb-8">
+        <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mx-auto mt-2 mb-8">
           Evaluated against the official competition validation splits.
         </p>
 
@@ -544,24 +757,24 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 8. 132-TOKEN VOCABULARY EXPLORER                        */}
+      {/* 9. 132-TOKEN VOCABULARY EXPLORER                        */}
       {/* ======================================================== */}
-      <section id="vocabulary" className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <section id="vocabulary" className="relative z-10 max-w-6xl mx-auto px-6 py-12 scroll-mt-20">
         <VocabularyExplorer />
       </section>
 
       {/* ======================================================== */}
-      {/* 9. FREQUENTLY ASKED QUESTIONS (ACCORDION)               */}
+      {/* 10. ARCHITECTURE & TECHNICAL FAQ                        */}
       {/* ======================================================== */}
-      <section id="faq" className="relative z-10 max-w-4xl mx-auto px-6 py-16">
+      <section id="faq" className="relative z-10 max-w-4xl mx-auto px-6 py-16 scroll-mt-20">
         <div className="flex flex-col items-center mb-10 text-center">
           <Badge variant="cyan" size="sm">
             Architecture & FAQ
           </Badge>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#F1F5F9] mt-2">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-2">
             Frequently Asked Questions
           </h2>
-          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mt-1">
+          <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mt-2">
             Understanding the underlying model architecture, preprocessing, and deployment.
           </p>
         </div>
@@ -576,7 +789,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               >
                 <button
                   onClick={() => setExpandedFaq(isOpen ? null : idx)}
-                  className="w-full p-4 sm:p-5 flex items-center justify-between text-left gap-4 hover:bg-[#151B27]/50 transition-colors"
+                  className="w-full p-5 flex items-center justify-between text-left gap-4 hover:bg-[#151B27]/50 transition-colors"
                 >
                   <span className="text-sm font-semibold text-[#F1F5F9]">{faq.q}</span>
                   <ChevronDown
@@ -593,7 +806,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="px-4 sm:px-5 pb-5 text-xs text-[#94A3B8] leading-relaxed border-t border-[#252D3B]/50 pt-3"
+                      className="px-5 pb-5 text-xs text-[#94A3B8] leading-relaxed border-t border-[#252D3B]/50 pt-3"
                     >
                       {faq.a}
                     </motion.div>
@@ -606,17 +819,16 @@ export const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* ======================================================== */}
-      {/* 10. PRE-FOOTER INSPIRING CTA BANNER                     */}
+      {/* 11. INSPIRING STUDIO LAUNCH PORTAL                      */}
       {/* ======================================================== */}
-      <section className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+      <section className="relative z-10 max-w-6xl mx-auto px-6 py-14">
         <div className="relative p-8 sm:p-14 rounded-3xl bg-gradient-to-br from-[#10141D] via-[#151B27] to-[#10141D] border border-[#8B7CFF]/30 shadow-glow-hero overflow-hidden text-center flex flex-col items-center">
-          {/* Floating Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-40 bg-[#8B7CFF]/20 blur-[90px] rounded-full pointer-events-none" />
 
           <Badge variant="accent" size="sm" dot>
             Production-Ready AI Workspace
           </Badge>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#F1F5F9] mt-3 max-w-2xl leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-[#F1F5F9] mt-3 max-w-2xl leading-tight">
             Ready to Accelerate Your Mathematical Workflow?
           </h2>
           <p className="text-xs sm:text-sm text-[#94A3B8] max-w-lg mt-3 leading-relaxed">
@@ -629,7 +841,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               size="lg"
               onClick={onLaunchWorkspace}
               icon={<ArrowRight className="w-4 h-4" />}
-              className="px-8"
+              className="px-8 shadow-glow-accent"
             >
               Enter Studio Workspace
             </Button>
@@ -641,14 +853,22 @@ export const HomePage: React.FC<HomePageProps> = ({
             >
               Scan Phone Camera
             </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={onOpenDashboard}
+              icon={<LayoutDashboard className="w-4 h-4 text-[#8B7CFF]" />}
+            >
+              View Dashboard
+            </Button>
           </div>
         </div>
       </section>
 
       {/* ======================================================== */}
-      {/* 11. FOOTER                                               */}
+      {/* 12. FOOTER                                               */}
       {/* ======================================================== */}
-      <footer className="relative z-10 border-t border-[#252D3B] bg-[#090B10] mt-12 px-6 py-10">
+      <footer className="relative z-10 border-t border-[#252D3B] bg-[#090B10] px-6 py-10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="MathVision Logo" className="w-8 h-8 rounded-lg" />

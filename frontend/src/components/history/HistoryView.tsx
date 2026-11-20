@@ -12,13 +12,14 @@ import { cn } from '../../utils/cn';
 interface HistoryViewProps {
   onLoadEntry: (entry: HistoryEntry) => void;
   onClose?: () => void;
+  initialFilter?: HistoryFilter;
 }
 
-export const HistoryView: React.FC<HistoryViewProps> = ({ onLoadEntry, onClose }) => {
+export const HistoryView: React.FC<HistoryViewProps> = ({ onLoadEntry, onClose, initialFilter = 'all' }) => {
   const { success } = useToast();
   const [historyList, setHistoryList] = useState<HistoryEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<HistoryFilter>('all');
+  const [activeFilter, setActiveFilter] = useState<HistoryFilter>(initialFilter);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const loadData = () => {

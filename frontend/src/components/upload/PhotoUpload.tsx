@@ -121,8 +121,8 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
     };
     img.src = dataUrl;
 
-    // Immediately trigger recognition!
-    onRecognize(file, dataUrl);
+    // Close QR modal and let the user inspect the received photo before recognizing
+    setIsQrModalOpen(false);
   };
 
   return (
@@ -253,25 +253,34 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
                   Adaptive Threshold & Denoised Ink Crop
                 </div>
               )}
+
+              {!showPreprocessed && (
+                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-sm border border-[#8B7CFF]/40 text-[11px] font-mono text-[#8B7CFF] flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Photo Ready • Awaiting Confirmation</span>
+                </div>
+              )}
             </div>
 
             {/* Quick Actions overlay */}
             <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-[#10141D]/90 backdrop-blur-md p-1.5 rounded-xl border border-[#252D3B] shadow-elevated">
               <button
                 onClick={() => setIsQrModalOpen(true)}
-                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#8B7CFF] hover:bg-[#8B7CFF]/10 transition-colors"
+                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#8B7CFF] hover:bg-[#8B7CFF]/10 transition-colors flex items-center gap-1 text-xs"
                 title="Scan new photo with Phone"
                 aria-label="Scan new photo with Phone"
               >
                 <QrCode className="w-4 h-4" />
+                <span className="hidden sm:inline">Phone QR</span>
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#1E2536] transition-colors"
+                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#1E2536] transition-colors flex items-center gap-1 text-xs"
                 title="Replace Image"
                 aria-label="Replace Image"
               >
                 <RefreshCw className="w-4 h-4" />
+                <span className="hidden sm:inline">Replace</span>
               </button>
               <button
                 onClick={handleRemove}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar, SidebarTab } from './components/layout/Sidebar';
 import { HomePage } from './components/home/HomePage';
+import { DashboardView } from './components/dashboard/DashboardView';
 import { Workspace } from './components/workspace/Workspace';
 import { HistoryView } from './components/history/HistoryView';
 import { ExamplePlayground } from './components/playground/ExamplePlayground';
@@ -29,11 +30,45 @@ import { replaceTokenInSequence } from './utils/latex';
 export const MainApp: React.FC = () => {
   const { success, error, info, warning } = useToast();
 
-  // Navigation: start on 'home' so user gets an inspiring, animated product introduction
-  const [currentTab, setCurrentTab] = useState<SidebarTab>('home');
+  // Navigation: check URL for view or default to 'home'
+  const initialView = (new URLSearchParams(window.location.search).get('view') as SidebarTab) || 'home';
+  const [currentTab, setCurrentTab] = useState<SidebarTab>(initialView);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [workspaceTitle, setWorkspaceTitle] = useState('Untitled Equation Workspace');
   const [beamWidth, setBeamWidth] = useState(3);
+
+  // Navigation with browser history pushState
+  const navigateToTab = useCallback((tab: SidebarTab) => {
+    if (tab === 'settings') {
+      setIsSettingsOpen(true);
+      return;
+    }
+    if (tab === 'model') {
+      setIsModelSpecsOpen(true);
+      return;
+    }
+    if (tab === 'docs') {
+      setIsDocsOpen(true);
+      return;
+    }
+    setCurrentTab(tab);
+    const targetUrl = tab === 'home' ? '/' : `/?view=${tab}`;
+    window.history.pushState({ tab }, '', targetUrl);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Listen to browser Back / Forward buttons
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const tab =
+        (e.state?.tab as SidebarTab) ||
+        (new URLSearchParams(window.location.search).get('view') as SidebarTab) ||
+        'home';
+      setCurrentTab(tab);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Modals visibility
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -238,14 +273,14 @@ export const MainApp: React.FC = () => {
     setEditedLatex(entry.currentLatex);
     setActiveTokenIndex(entry.tokens && entry.tokens.length > 0 ? 0 : null);
     setTokenEdits([]);
-    setCurrentTab('workspace');
+    navigateToTab('workspace');
     success('Loaded History Entry', `Expression restored into workspace.`);
   };
 
   // Load preset from Playground or Homepage
   const handleLoadExample = (ex: DemoPreset) => {
     handleSetPrediction(ex.response, ex.response.preprocessed_image);
-    setCurrentTab('workspace');
+    navigateToTab('workspace');
     success('Example Loaded', `${ex.name} loaded into workspace.`);
   };
 
@@ -306,22 +341,83 @@ export const MainApp: React.FC = () => {
     },
   };
 
+  if (currentTab === 'home') {
+    return (
+      <div className="min-h-screen w-full bg-[#090B10] text-[#F1F5F9] selection:bg-[#8B7CFF]/30 selection:text-white">
+        <HomePage
+          onLaunchWorkspace={() => navigateToTab('workspace')}
+          onOpenDashboard={() => navigateToTab('dashboard')}
+          onLoadPreset={handleLoadExample}
+          isBackendConnected={isBackendConnected}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenDocs={() => setIsDocsOpen(true)}
+          onOpenModelSpecs={() => setIsModelSpecsOpen(true)}
+          onOpenShortcuts={() => setIsShortcutsOpen(true)}
+        />
+
+        {/* Settings & Backend Connection Modal */}
+        <Modal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          title="Settings & Backend Connection"
+          subtitle="Manage FastAPI inference endpoints and beam decoding width"
+          maxWidth="md"
+        >
+          <SettingsModal
+            beamWidth={beamWidth}
+            onBeamWidthChange={setBeamWidth}
+            isBackendConnected={isBackendConnected}
+            onRefreshConnection={refreshBackendConnection}
+          />
+        </Modal>
+
+        {/* Model Specifications & Benchmarks Modal */}
+        <Modal
+          isOpen={isModelSpecsOpen}
+          onClose={() => setIsModelSpecsOpen(false)}
+          title="Model Architecture & Benchmarks"
+          subtitle="DenseNet-121 + 3-Layer Transformer (CROHME23)"
+          maxWidth="2xl"
+        >
+          <ModelSpecModal />
+        </Modal>
+
+        {/* Documentation & Vocabulary Modal */}
+        <Modal
+          isOpen={isDocsOpen}
+          onClose={() => setIsDocsOpen(false)}
+          title="Documentation & Vocabulary"
+          subtitle="Guidelines and searchable atomic token dictionary"
+          maxWidth="2xl"
+        >
+          <DocsModal />
+        </Modal>
+
+        {/* Shortcuts Cheatsheet Modal */}
+        <Modal
+          isOpen={isShortcutsOpen}
+          onClose={() => setIsShortcutsOpen(false)}
+          title="Keyboard Shortcuts"
+          subtitle="Accelerate your mathematical workflow"
+          maxWidth="md"
+        >
+          <ShortcutsModal />
+        </Modal>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#090B10] text-[#F1F5F9]">
       {/* Collapsible Left Sidebar */}
       <Sidebar
         currentTab={currentTab}
-        onSelectTab={(tab) => {
-          if (tab === 'settings') setIsSettingsOpen(true);
-          else if (tab === 'model') setIsModelSpecsOpen(true);
-          else if (tab === 'docs') setIsDocsOpen(true);
-          else setCurrentTab(tab);
-        }}
+        onSelectTab={navigateToTab}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         onNewWorkspace={() => {
           handleClearWorkspace();
-          setCurrentTab('workspace');
+          navigateToTab('workspace');
         }}
         isBackendConnected={isBackendConnected}
         historyCount={historyCount}
@@ -333,12 +429,7 @@ export const MainApp: React.FC = () => {
         {/* Top Header Navigation */}
         <Header
           currentTab={currentTab}
-          onSelectTab={(tab) => {
-            if (tab === 'settings') setIsSettingsOpen(true);
-            else if (tab === 'model') setIsModelSpecsOpen(true);
-            else if (tab === 'docs') setIsDocsOpen(true);
-            else setCurrentTab(tab);
-          }}
+          onSelectTab={navigateToTab}
           workspaceTitle={workspaceTitle}
           onUpdateTitle={setWorkspaceTitle}
           isBackendConnected={isBackendConnected}
@@ -351,15 +442,26 @@ export const MainApp: React.FC = () => {
 
         {/* View Switcher based on currentTab */}
         <main className="flex-1 overflow-hidden relative">
-          {currentTab === 'home' && (
-            <HomePage
-              onLaunchWorkspace={() => setCurrentTab('workspace')}
-              onLoadPreset={handleLoadExample}
-              isBackendConnected={isBackendConnected}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-              onOpenDocs={() => setIsDocsOpen(true)}
+          {currentTab === 'dashboard' && (
+            <DashboardView
+              onStartCanvas={() => {
+                setInputMode('canvas');
+                navigateToTab('workspace');
+              }}
+              onStartPhoto={() => {
+                setInputMode('photo');
+                navigateToTab('workspace');
+              }}
+              onOpenQrModal={() => {
+                setInputMode('photo');
+                navigateToTab('workspace');
+              }}
+              onOpenPlayground={() => navigateToTab('playground')}
+              onOpenHistory={() => navigateToTab('history')}
               onOpenModelSpecs={() => setIsModelSpecsOpen(true)}
-              onOpenShortcuts={() => setIsShortcutsOpen(true)}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              onLoadHistoryEntry={handleLoadHistoryEntry}
+              isBackendConnected={isBackendConnected}
             />
           )}
 
@@ -378,15 +480,16 @@ export const MainApp: React.FC = () => {
           )}
 
           {currentTab === 'history' && (
-            <div className="h-full p-6 overflow-hidden color-grade-bg">
+            <div className="h-full p-4 sm:p-6 overflow-hidden color-grade-bg">
               <div className="max-w-4xl mx-auto h-full flex flex-col">
                 <h2 className="text-lg font-semibold text-[#F1F5F9] mb-3">
                   Recognition History
                 </h2>
                 <div className="flex-1 min-h-0 bg-[#10141D]/90 backdrop-blur-md p-4 rounded-2xl border border-[#252D3B]">
                   <HistoryView
+                    initialFilter="all"
                     onLoadEntry={handleLoadHistoryEntry}
-                    onClose={() => setCurrentTab('workspace')}
+                    onClose={() => navigateToTab('workspace')}
                   />
                 </div>
               </div>
@@ -394,15 +497,16 @@ export const MainApp: React.FC = () => {
           )}
 
           {currentTab === 'favorites' && (
-            <div className="h-full p-6 overflow-hidden color-grade-bg">
+            <div className="h-full p-4 sm:p-6 overflow-hidden color-grade-bg">
               <div className="max-w-4xl mx-auto h-full flex flex-col">
                 <h2 className="text-lg font-semibold text-[#F1F5F9] mb-3">
                   My Favorite Equations
                 </h2>
                 <div className="flex-1 min-h-0 bg-[#10141D]/90 backdrop-blur-md p-4 rounded-2xl border border-[#252D3B]">
                   <HistoryView
+                    initialFilter="favorites"
                     onLoadEntry={handleLoadHistoryEntry}
-                    onClose={() => setCurrentTab('workspace')}
+                    onClose={() => navigateToTab('workspace')}
                   />
                 </div>
               </div>
@@ -410,7 +514,7 @@ export const MainApp: React.FC = () => {
           )}
 
           {currentTab === 'playground' && (
-            <div className="h-full p-6 overflow-hidden color-grade-bg">
+            <div className="h-full p-4 sm:p-6 overflow-hidden color-grade-bg">
               <div className="max-w-4xl mx-auto h-full flex flex-col">
                 <h2 className="text-lg font-semibold text-[#F1F5F9] mb-3">
                   Mathematical Example Playground
@@ -418,7 +522,7 @@ export const MainApp: React.FC = () => {
                 <div className="flex-1 min-h-0 bg-[#10141D]/90 backdrop-blur-md p-4 rounded-2xl border border-[#252D3B]">
                   <ExamplePlayground
                     onLoadExample={handleLoadExample}
-                    onClose={() => setCurrentTab('workspace')}
+                    onClose={() => navigateToTab('workspace')}
                   />
                 </div>
               </div>

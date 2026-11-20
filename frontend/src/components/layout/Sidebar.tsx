@@ -1,6 +1,7 @@
 import React from 'react';
 import {
-  Home,
+  Globe,
+  LayoutDashboard,
   PlusCircle,
   History,
   Star,
@@ -18,6 +19,7 @@ import { cn } from '../../utils/cn';
 
 export type SidebarTab =
   | 'home'
+  | 'dashboard'
   | 'workspace'
   | 'history'
   | 'favorites'
@@ -50,9 +52,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     {
       id: 'home' as SidebarTab,
-      label: 'Home & Overview',
-      icon: Home,
-      badge: 'Intro',
+      label: 'Public Website',
+      icon: Globe,
+      badge: 'Home',
+    },
+    {
+      id: 'dashboard' as SidebarTab,
+      label: 'App Dashboard',
+      icon: LayoutDashboard,
+      badge: undefined,
     },
     {
       id: 'workspace' as SidebarTab,

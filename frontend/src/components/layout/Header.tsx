@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import {
   Home,
+  Globe,
+  LayoutDashboard,
   Keyboard,
   HelpCircle,
   Cpu,
@@ -55,7 +57,9 @@ export const Header: React.FC<HeaderProps> = ({
   const getBreadcrumbLabel = () => {
     switch (currentTab) {
       case 'home':
-        return 'Home & Introduction';
+        return 'Public Website';
+      case 'dashboard':
+        return 'Application Dashboard';
       case 'history':
         return 'Recognition History';
       case 'favorites':
@@ -128,18 +132,27 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Right: Quick actions, connection status, modal triggers */}
       <div className="flex items-center gap-2">
         {/* Toggle between Home and Workspace */}
+        {/* App quick switcher */}
         <div className="flex items-center bg-[#090B10] p-0.5 rounded-xl border border-[#252D3B]">
           <button
             onClick={() => onSelectTab('home')}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-[#94A3B8] hover:text-[#F1F5F9] transition-colors"
+            title="Return to Public Website"
+          >
+            <Globe className="w-3.5 h-3.5 text-[#8B7CFF]" />
+            <span className="hidden sm:inline">Public Home</span>
+          </button>
+          <button
+            onClick={() => onSelectTab('dashboard')}
             className={cn(
               'flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors',
-              currentTab === 'home'
+              currentTab === 'dashboard'
                 ? 'bg-[#1E2536] text-[#F1F5F9] shadow-sm'
                 : 'text-[#94A3B8] hover:text-[#F1F5F9]'
             )}
           >
-            <Home className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Home</span>
+            <LayoutDashboard className="w-3.5 h-3.5 text-[#38BDF8]" />
+            <span className="hidden sm:inline">Dashboard</span>
           </button>
           <button
             onClick={() => onSelectTab('workspace')}
@@ -150,8 +163,8 @@ export const Header: React.FC<HeaderProps> = ({
                 : 'text-[#94A3B8] hover:text-[#F1F5F9]'
             )}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Studio IDE</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#8B7CFF]" />
+            <span className="hidden sm:inline">Studio Workspace</span>
           </button>
         </div>
 

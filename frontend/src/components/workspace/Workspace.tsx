@@ -9,6 +9,7 @@ import { VerificationPanel } from '../verification/VerificationPanel';
 import { WorkspaceState, WorkspaceActions } from '../../types/workspace';
 import { Tabs } from '../ui/Tabs';
 import { Tooltip } from '../ui/Tooltip';
+import { Modal } from '../ui/Modal';
 import {
   Pen,
   Image as ImageIcon,
@@ -48,6 +49,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   const [viewMode, setViewMode] = useState<WorkspaceViewMode>('balanced');
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
   const [isRightCollapsed, setIsRightCollapsed] = useState(false);
+  const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
 
   const {
     inputMode,
@@ -325,9 +327,23 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               </h3>
             </div>
 
-            <span className="text-[10px] font-mono text-[#94A3B8]">
-              {prediction ? `${prediction.tokens.length} Symbols` : 'Awaiting Input'}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-[#94A3B8]">
+                {prediction ? `${prediction.tokens.length} Symbols` : 'Awaiting Input'}
+              </span>
+
+              {prediction && (
+                <Tooltip content="Expand Full Deep-Dive Inspection">
+                  <button
+                    onClick={() => setIsExplainModalOpen(true)}
+                    className="p-1 rounded-lg text-[#94A3B8] hover:text-[#8B7CFF] hover:bg-[#8B7CFF]/10 transition-colors"
+                    aria-label="Expand Full Deep-Dive Inspection"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
           </div>
 
           {prediction ? (
@@ -403,6 +419,67 @@ export const Workspace: React.FC<WorkspaceProps> = ({
           )}
         </div>
       </div>
+
+      {/* Expanded Deep-Dive Intelligence & Explainability Modal */}
+      {prediction && (
+        <Modal
+          isOpen={isExplainModalOpen}
+          onClose={() => setIsExplainModalOpen(false)}
+          title="Neural Cross-Attention & Spatial Grounding Deep Dive"
+          subtitle="Inspect peak attention coordinates on DenseNet feature maps, explore alternative hypotheses, and verify SymPy algebra"
+          maxWidth="4xl"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-2 max-h-[75vh] overflow-y-auto">
+            {/* Left: High-Resolution Feature Map & Spotlight (6 cols) */}
+            <div className="lg:col-span-6 flex flex-col gap-4">
+              <span className="text-xs font-semibold text-[#8B7CFF] uppercase tracking-wider block">
+                DenseNet-121 Feature Memory & Attention Grid
+              </span>
+
+              {prediction.preprocessed_image && (
+                <AttentionSpotlight
+                  preprocessedImage={prediction.preprocessed_image}
+                  activeToken={activeToken}
+                  activeTokenIndex={activeTokenIndex}
+                  tokens={prediction.tokens}
+                  onSelectToken={actions.setActiveTokenIndex}
+                  opacity={overlayOpacity}
+                  onOpacityChange={(val) => actions.updateExplainabilityConfig({ overlayOpacity: val })}
+                  showSpotlight={showSpotlight}
+                  onToggleSpotlight={() => actions.updateExplainabilityConfig({ showSpotlight: !showSpotlight })}
+                  showCrosshair={showCrosshair}
+                  onToggleCrosshair={() => actions.updateExplainabilityConfig({ showCrosshair: !showCrosshair })}
+                  showCoordinates={showCoordinates}
+                  onToggleCoordinates={() => actions.updateExplainabilityConfig({ showCoordinates: !showCoordinates })}
+                  spotlightRadius={spotlightRadius}
+                  onRadiusChange={(val) => actions.updateExplainabilityConfig({ spotlightRadius: val })}
+                />
+              )}
+            </div>
+
+            {/* Right: Token Hypotheses & SymPy Verification (6 cols) */}
+            <div className="lg:col-span-6 flex flex-col gap-4">
+              <span className="text-xs font-semibold text-[#38BDF8] uppercase tracking-wider block">
+                Beam Search Token Predictions & CAS Tree
+              </span>
+
+              <TokenInspector
+                tokens={prediction.tokens}
+                activeTokenIndex={activeTokenIndex}
+                onSelectToken={actions.setActiveTokenIndex}
+                onReplaceToken={actions.replaceToken}
+                tokenEdits={tokenEdits}
+              />
+
+              <VerificationPanel
+                syntaxValid={prediction.syntax_valid}
+                sympy={prediction.sympy}
+                currentLatex={editedLatex}
+              />
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
