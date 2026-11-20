@@ -58,8 +58,32 @@ def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 9
             norm, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
             cv2.THRESH_BINARY, 25, 14
         )
-        # Mild denoise for paper speckles
-        bin_img = cv2.medianBlur(bin_img, 3)
+        # Invert to binary ink (ink = 255 - bin_img)
+        ink = 255 - bin_img
+
+        # Remove horizontal ruled notebook lines using morphological opening with a wide horizontal kernel
+        h_kernel_len = max(40, img.shape[1] // 10)
+        h_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (h_kernel_len, 1))
+        h_lines = cv2.morphologyEx(ink, cv2.MORPH_OPEN, h_kernel)
+        ink = cv2.subtract(ink, h_lines)
+
+        # Remove vertical margin lines using morphological opening with a tall vertical kernel
+        v_kernel_len = max(40, img.shape[0] // 8)
+        v_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, v_kernel_len))
+        v_lines = cv2.morphologyEx(ink, cv2.MORPH_OPEN, v_kernel)
+        ink = cv2.subtract(ink, v_lines)
+
+        # Filter tiny paper noise specks using connectedComponentsWithStats (drop components with area < 15 px)
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(ink, connectivity=8)
+        cleaned_ink = np.zeros_like(ink)
+        for label_idx in range(1, num_labels):
+            area = stats[label_idx, cv2.CC_STAT_AREA]
+            if area >= 15:
+                cleaned_ink[labels == label_idx] = 255
+        ink = cleaned_ink
+
+        # Restore white-background/black-ink (255 - ink)
+        bin_img = 255 - ink
     else:
         # Clean digital canvas: ensure white background, black ink
         if np.mean(img) < 127:
@@ -78,6 +102,8 @@ def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 9
     y_max, x_max = min(bin_img.shape[0], y_max + pad), min(bin_img.shape[1], x_max + pad)
     cropped = bin_img[y_min:y_max, x_min:x_max]
 
+    ink_density = float(np.mean(cropped < 200))
+
     # Resize to fixed height=96, preserving aspect ratio, width padded to multiple of 16
     ch, cw = cropped.shape
     scale = (target_h - 12) / max(ch, 1)
@@ -94,7 +120,7 @@ def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 9
     # Encode preprocessed canvas for frontend overlay alignment
     _, png_buf = cv2.imencode(".png", canvas)
     b64_img = "data:image/png;base64," + base64.b64encode(png_buf).decode("utf-8")
-    return tensor, b64_img, target_h, padded_w
+    return tensor, b64_img, target_h, padded_w, ink_density
 
 def softmax(x):
     e = np.exp(x - np.max(x))
@@ -159,6 +185,10 @@ def decode_beam_search(memory, hp: int, wp: int, beam_width: int = 3, max_len: i
                 }]
                 candidates.append((new_score, seq + [tid], new_meta))
 
+        # Early-Stop Fix: Stop as soon as beam_width beams hit <EOS>
+        if len(completed) >= beam_width:
+            break
+
         if not candidates:
             break
         # Length-normalized sorting
@@ -170,12 +200,27 @@ def decode_beam_search(memory, hp: int, wp: int, beam_width: int = 3, max_len: i
 
     all_cands = completed if completed else beams
     all_cands.sort(key=lambda x: x[0] / (len(x[1]) ** 0.7), reverse=True)
-    _, best_seq, best_meta = all_cands[0]
+    top_cands = all_cands[:beam_width]
 
-    # Strip <EOS> from output
-    clean_meta = [m for tid, m in zip(best_seq[1:], best_meta) if tid not in (PAD_ID, SOS_ID, EOS_ID)]
-    tokens = [m["token"] for m in clean_meta]
-    latex_str = " ".join(tokens)
+    # Top-k Reranking with LaTeX syntax & SymPy validation bonus
+    reranked = []
+    for score, seq, meta in top_cands:
+        norm_score = score / (len(seq) ** 0.7)
+        cand_meta = [m for tid, m in zip(seq[1:], meta) if tid not in (PAD_ID, SOS_ID, EOS_ID)]
+        cand_tokens = [m["token"] for m in cand_meta]
+        cand_latex = " ".join(cand_tokens)
+
+        bonus = 0.0
+        if check_latex_syntax(cand_tokens):
+            bonus += 0.15
+            sympy_res = verify_with_sympy(cand_latex)
+            if sympy_res.get("valid", False):
+                bonus += 0.10
+
+        reranked.append((norm_score + bonus, seq, meta, cand_latex, cand_meta))
+
+    reranked.sort(key=lambda x: x[0], reverse=True)
+    _, best_seq, best_meta, latex_str, clean_meta = reranked[0]
     return latex_str, clean_meta
 
 # 4. API Endpoints
@@ -192,7 +237,7 @@ async def predict(
     t0 = time.time()
     try:
         image_bytes = await file.read()
-        tensor, b64_img, h, w = preprocess_image(image_bytes, mode=mode)
+        tensor, b64_img, h, w, ink_density = preprocess_image(image_bytes, mode=mode)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -206,10 +251,30 @@ async def predict(
 
     avg_conf = round(float(np.mean([m["confidence"] for m in token_meta])), 4) if token_meta else 0.0
 
+    # OOD / Non-Math Scribble Guard
+    STRUCTURAL_TOKENS = {"{", "}", "(", ")", "\\left", "\\right"}
+    content_metas = [m for m in token_meta if m["token"] not in STRUCTURAL_TOKENS]
+    if content_metas:
+        content_confidences = [m["confidence"] for m in content_metas]
+        content_confidence = round(float(np.mean(content_confidences)), 4)
+        low_conf_ratio = round(float(np.mean([1.0 if c < 0.50 else 0.0 for c in content_confidences])), 4)
+    else:
+        content_confidence = avg_conf
+        low_conf_ratio = 0.0
+
+    is_ood = bool(content_confidence < 0.55 or low_conf_ratio > 0.35 or ink_density > 0.45)
+    warning = (
+        "Low confidence — input may not be a valid mathematical expression."
+        if is_ood else None
+    )
+
     return {
         "latex": latex_str,
         "tokens": token_meta,
         "avg_confidence": avg_conf,
+        "content_confidence": content_confidence,
+        "is_ood": is_ood,
+        "warning": warning,
         "syntax_valid": syntax_ok,
         "sympy": sympy_info,
         "preprocessed_image": b64_img,

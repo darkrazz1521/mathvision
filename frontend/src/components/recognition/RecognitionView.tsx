@@ -6,7 +6,7 @@ import { formatConfidence } from '../../utils/latex';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Tooltip } from '../ui/Tooltip';
-import { Bookmark, BookmarkCheck, Sparkles, Layers, Clock } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Sparkles, Layers, Clock, AlertTriangle } from 'lucide-react';
 import { saveHistoryEntry } from '../../services/historyStorage';
 import { useToast } from '../ui/Toast';
 
@@ -115,7 +115,19 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
       )}
 
       {/* Main LaTeX & KaTeX Editor */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-2">
+        {prediction && (prediction.is_ood || prediction.warning) && (
+          <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs shadow-sm shrink-0">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+            <div className="flex-1">
+              <span className="font-semibold text-amber-200">Ambiguous Input Warning: </span>
+              <span>
+                {prediction.warning ||
+                  'Low confidence — input may not be a valid mathematical expression.'}
+              </span>
+            </div>
+          </div>
+        )}
         {prediction ? (
           <LatexEditor
             originalLatex={prediction.latex}

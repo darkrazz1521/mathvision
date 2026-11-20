@@ -203,14 +203,20 @@ export const AttentionSpotlight: React.FC<AttentionSpotlightProps> = ({
                   <div className="w-2 h-2 rounded-full border border-white bg-[#8B7CFF] -translate-x-1/2 -translate-y-1/2" />
                 </>
               )}
-
-              {/* Peak Coordinate Tag */}
-              {showCoordinates && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-1.5 py-0.5 rounded bg-black/90 text-white font-mono text-[9px] whitespace-nowrap shadow border border-[#252D3B]">
-                  ({activeToken!.x.toFixed(3)}, {activeToken!.y.toFixed(3)})
-                </div>
-              )}
             </motion.div>
+          )}
+
+          {/* Floating Clamped Coordinate Badge */}
+          {showSpotlight && hasCoords && showCoordinates && (
+            <div
+              className="absolute pointer-events-none px-2 py-0.5 rounded bg-black/95 text-white font-mono text-[9px] whitespace-nowrap shadow-lg border border-[#252D3B] -translate-x-1/2 z-30 transition-all duration-150"
+              style={{
+                left: `${Math.min(Math.max(activeToken!.x * 100, 15), 85).toFixed(2)}%`,
+                top: `calc(${Math.min(Math.max(activeToken!.y * 100, 10), 85).toFixed(2)}% + ${spotlightRadius + 6}px)`,
+              }}
+            >
+              ({activeToken!.x.toFixed(3)}, {activeToken!.y.toFixed(3)})
+            </div>
           )}
 
           {/* All token peak markers clickable spots */}

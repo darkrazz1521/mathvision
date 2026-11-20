@@ -29,6 +29,9 @@ export interface PredictResponse {
   latex: string;
   tokens: TokenMetadata[];
   avg_confidence: number;
+  content_confidence?: number;
+  is_ood?: boolean;
+  warning?: string | null;
   syntax_valid: boolean;
   sympy: SympyVerification;
   preprocessed_image: string; // Base64 data URL

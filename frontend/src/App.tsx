@@ -244,7 +244,7 @@ export const MainApp: React.FC = () => {
           handleSetPrediction(
             {
               ...demoPreset.response,
-              preprocessed_image: previewUrl,
+              preprocessed_image: demoPreset.response.preprocessed_image || previewUrl,
             },
             previewUrl
           );
