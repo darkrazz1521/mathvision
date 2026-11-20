@@ -58,6 +58,18 @@ export async function checkApiHealth(
 }
 
 /**
+ * Fast lightweight HEAD ping for health check / keepalive
+ */
+export async function pingAlive(baseUrl: string = getApiBaseUrl()): Promise<boolean> {
+  try {
+    const res = await fetch(`${baseUrl}/alive`, { method: 'HEAD' });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Predicts mathematical expression using the FastAPI backend /predict endpoint
  */
 export async function predictEquation(

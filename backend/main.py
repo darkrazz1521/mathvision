@@ -8,7 +8,7 @@ import uuid
 import cv2
 import numpy as np
 import onnxruntime as ort
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Response
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sympy.parsing.latex import parse_latex
@@ -224,9 +224,32 @@ def decode_beam_search(memory, hp: int, wp: int, beam_width: int = 3, max_len: i
     return latex_str, clean_meta
 
 # 4. API Endpoints
-@app.get("/health")
+@app.api_route("/", methods=["GET", "HEAD"])
+def root():
+    return {
+        "status": "ok",
+        "service": "MathVision HMER API",
+        "version": "2.0",
+        "timestamp": time.time(),
+    }
+
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
-    return {"status": "ok", "vocab_size": len(VOCAB)}
+    return {
+        "status": "ok",
+        "service": "MathVision HMER API",
+        "vocab_size": len(VOCAB),
+        "models_loaded": enc_sess is not None and dec_sess is not None,
+        "timestamp": time.time(),
+    }
+
+@app.api_route("/alive", methods=["GET", "HEAD"])
+def alive():
+    return {
+        "status": "alive",
+        "uptime": "ok",
+        "timestamp": time.time(),
+    }
 
 @app.post("/predict")
 async def predict(
