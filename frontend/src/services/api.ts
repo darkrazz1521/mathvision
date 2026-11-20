@@ -1,12 +1,15 @@
 import { HealthResponse, PredictRequestOptions, PredictResponse } from '../types/api';
 
-const DEFAULT_API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const DEFAULT_API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://mathvision-7zta.onrender.com';
 const STORAGE_API_KEY = 'mathvision_api_base_url';
 
 export function getApiBaseUrl(): string {
   try {
     const saved = localStorage.getItem(STORAGE_API_KEY);
-    return saved || DEFAULT_API_BASE;
+    if (!saved || saved === 'http://localhost:8000' || saved === 'http://127.0.0.1:8000') {
+      return DEFAULT_API_BASE;
+    }
+    return saved;
   } catch {
     return DEFAULT_API_BASE;
   }

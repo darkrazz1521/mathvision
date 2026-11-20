@@ -14,6 +14,7 @@ import {
   Wifi,
   Sparkles,
   Info,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Tooltip } from '../ui/Tooltip';
@@ -21,6 +22,7 @@ import {
   createMobileSession,
   checkMobileSessionStatus,
   getNetworkInfo,
+  getApiBaseUrl,
 } from '../../services/api';
 import { useToast } from '../ui/Toast';
 import { cn } from '../../utils/cn';
@@ -50,11 +52,21 @@ export const MobileQrModal: React.FC<MobileQrModalProps> = ({
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const apiBase = getApiBaseUrl();
+  const isCloudBackend = !apiBase.includes('localhost') && !apiBase.includes('127.0.0.1');
+
   // Generate QR for a given host and session
   const generateQrForHost = async (host: string, sessId: string) => {
-    const port = window.location.port ? `:${window.location.port}` : '';
-    const protocol = window.location.protocol;
-    const url = `${protocol}//${host}${port}/?mode=capture&session=${sessId}`;
+    let url = '';
+    if (isCloudBackend && (!host || host === 'cloud')) {
+      url = `${apiBase.replace(/\/$/, '')}/capture?session=${sessId}`;
+    } else if (host.startsWith('http://') || host.startsWith('https://')) {
+      url = `${host.replace(/\/$/, '')}/capture?session=${sessId}`;
+    } else {
+      const port = window.location.port ? `:${window.location.port}` : '';
+      const protocol = window.location.protocol;
+      url = `${protocol}//${host}${port}/?mode=capture&session=${sessId}`;
+    }
     setTargetUrl(url);
 
     try {
@@ -72,7 +84,7 @@ export const MobileQrModal: React.FC<MobileQrModalProps> = ({
     }
   };
 
-  // Initialize session and discover real Wi-Fi IP
+  // Initialize session and discover real Wi-Fi IP or cloud endpoint
   const initSession = async () => {
     setIsWaiting(true);
     setHasReceived(false);
@@ -82,42 +94,48 @@ export const MobileQrModal: React.FC<MobileQrModalProps> = ({
       const sess = await createMobileSession();
       setSessionId(sess.session_id);
 
-      // 2. Discover LAN IPs from backend
-      const net = await getNetworkInfo();
-      const detectedIps = net?.available_ips || (net?.lan_ip ? [net.lan_ip] : []);
-      setAvailableIps(detectedIps);
+      if (isCloudBackend) {
+        setLanHost('cloud');
+        setHostInput(apiBase);
+        await generateQrForHost('cloud', sess.session_id);
+      } else {
+        // 2. Discover LAN IPs from backend
+        const net = await getNetworkInfo();
+        const detectedIps = net?.available_ips || (net?.lan_ip ? [net.lan_ip] : []);
+        setAvailableIps(detectedIps);
 
-      // 3. Choose the best IP for phone connection
-      // Priority:
-      // a) Wi-Fi IP (often 10.x.x.x or 192.168.1.x or 192.168.0.x / 192.168.x.x not ending in .1 VMware)
-      let bestHost = window.location.hostname;
+        // 3. Choose the best IP for phone connection
+        let bestHost = window.location.hostname;
 
-      if (bestHost === 'localhost' || bestHost === '127.0.0.1') {
-        if (net?.lan_ip && !net.lan_ip.startsWith('127.')) {
-          bestHost = net.lan_ip;
-        } else if (detectedIps.length > 0) {
-          // Find non-virtual IP if possible
-          const nonVirtual = detectedIps.find(
-            (ip) => !ip.startsWith('192.168.183.') && !ip.startsWith('192.168.250.') && !ip.startsWith('172.22.')
-          );
-          bestHost = nonVirtual || detectedIps[0];
-        } else {
-          bestHost = '10.146.164.145'; // Wi-Fi fallback from system adapter
+        if (bestHost === 'localhost' || bestHost === '127.0.0.1') {
+          if (net?.lan_ip && !net.lan_ip.startsWith('127.')) {
+            bestHost = net.lan_ip;
+          } else if (detectedIps.length > 0) {
+            const nonVirtual = detectedIps.find(
+              (ip) => !ip.startsWith('192.168.183.') && !ip.startsWith('192.168.250.') && !ip.startsWith('172.22.')
+            );
+            bestHost = nonVirtual || detectedIps[0];
+          } else {
+            bestHost = '10.146.164.145'; // Wi-Fi fallback from system adapter
+          }
         }
+
+        setLanHost(bestHost);
+        setHostInput(bestHost);
+        await generateQrForHost(bestHost, sess.session_id);
       }
-
-      setLanHost(bestHost);
-      setHostInput(bestHost);
-
-      await generateQrForHost(bestHost, sess.session_id);
     } catch (err) {
       console.error('Failed to initialize mobile session:', err);
-      // Fallback
       const fallbackSess = Math.random().toString(36).substring(2, 9);
       setSessionId(fallbackSess);
-      setLanHost('10.146.164.145');
-      setHostInput('10.146.164.145');
-      await generateQrForHost('10.146.164.145', fallbackSess);
+      if (isCloudBackend) {
+        setLanHost('cloud');
+        await generateQrForHost('cloud', fallbackSess);
+      } else {
+        setLanHost('10.146.164.145');
+        setHostInput('10.146.164.145');
+        await generateQrForHost('10.146.164.145', fallbackSess);
+      }
     }
   };
 
@@ -203,65 +221,84 @@ export const MobileQrModal: React.FC<MobileQrModalProps> = ({
         </div>
       </div>
 
-      {/* Warning if host is localhost */}
-      {isLocalhost && (
-        <div className="w-full max-w-sm p-3 my-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs text-left flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-          <div className="leading-snug">
-            <strong>Phone cannot open "localhost":</strong> Select your computer's Wi-Fi IP below so your phone can reach this computer.
+      {/* Status banner: Cloud Sync vs Localhost Warning */}
+      {isCloudBackend ? (
+        <div className="w-full max-w-sm p-2.5 my-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs text-left flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="leading-snug">
+              <span className="font-semibold text-emerald-200">Universal Cloud Sync Active</span>
+              <p className="text-[11px] text-emerald-300/80">
+                Works on any phone via 4G, 5G, or Wi-Fi
+              </p>
+            </div>
           </div>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
+            HTTPS Live
+          </span>
         </div>
-      )}
+      ) : (
+        <>
+          {isLocalhost && (
+            <div className="w-full max-w-sm p-3 my-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs text-left flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="leading-snug">
+                <strong>Phone cannot open "localhost":</strong> Select your computer's Wi-Fi IP below so your phone can reach this computer.
+              </div>
+            </div>
+          )}
 
-      {/* Available IP Selection Pills */}
-      <div className="w-full max-w-sm my-2 text-left">
-        <span className="text-[11px] text-[#94A3B8] font-medium block mb-1.5">
-          Select Computer IP on Wi-Fi Network:
-        </span>
-        <div className="flex flex-wrap gap-1.5">
-          {availableIps.map((ip) => {
-            const isSelected = lanHost === ip;
-            const isWifi = ip.startsWith('10.') || ip.startsWith('192.168.1.') || ip.startsWith('192.168.0.');
-            return (
+          {/* Available IP Selection Pills */}
+          <div className="w-full max-w-sm my-2 text-left">
+            <span className="text-[11px] text-[#94A3B8] font-medium block mb-1.5">
+              Select Computer IP on Wi-Fi Network:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {availableIps.map((ip) => {
+                const isSelected = lanHost === ip;
+                const isWifi = ip.startsWith('10.') || ip.startsWith('192.168.1.') || ip.startsWith('192.168.0.');
+                return (
+                  <button
+                    key={ip}
+                    onClick={() => handleSelectIp(ip)}
+                    className={cn(
+                      'px-2.5 py-1 text-xs font-mono rounded-lg transition-colors border select-none flex items-center gap-1',
+                      isSelected
+                        ? 'bg-[#8B7CFF]/20 text-[#8B7CFF] border-[#8B7CFF] font-semibold shadow-sm'
+                        : 'bg-[#090B10] text-[#94A3B8] border-[#252D3B] hover:text-[#F1F5F9]'
+                    )}
+                  >
+                    <span>{ip}</span>
+                    {isWifi && <span className="text-[9px] text-[#34D399] font-sans font-bold">Wi-Fi ★</span>}
+                  </button>
+                );
+              })}
+
               <button
-                key={ip}
-                onClick={() => handleSelectIp(ip)}
-                className={cn(
-                  'px-2.5 py-1 text-xs font-mono rounded-lg transition-colors border select-none flex items-center gap-1',
-                  isSelected
-                    ? 'bg-[#8B7CFF]/20 text-[#8B7CFF] border-[#8B7CFF] font-semibold shadow-sm'
-                    : 'bg-[#090B10] text-[#94A3B8] border-[#252D3B] hover:text-[#F1F5F9]'
-                )}
+                onClick={() => setIsEditingHost(!isEditingHost)}
+                className="px-2 py-1 text-xs rounded-lg text-[#38BDF8] border border-[#252D3B] hover:bg-[#151B27]"
               >
-                <span>{ip}</span>
-                {isWifi && <span className="text-[9px] text-[#34D399] font-sans font-bold">Wi-Fi ★</span>}
+                Custom IP...
               </button>
-            );
-          })}
+            </div>
 
-          <button
-            onClick={() => setIsEditingHost(!isEditingHost)}
-            className="px-2 py-1 text-xs rounded-lg text-[#38BDF8] border border-[#252D3B] hover:bg-[#151B27]"
-          >
-            Custom IP...
-          </button>
-        </div>
-
-        {isEditingHost && (
-          <form onSubmit={handleSaveCustomHost} className="flex gap-1.5 mt-2">
-            <input
-              type="text"
-              value={hostInput}
-              onChange={(e) => setHostInput(e.target.value)}
-              placeholder="e.g. 10.146.164.145"
-              className="flex-1 bg-[#090B10] border border-[#8B7CFF] rounded-lg px-2.5 py-1 text-xs text-[#F1F5F9] font-mono focus:outline-none"
-            />
-            <Button size="xs" variant="primary" type="submit">
-              Apply
-            </Button>
-          </form>
-        )}
-      </div>
+            {isEditingHost && (
+              <form onSubmit={handleSaveCustomHost} className="flex gap-1.5 mt-2">
+                <input
+                  type="text"
+                  value={hostInput}
+                  onChange={(e) => setHostInput(e.target.value)}
+                  placeholder="e.g. 10.146.164.145"
+                  className="flex-1 bg-[#090B10] border border-[#8B7CFF] rounded-lg px-2.5 py-1 text-xs text-[#F1F5F9] font-mono focus:outline-none"
+                />
+                <Button size="xs" variant="primary" type="submit">
+                  Apply
+                </Button>
+              </form>
+            )}
+          </div>
+        </>
+      )}
 
       {/* QR Code Container with Animated Scanner */}
       <div className="relative my-3 p-4 rounded-2xl bg-white shadow-2xl border-2 border-[#8B7CFF]/40 overflow-hidden">
@@ -333,18 +370,39 @@ export const MobileQrModal: React.FC<MobileQrModalProps> = ({
         </div>
       </div>
 
-      {/* Important Connection Checklist */}
+      {/* Important Connection Instructions */}
       <div className="w-full max-w-sm mt-3 p-3 rounded-xl bg-[#151B27] border border-[#252D3B] text-left text-xs space-y-1.5">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
-          <Wifi className="w-3.5 h-3.5" />
-          <span>Wi-Fi Connection Requirement:</span>
+          {isCloudBackend ? (
+            <ShieldCheck className="w-3.5 h-3.5" />
+          ) : (
+            <Wifi className="w-3.5 h-3.5" />
+          )}
+          <span>
+            {isCloudBackend
+              ? 'Instant Camera Sync Instructions:'
+              : 'Wi-Fi Connection Requirement:'}
+          </span>
         </div>
-        <p className="text-[11px] text-[#94A3B8] leading-snug">
-          1. Your <strong>phone and computer must be on the same Wi-Fi network</strong> (or connect your computer to your phone's Mobile Hotspot).
-        </p>
-        <p className="text-[11px] text-[#94A3B8] leading-snug">
-          2. If your phone is using mobile data (4G/5G), turn on Wi-Fi and connect to the same network.
-        </p>
+        {isCloudBackend ? (
+          <>
+            <p className="text-[11px] text-[#94A3B8] leading-snug">
+              1. Scan the QR code using any smartphone Camera app or Google Lens.
+            </p>
+            <p className="text-[11px] text-[#94A3B8] leading-snug">
+              2. Take a photo of your notebook equation and tap <strong>Send to MathVision Desktop</strong>.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-[11px] text-[#94A3B8] leading-snug">
+              1. Your <strong>phone and computer must be on the same Wi-Fi network</strong> (or connect your computer to your phone's Mobile Hotspot).
+            </p>
+            <p className="text-[11px] text-[#94A3B8] leading-snug">
+              2. If your phone is using mobile data (4G/5G), turn on Wi-Fi and connect to the same network.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

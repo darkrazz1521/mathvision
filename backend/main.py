@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 import onnxruntime as ort
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sympy.parsing.latex import parse_latex
 import sympy as sp
@@ -317,3 +318,349 @@ def get_session_status(session_id: str):
 def clear_session(session_id: str):
     ACTIVE_SESSIONS.pop(session_id, None)
     return {"status": "cleared"}
+
+
+@app.get("/capture", response_class=HTMLResponse)
+def mobile_capture_page(session: str = ""):
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MathVision Camera Sync</title>
+  <style>
+    * {{
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }}
+    body {{
+      background-color: #090B10;
+      color: #F1F5F9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+    }}
+    .container {{
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }}
+    .header {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #10141D;
+      border: 1px solid #252D3B;
+      border-radius: 16px;
+    }}
+    .logo-group {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+    .logo-icon {{
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #8B7CFF, #38BDF8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: #090B10;
+    }}
+    .title {{
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }}
+    .badge {{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38BDF8;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-family: monospace;
+      font-weight: 600;
+    }}
+    .card {{
+      background: #10141D;
+      border: 1px solid #252D3B;
+      border-radius: 20px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }}
+    .icon-circle {{
+      width: 64px;
+      height: 64px;
+      background: rgba(139, 124, 255, 0.12);
+      border: 1px solid rgba(139, 124, 255, 0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+    }}
+    h1 {{
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }}
+    p.desc {{
+      font-size: 13px;
+      color: #94A3B8;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }}
+    .btn {{
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }}
+    .btn-primary {{
+      background: linear-gradient(135deg, #8B7CFF, #6D5BFA);
+      color: white;
+      box-shadow: 0 4px 15px rgba(139, 124, 255, 0.35);
+    }}
+    .btn-secondary {{
+      background: #151B27;
+      color: #CBD5E1;
+      border: 1px solid #252D3B;
+      margin-top: 10px;
+    }}
+    .btn:active {{
+      transform: scale(0.98);
+    }}
+    .preview-box {{
+      width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #252D3B;
+      margin-bottom: 16px;
+      background: #000;
+      display: none;
+    }}
+    .preview-box img {{
+      width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+      display: block;
+    }}
+    .success-box {{
+      display: none;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      color: #34D399;
+      width: 100%;
+    }}
+    .error-box {{
+      display: none;
+      background: rgba(251, 113, 133, 0.1);
+      border: 1px solid rgba(251, 113, 133, 0.3);
+      color: #FB7185;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-top: 12px;
+      width: 100%;
+    }}
+    .tip-box {{
+      background: #151B27;
+      border: 1px solid #252D3B;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 12px;
+      color: #94A3B8;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }}
+    .tip-box div {{
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-group">
+        <div class="logo-icon">&sum;</div>
+        <div>
+          <div class="title">MathVision</div>
+          <div style="font-size: 10px; color: #94A3B8;">Camera Sync v2.0</div>
+        </div>
+      </div>
+      <div class="badge" id="sessionBadge">Session: {session[:8] if session else "Ready"}</div>
+    </div>
+
+    <div class="card" id="mainCard">
+      <div id="initialState">
+        <div class="icon-circle">&#128247;</div>
+        <h1>Take Photo of Equation</h1>
+        <p class="desc">Point your phone camera straight at the handwritten mathematical expression in your notebook.</p>
+
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+
+        <button class="btn btn-primary" onclick="document.getElementById('cameraInput').click()">
+          &#128248; Open Camera (Snap)
+        </button>
+        <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+          &#128193; Choose from Gallery
+        </button>
+      </div>
+
+      <div id="previewState" style="display: none; width: 100%;">
+        <div class="preview-box" id="previewContainer">
+          <img id="previewImg" src="" alt="Preview">
+        </div>
+        <button class="btn btn-primary" id="uploadBtn" onclick="uploadPhoto()">
+          &#128640; Send to MathVision Desktop
+        </button>
+        <button class="btn btn-secondary" onclick="retakePhoto()">
+          &#8634; Retake Photo
+        </button>
+      </div>
+
+      <div id="successState" class="success-box">
+        <div style="font-size: 36px; margin-bottom: 8px;">&#10004;</div>
+        <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #F1F5F9;">Sent to Desktop!</h2>
+        <p style="font-size: 13px; color: #94A3B8; margin-bottom: 16px;">
+          Your photo has been transferred to your MathVision workspace and is being recognized.
+        </p>
+        <button class="btn btn-secondary" onclick="retakePhoto()">
+          &#128247; Snap Another Equation
+        </button>
+      </div>
+
+      <div class="error-box" id="errorBox"></div>
+    </div>
+
+    <div class="tip-box">
+      <div style="font-weight: 600; color: #CBD5E1; margin-bottom: 2px;">Tips for best recognition:</div>
+      <div><span>&#10003;</span> Hold phone parallel to avoid angled perspective</div>
+      <div><span>&#10003;</span> Ensure sufficient lighting with no heavy hand shadows</div>
+      <div><span>&#10003;</span> Ruled and grid notebook papers are supported</div>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || "{session}";
+    let selectedFile = null;
+
+    const cameraInput = document.getElementById('cameraInput');
+    const fileInput = document.getElementById('fileInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImg = document.getElementById('previewImg');
+    const initialState = document.getElementById('initialState');
+    const previewState = document.getElementById('previewState');
+    const successState = document.getElementById('successState');
+    const errorBox = document.getElementById('errorBox');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    function handleFile(file) {{
+      if (!file) return;
+      selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = function(e) {{
+        previewImg.src = e.target.result;
+        previewContainer.style.display = 'block';
+        initialState.style.display = 'none';
+        successState.style.display = 'none';
+        previewState.style.display = 'block';
+        errorBox.style.display = 'none';
+      }};
+      reader.readAsDataURL(file);
+    }}
+
+    cameraInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+    fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+    function retakePhoto() {{
+      selectedFile = null;
+      cameraInput.value = '';
+      fileInput.value = '';
+      initialState.style.display = 'block';
+      previewState.style.display = 'none';
+      successState.style.display = 'none';
+      errorBox.style.display = 'none';
+    }}
+
+    async function uploadPhoto() {{
+      if (!selectedFile) return;
+      if (!sessionId) {{
+        showError('No active session ID provided in link.');
+        return;
+      }}
+
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '&#9203; Uploading to Desktop...';
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      try {{
+        const res = await fetch('/session/' + encodeURIComponent(sessionId) + '/upload', {{
+          method: 'POST',
+          body: formData,
+        }});
+
+        if (res.ok) {{
+          previewState.style.display = 'none';
+          successState.style.display = 'block';
+        }} else {{
+          const data = await res.json().catch(() => ({{}}));
+          showError(data.detail || 'Failed to upload photo. Please try again.');
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = '&#128640; Send to MathVision Desktop';
+        }}
+      }} catch (err) {{
+        showError('Network error connecting to MathVision server.');
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '&#128640; Send to MathVision Desktop';
+      }}
+    }}
+
+    function showError(msg) {{
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+    }}
+  </script>
+</body>
+</html>
+"""
+    return HTMLResponse(content=html_content)
