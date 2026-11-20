@@ -1,0 +1,37 @@
+# Python & Virtual Environments
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Large Datasets and Archives (> 50 MB)
+*.zip
+crohme23_art30k.zip
+crohme23_packed.zip
+crohme23_art30k/
+crohme23_packed/
+dataset/
+checkpoints/
+processed/
+notebooks/
+kaggle notebook/
+onnx_models/
+
+# Large FP32 ONNX data weights (INT8 models in backend/models are kept)
+*.onnx.data
+
+# Node.js & Vite
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
