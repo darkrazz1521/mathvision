@@ -21,6 +21,28 @@ const CATEGORIES = [
   { key: 'variables', label: 'Variables & Numbers' },
 ];
 
+/**
+ * Format structural or operator tokens with arguments so KaTeX can render them cleanly
+ */
+const getDisplayTokenLatex = (tok: string): string => {
+  switch (tok) {
+    case '\\sqrt':
+      return '\\sqrt{\\phantom{n}}';
+    case '\\frac':
+      return '\\frac{\\cdot}{\\cdot}';
+    case '{':
+      return '\\{';
+    case '}':
+      return '\\}';
+    case '^':
+      return '{}^{\\square}';
+    case '_':
+      return '{}_{\\square}';
+    default:
+      return tok;
+  }
+};
+
 const VOCAB_LIST: TokenItem[] = [
   // Greek
   { id: 53, token: '\\alpha', category: 'greek', description: 'Alpha' },
@@ -178,7 +200,7 @@ export const VocabularyExplorer: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 max-h-[380px] overflow-y-auto pr-1">
         {filteredTokens.map((item) => {
           const isCopied = copiedToken === item.token;
-          const { html } = renderLatexToHtml(item.token, false);
+          const { html } = renderLatexToHtml(getDisplayTokenLatex(item.token), false);
 
           return (
             <motion.div

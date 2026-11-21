@@ -220,6 +220,7 @@ export const InteractiveHeroSandbox: React.FC<InteractiveHeroSandboxProps> = ({
   const { html: renderedCanvasMath } = canvasPrediction
     ? renderLatexToHtml(canvasPrediction.latex, true)
     : { html: '' };
+  const { html: renderedQuadraticMath } = renderLatexToHtml('x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', true);
 
   return (
     <div className="w-full max-w-5xl mx-auto rounded-3xl bg-[#10141D]/90 border border-[#252D3B] shadow-2xl backdrop-blur-2xl overflow-hidden relative">
@@ -628,10 +629,11 @@ export const InteractiveHeroSandbox: React.FC<InteractiveHeroSandboxProps> = ({
             >
               {/* Right Side: Clean Binarized Model Input */}
               <div className="absolute inset-0 bg-[#FFFFFF] flex items-center justify-center p-4">
-                <div className="text-center">
-                  <div className="font-math text-4xl text-[#090B10] font-bold tracking-wider">
-                    {`x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}`}
-                  </div>
+                <div className="text-center max-w-full overflow-hidden px-4">
+                  <div
+                    className="font-math text-2xl sm:text-3xl md:text-4xl text-[#090B10] font-bold tracking-normal"
+                    dangerouslySetInnerHTML={{ __html: renderedQuadraticMath }}
+                  />
                   <span className="absolute bottom-3 right-3 text-[11px] font-mono px-2 py-0.5 rounded bg-black/80 text-[#34D399]">
                     After: Isolated Ink (DenseNet-Ready)
                   </span>
@@ -647,10 +649,11 @@ export const InteractiveHeroSandbox: React.FC<InteractiveHeroSandboxProps> = ({
                 <div className="absolute inset-0 canvas-ruled-paper opacity-80" />
                 <div className="absolute inset-0 bg-gradient-to-tr from-amber-900/15 via-transparent to-slate-900/25 pointer-events-none" />
 
-                <div className="w-[640px] h-full flex items-center justify-start pl-8 relative">
-                  <div className="font-math text-4xl text-[#1E293B] font-bold tracking-wider opacity-90 filter blur-[0.3px]">
-                    {`x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}`}
-                  </div>
+                <div className="w-[640px] max-w-none h-full flex items-center justify-start pl-8 relative">
+                  <div
+                    className="font-math text-2xl sm:text-3xl md:text-4xl text-[#1E293B] font-bold tracking-normal opacity-90 filter blur-[0.3px]"
+                    dangerouslySetInnerHTML={{ __html: renderedQuadraticMath }}
+                  />
                   <span className="absolute bottom-3 left-3 text-[11px] font-mono px-2 py-0.5 rounded bg-black/80 text-amber-300">
                     Before: Notebook Photo (Shadows & Ruled Lines)
                   </span>

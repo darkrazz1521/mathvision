@@ -618,9 +618,9 @@ export const LiveNeuralPipeline: React.FC<LiveNeuralPipelineProps> = ({
               </div>
 
               {/* KaTeX Live Precision Render Box */}
-              <div className="w-full max-w-2xl p-8 rounded-3xl bg-[#10141D] border border-[#252D3B] text-center shadow-2xl relative">
+              <div className="w-full max-w-2xl p-6 sm:p-8 rounded-3xl bg-[#10141D] border border-[#252D3B] text-center shadow-2xl relative overflow-x-auto max-w-full">
                 <div
-                  className="font-math text-[#F1F5F9] text-3xl sm:text-4xl"
+                  className="font-math text-[#F1F5F9] text-xl sm:text-2xl md:text-3xl lg:text-4xl max-w-full overflow-x-auto py-2"
                   dangerouslySetInnerHTML={{ __html: renderedLatex }}
                 />
 

@@ -150,38 +150,6 @@ const UNIVERSE_DOMAINS = [
   },
 ];
 
-// Interactive Floating Celestial Equations for Act I
-const FLOATING_HERO_EQUATIONS = [
-  {
-    id: 'calc',
-    latex: '\\int _ { - \\infty } ^ { \\infty } e ^ { - x ^ { 2 } } d x = \\sqrt { \\pi }',
-    name: 'Gaussian Integral',
-    category: 'Calculus',
-    coord: 'top-8 left-4 lg:left-12',
-  },
-  {
-    id: 'einstein',
-    latex: 'E = m c ^ { 2 }',
-    name: 'Mass-Energy Equivalence',
-    category: 'Relativity',
-    coord: 'top-20 right-4 lg:right-16',
-  },
-  {
-    id: 'quantum',
-    latex: 'i \\hbar \\frac { \\partial \\Psi } { \\partial t } = \\hat { H } \\Psi',
-    name: 'Schrödinger Wave',
-    category: 'Quantum',
-    coord: 'bottom-24 left-6 lg:left-20',
-  },
-  {
-    id: 'maxwell',
-    latex: '\\nabla \\times \\mathbf { E } = - \\frac { \\partial \\mathbf { B } } { \\partial t }',
-    name: 'Faraday Induction',
-    category: 'Electrodynamics',
-    coord: 'bottom-16 right-6 lg:right-24',
-  },
-];
-
 // Architectural FAQ
 const FAQS = [
   {
@@ -219,7 +187,6 @@ export const HomePage: React.FC<HomePageProps> = ({
   const { success } = useToast();
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [activeDomainId, setActiveDomainId] = useState<string>('physics');
-  const [activeHeroEq, setActiveHeroEq] = useState<string>('calc');
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [copiedLatex, setCopiedLatex] = useState(false);
 
@@ -387,59 +354,28 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* ======================================================== */}
       <section
         id="act-universe"
-        className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-20 flex flex-col items-center text-center scroll-mt-20"
+        className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-16 flex flex-col items-center text-center scroll-mt-20 overflow-hidden"
       >
-        {/* Floating Celestial Equations (Orbiting the Hero with Parallax) */}
-        <div className="absolute inset-0 pointer-events-none hidden xl:block overflow-hidden">
-          {FLOATING_HERO_EQUATIONS.map((eq) => {
-            const { html } = renderLatexToHtml(eq.latex, false);
-            const isSelected = activeHeroEq === eq.id;
-            return (
-              <div
-                key={eq.id}
-                className={cn(
-                  'absolute pointer-events-auto cursor-pointer p-3 rounded-2xl border backdrop-blur-xl transition-all duration-300 select-none group',
-                  eq.coord,
-                  isSelected
-                    ? 'bg-[#151B27] border-[#8B7CFF] shadow-glow-accent scale-105'
-                    : 'bg-[#10141D]/60 border-[#252D3B]/60 hover:border-[#8B7CFF]/50 hover:bg-[#151B27]/80'
-                )}
-                onClick={() => setActiveHeroEq(eq.id)}
-              >
-                <div className="text-[10px] font-mono text-[#8B7CFF] mb-1 font-semibold flex items-center justify-between gap-3">
-                  <span>{eq.category}</span>
-                  <span className="text-[#64748B] group-hover:text-[#F1F5F9] transition-colors">
-                    {eq.name}
-                  </span>
-                </div>
-                <div
-                  className="font-math text-sm text-[#F1F5F9]"
-                  dangerouslySetInnerHTML={{ __html: html }}
-                />
-              </div>
-            );
-          })}
-        </div>
-
         {/* Philosophy Monospace Index Tag */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#151B27]/80 border border-[#8B7CFF]/40 text-[#8B7CFF] text-xs font-mono mb-8 backdrop-blur-md shadow-glow-accent/20"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#151B27]/90 border border-[#8B7CFF]/40 text-[#8B7CFF] text-xs font-mono mb-6 backdrop-blur-md shadow-glow-accent/20"
         >
           <Orbit className="w-3.5 h-3.5 text-[#38BDF8]" />
           <span>ACT I • The Universal Operating System of Reality</span>
         </motion.div>
 
-        {/* Monumental Editorial Headline */}
+        {/* Monumental Coordinated Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight text-[#F1F5F9] max-w-6xl leading-[1.02]"
+          className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-[#F1F5F9] max-w-5xl leading-[1.08] sm:leading-[1.06]"
         >
-          Everything in the Universe is Inscribed in{' '}
+          Everything in the Universe <br className="hidden sm:inline" />
+          is Inscribed in{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B7CFF] via-[#38BDF8] to-[#34D399]">
             Mathematics.
           </span>
@@ -450,17 +386,17 @@ export const HomePage: React.FC<HomePageProps> = ({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-8 text-base sm:text-xl text-[#94A3B8] max-w-3xl leading-relaxed font-normal"
+          className="mt-6 text-sm sm:text-lg text-[#94A3B8] max-w-2xl leading-relaxed font-normal"
         >
-          From the nonlinear tensor curvature of general relativity to the self-attention weights of deep Transformer decoders, mathematics is the foundational code of reality. MathVision bridges human freehand intuition with verified Computer Algebra systems.
+          From the tensor curvature of general relativity to the self-attention weights of deep Transformer decoders, mathematics is the foundational code of reality. MathVision bridges human freehand intuition with verified Computer Algebra systems.
         </motion.p>
 
-        {/* Real-Time Interactive 3D WebGL Mathematical Geometry Centerpiece */}
+        {/* Real-Time Interactive 3D WebGL Centerpiece (Dedicated Stage, No Collisions) */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.25 }}
-          className="w-full max-w-4xl my-4"
+          className="w-full max-w-3xl my-6 relative flex items-center justify-center"
         >
           <MathHero3D />
         </motion.div>
@@ -470,7 +406,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-6 flex flex-wrap items-center justify-center gap-4"
+          className="mt-4 flex flex-wrap items-center justify-center gap-4 relative z-20"
         >
           <Button
             variant="primary"
@@ -502,50 +438,65 @@ export const HomePage: React.FC<HomePageProps> = ({
           </button>
         </motion.div>
 
-        {/* High-Impact Numerical Telemetry Bar (Open Editorial, NOT Boxed Cards) */}
+        {/* High-Impact Model Telemetry Bar (Dedicated Independent Card Space, Completely Unobstructed) */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-16 w-full max-w-4xl pt-8 border-t border-[#252D3B]/50 grid grid-cols-2 sm:grid-cols-4 gap-8 text-center"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.35 }}
+          className="mt-12 w-full max-w-5xl pt-8 border-t border-[#252D3B]/60 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center relative z-20"
         >
-          <div>
-            <span className="text-3xl sm:text-4xl font-black font-mono text-[#8B7CFF] block">
+          <div className="p-4 rounded-2xl bg-[#10141D]/80 border border-[#252D3B]/80 backdrop-blur-md transition-all hover:border-[#8B7CFF]/40 shadow-sm">
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-black font-mono text-[#8B7CFF] block">
               12.82 MB
             </span>
-            <span className="text-xs text-[#94A3B8] mt-1 block font-sans">
+            <span className="text-xs font-semibold text-[#F1F5F9] mt-1.5 block">
               INT8 ONNX Footprint
             </span>
+            <span className="text-[11px] text-[#64748B] block mt-0.5">
+              DenseNet-121 + Decoder
+            </span>
           </div>
-          <div>
-            <span className="text-3xl sm:text-4xl font-black font-mono text-[#38BDF8] block">
+
+          <div className="p-4 rounded-2xl bg-[#10141D]/80 border border-[#252D3B]/80 backdrop-blur-md transition-all hover:border-[#38BDF8]/40 shadow-sm">
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-black font-mono text-[#38BDF8] block">
               132 Tokens
             </span>
-            <span className="text-xs text-[#94A3B8] mt-1 block font-sans">
+            <span className="text-xs font-semibold text-[#F1F5F9] mt-1.5 block">
               Atomic LaTeX Space
             </span>
+            <span className="text-[11px] text-[#64748B] block mt-0.5">
+              CROHME Grammar Units
+            </span>
           </div>
-          <div>
-            <span className="text-3xl sm:text-4xl font-black font-mono text-[#34D399] block">
+
+          <div className="p-4 rounded-2xl bg-[#10141D]/80 border border-[#252D3B]/80 backdrop-blur-md transition-all hover:border-[#34D399]/40 shadow-sm">
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-black font-mono text-[#34D399] block">
               ~120 ms
             </span>
-            <span className="text-xs text-[#94A3B8] mt-1 block font-sans">
-              Pure CPU Inference
+            <span className="text-xs font-semibold text-[#F1F5F9] mt-1.5 block">
+              CPU Inference Latency
+            </span>
+            <span className="text-[11px] text-[#64748B] block mt-0.5">
+              Beam Width 3 on 4-Core CPU
             </span>
           </div>
-          <div>
-            <span className="text-3xl sm:text-4xl font-black font-mono text-amber-400 block">
+
+          <div className="p-4 rounded-2xl bg-[#10141D]/80 border border-[#252D3B]/80 backdrop-blur-md transition-all hover:border-amber-400/40 shadow-sm">
+            <span className="text-2xl sm:text-3xl lg:text-4xl font-black font-mono text-amber-400 block">
               CROHME-23
             </span>
-            <span className="text-xs text-[#94A3B8] mt-1 block font-sans">
+            <span className="text-xs font-semibold text-[#F1F5F9] mt-1.5 block">
               Benchmark Verified
+            </span>
+            <span className="text-[11px] text-[#64748B] block mt-0.5">
+              Official Validation Split
             </span>
           </div>
         </motion.div>
       </section>
 
-      {/* Living Equation Ticker Marquee Ribbon */}
-      <div className="relative z-10 w-full py-3.5 overflow-hidden border-y border-[#252D3B]/40 bg-[#090B10]/60 backdrop-blur-md select-none">
+      {/* Living Equation Ticker Marquee Ribbon with Edge Fade Mask */}
+      <div className="relative z-10 w-full py-3.5 overflow-hidden border-y border-[#252D3B]/40 bg-[#090B10]/60 backdrop-blur-md select-none [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
         <div className="animate-marquee space-x-12 text-xs font-mono text-[#64748B]">
           <span>•</span>
           <span className="text-[#8B7CFF] font-semibold">\int_{'{-\\infty}'}^{'{\\infty}'} e^{'-x^2'} dx = \sqrt{'{'}\pi{'}'}</span>
@@ -835,9 +786,9 @@ export const HomePage: React.FC<HomePageProps> = ({
 
           {/* Right: Grand KaTeX Mathematical Exhibit (6 cols) */}
           <div className="lg:col-span-6 flex flex-col gap-4">
-            <div className="p-10 rounded-3xl bg-[#090B10] border border-[#252D3B] min-h-[220px] flex items-center justify-center shadow-2xl relative overflow-x-auto">
+            <div className="p-8 sm:p-10 rounded-3xl bg-[#090B10] border border-[#252D3B] min-h-[220px] flex items-center justify-center shadow-2xl relative overflow-x-auto max-w-full">
               <div
-                className="font-math text-[#F1F5F9] text-3xl sm:text-4xl text-center select-text"
+                className="font-math text-[#F1F5F9] text-xl sm:text-2xl md:text-3xl lg:text-4xl text-center select-text max-w-full overflow-x-auto py-2"
                 dangerouslySetInnerHTML={{ __html: domainRenderedMath }}
               />
               <div className="absolute bottom-3 right-4 text-[10px] font-mono text-[#64748B] uppercase tracking-wider">
@@ -913,13 +864,13 @@ export const HomePage: React.FC<HomePageProps> = ({
           </p>
         </div>
 
-        {/* Large-Scale Typographic Numerical Display (NO Generic Stat Cards) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 text-center pb-16 border-b border-[#252D3B]/60">
-          <div>
-            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-bold">
+        {/* Numerical Benchmark Display (Responsive, Distinct Layout) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center pb-12 border-b border-[#252D3B]/60">
+          <div className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60">
+            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-semibold">
               Expression Rate (ExpRate)
             </span>
-            <span className="text-6xl sm:text-7xl font-black font-mono text-[#8B7CFF] block mt-3">
+            <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-[#8B7CFF] block mt-3">
               32.84%
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
@@ -927,11 +878,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             </span>
           </div>
 
-          <div>
-            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-bold">
+          <div className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60">
+            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-semibold">
               ≤ 1 Error Rate
             </span>
-            <span className="text-6xl sm:text-7xl font-black font-mono text-[#38BDF8] block mt-3">
+            <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-[#38BDF8] block mt-3">
               41.42%
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
@@ -939,17 +890,23 @@ export const HomePage: React.FC<HomePageProps> = ({
             </span>
           </div>
 
-          <div>
-            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-bold">
+          <div className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60">
+            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-semibold">
               Character Error Rate (CER)
             </span>
-            <span className="text-6xl sm:text-7xl font-black font-mono text-amber-400 block mt-3">
+            <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-amber-400 block mt-3">
               40.88%
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
               Average symbol Levenshtein edit distance
             </span>
           </div>
+        </div>
+
+        <div className="mt-4 text-center">
+          <span className="inline-block text-[11px] font-mono text-[#64748B] px-3 py-1 rounded-full bg-[#151B27]/50 border border-[#252D3B]/50">
+            Official CROHME-2023 Competition Validation Set Benchmark • Standardized Empirical Evaluation
+          </span>
         </div>
 
         {/* 132-Token Atomic Vocabulary Matrix */}
