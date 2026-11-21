@@ -48,6 +48,16 @@ import { MobileQrModal } from '../upload/MobileQrModal';
 import { renderLatexToHtml } from '../../utils/latex';
 import { useToast } from '../ui/Toast';
 import { cn } from '../../utils/cn';
+import {
+  fadeUpVariants,
+  staggerContainerVariants,
+  staggerItemVariants,
+  scaleRevealVariants,
+  slideLeftVariants,
+  slideRightVariants,
+  VIEWPORT_ONCE,
+} from '../../utils/motion';
+import { AnimatedMetric } from './AnimatedMetric';
 
 interface HomePageProps {
   onLaunchWorkspace: () => void;
@@ -540,11 +550,17 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* ======================================================== */}
       <section
         id="act-human-medium"
-        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20 overflow-hidden"
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Human Storytelling Editorial */}
-          <div className="lg:col-span-5 space-y-6">
+          <motion.div
+            variants={slideLeftVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={VIEWPORT_ONCE}
+            className="lg:col-span-5 space-y-6"
+          >
             <div className="inline-flex items-center gap-2 text-xs font-mono text-[#8B7CFF] font-semibold">
               <span>// ACT II — THE HUMAN MEDIUM</span>
             </div>
@@ -561,8 +577,14 @@ export const HomePage: React.FC<HomePageProps> = ({
               Yet traditional computer vision fails at handwritten mathematics. Inky loops, overlapping fractions, horizontal division lines, and subtle exponents create high structural ambiguity that standard optical character recognition cannot decipher.
             </p>
 
-            <div className="pt-4 border-t border-[#252D3B]/60 space-y-4">
-              <div className="flex items-start gap-3">
+            <motion.div
+              variants={staggerContainerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={VIEWPORT_ONCE}
+              className="pt-4 border-t border-[#252D3B]/60 space-y-4"
+            >
+              <motion.div variants={staggerItemVariants} className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-xl bg-[#8B7CFF]/15 text-[#8B7CFF] flex items-center justify-center shrink-0 mt-1">
                   <PenTool className="w-4 h-4" />
                 </div>
@@ -574,9 +596,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                     120 Hz Bezier curve capture preserving stroke velocity and pressure.
                   </p>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="flex items-start gap-3">
+              <motion.div variants={staggerItemVariants} className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-xl bg-[#38BDF8]/15 text-[#38BDF8] flex items-center justify-center shrink-0 mt-1">
                   <Camera className="w-4 h-4" />
                 </div>
@@ -588,12 +610,18 @@ export const HomePage: React.FC<HomePageProps> = ({
                     Morphological background division cancels lighting gradients and blue notebook lines.
                   </p>
                 </div>
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
 
           {/* Right Column: Open Interactive Ink-to-LaTeX Transformation Stage */}
-          <div className="lg:col-span-7 relative">
+          <motion.div
+            variants={scaleRevealVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={VIEWPORT_ONCE}
+            className="lg:col-span-7 relative"
+          >
             <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-b from-[#151B27]/80 to-[#10141D]/90 border border-[#252D3B] shadow-2xl relative overflow-hidden backdrop-blur-xl">
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#252D3B]/50">
                 <span className="text-xs font-mono text-[#8B7CFF] font-semibold">
@@ -648,7 +676,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <span className="text-emerald-400 font-mono">0.0% Syntax Error</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -657,14 +685,21 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* ======================================================== */}
       <section
         id="act-transformation"
-        className="relative z-10 max-w-7xl mx-auto px-6 py-20 scroll-mt-20"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-20 scroll-mt-20 overflow-hidden"
       >
-        <LiveNeuralPipeline
-          onOpenWorkspaceWithEquation={(latex) => {
-            const match = DEMO_PRESETS.find((p) => p.latex === latex) || DEMO_PRESETS[0];
-            onLoadPreset(match);
-          }}
-        />
+        <motion.div
+          variants={scaleRevealVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+        >
+          <LiveNeuralPipeline
+            onOpenWorkspaceWithEquation={(latex) => {
+              const match = DEMO_PRESETS.find((p) => p.latex === latex) || DEMO_PRESETS[0];
+              onLoadPreset(match);
+            }}
+          />
+        </motion.div>
       </section>
 
       {/* ======================================================== */}
@@ -672,9 +707,15 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* ======================================================== */}
       <section
         id="act-fabric"
-        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20 overflow-hidden"
       >
-        <div className="flex flex-col items-center text-center mb-12">
+        <motion.div
+          variants={fadeUpVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="flex flex-col items-center text-center mb-12"
+        >
           <div className="text-xs font-mono text-[#38BDF8] font-semibold mb-2">
             // ACT IV — THE UNIVERSAL CONNECTIVITY
           </div>
@@ -684,15 +725,22 @@ export const HomePage: React.FC<HomePageProps> = ({
           <p className="text-xs sm:text-sm text-[#94A3B8] max-w-2xl mt-3 leading-relaxed">
             The equations recognized by MathVision are the identical foundational laws that govern the cosmos, electromagnetic waves, quantum probability fields, and the attention weights of modern AI.
           </p>
-        </div>
+        </motion.div>
 
         {/* Domain Tab Selector (Minimal Hairline Tabs) */}
-        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-8">
+        <motion.div
+          variants={staggerContainerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-8"
+        >
           {UNIVERSE_DOMAINS.map((domain) => {
             const Icon = domain.icon;
             const isSelected = domain.id === activeDomainId;
             return (
-              <button
+              <motion.button
+                variants={staggerItemVariants}
                 key={domain.id}
                 onClick={() => setActiveDomainId(domain.id)}
                 className={cn(
@@ -704,15 +752,21 @@ export const HomePage: React.FC<HomePageProps> = ({
               >
                 <Icon className="w-4 h-4" style={{ color: domain.color }} />
                 <span>{domain.name}</span>
-              </button>
+              </motion.button>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Asymmetric Exhibition Display (Open Layout, NO Nested Cards) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           {/* Left: Scientific Context (6 cols) */}
-          <div className="lg:col-span-6 space-y-6">
+          <motion.div
+            variants={slideLeftVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={VIEWPORT_ONCE}
+            className="lg:col-span-6 space-y-6"
+          >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-[#151B27] border border-[#252D3B]">
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeDomain.color }} />
               <span style={{ color: activeDomain.color }}>{activeDomain.tag}</span>
@@ -782,10 +836,16 @@ export const HomePage: React.FC<HomePageProps> = ({
                 )}
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right: Grand KaTeX Mathematical Exhibit (6 cols) */}
-          <div className="lg:col-span-6 flex flex-col gap-4">
+          <motion.div
+            variants={scaleRevealVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={VIEWPORT_ONCE}
+            className="lg:col-span-6 flex flex-col gap-4"
+          >
             <div className="p-8 sm:p-10 rounded-3xl bg-[#090B10] border border-[#252D3B] min-h-[220px] flex items-center justify-center shadow-2xl relative overflow-x-auto max-w-full">
               <div
                 className="font-math text-[#F1F5F9] text-xl sm:text-2xl md:text-3xl lg:text-4xl text-center select-text max-w-full overflow-x-auto py-2"
@@ -808,7 +868,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 Validated
               </span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -817,9 +877,15 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* ======================================================== */}
       <section
         id="act-sandbox"
-        className="relative z-10 max-w-7xl mx-auto px-6 py-24 scroll-mt-20"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-24 scroll-mt-20 overflow-hidden"
       >
-        <div className="flex flex-col items-center text-center mb-10">
+        <motion.div
+          variants={fadeUpVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="flex flex-col items-center text-center mb-10"
+        >
           <div className="text-xs font-mono text-[#34D399] font-semibold mb-2">
             // ACT V — REAL-TIME EXPERIMENTATION
           </div>
@@ -829,20 +895,27 @@ export const HomePage: React.FC<HomePageProps> = ({
           <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl mt-2 leading-relaxed">
             Test the engine live: draw equations on the canvas, inspect cross-attention spatial grounding coordinates, or slide through notebook photo background division.
           </p>
-        </div>
+        </motion.div>
 
-        <InteractiveHeroSandbox
-          onOpenInStudio={(item) => {
-            if (typeof item === 'string') {
-              const match = DEMO_PRESETS.find((p) => p.latex === item);
-              if (match) onLoadPreset(match);
-              else onLaunchWorkspace();
-            } else {
-              onLoadPreset(item);
-            }
-          }}
-          isBackendConnected={isBackendConnected}
-        />
+        <motion.div
+          variants={scaleRevealVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+        >
+          <InteractiveHeroSandbox
+            onOpenInStudio={(item) => {
+              if (typeof item === 'string') {
+                const match = DEMO_PRESETS.find((p) => p.latex === item);
+                if (match) onLoadPreset(match);
+                else onLaunchWorkspace();
+              } else {
+                onLoadPreset(item);
+              }
+            }}
+            isBackendConnected={isBackendConnected}
+          />
+        </motion.div>
       </section>
 
       {/* ======================================================== */}
@@ -850,9 +923,15 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* ======================================================== */}
       <section
         id="act-benchmarks"
-        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20"
+        className="relative z-10 max-w-7xl mx-auto px-6 py-28 scroll-mt-20 overflow-hidden"
       >
-        <div className="flex flex-col items-center text-center mb-14">
+        <motion.div
+          variants={fadeUpVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="flex flex-col items-center text-center mb-14"
+        >
           <div className="text-xs font-mono text-amber-400 font-semibold mb-2">
             // ACT VI — EMPIRICAL BENCHMARKS & 132-TOKEN VOCABULARY
           </div>
@@ -862,46 +941,61 @@ export const HomePage: React.FC<HomePageProps> = ({
           <p className="text-xs sm:text-sm text-[#94A3B8] max-w-lg mt-3 leading-relaxed">
             Evaluated on official international competition validation splits under pure INT8 CPU inference.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Numerical Benchmark Display (Responsive, Distinct Layout) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center pb-12 border-b border-[#252D3B]/60">
-          <div className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60">
+        {/* Numerical Benchmark Display (Animated Numbers, Staggered Reveal) */}
+        <motion.div
+          variants={staggerContainerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center pb-12 border-b border-[#252D3B]/60"
+        >
+          <motion.div
+            variants={staggerItemVariants}
+            className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60"
+          >
             <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-semibold">
               Expression Rate (ExpRate)
             </span>
             <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-[#8B7CFF] block mt-3">
-              32.84%
+              <AnimatedMetric value={32.84} suffix="%" />
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
               Exact match zero-error mathematical expressions
             </span>
-          </div>
+          </motion.div>
 
-          <div className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60">
+          <motion.div
+            variants={staggerItemVariants}
+            className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60"
+          >
             <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-semibold">
               ≤ 1 Error Rate
             </span>
             <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-[#38BDF8] block mt-3">
-              41.42%
+              <AnimatedMetric value={41.42} suffix="%" />
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
               At most one single token correction required
             </span>
-          </div>
+          </motion.div>
 
-          <div className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60">
+          <motion.div
+            variants={staggerItemVariants}
+            className="p-6 rounded-2xl bg-[#10141D]/60 border border-[#252D3B]/60"
+          >
             <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8] font-semibold">
               Character Error Rate (CER)
             </span>
             <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-amber-400 block mt-3">
-              40.88%
+              <AnimatedMetric value={40.88} suffix="%" />
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
               Average symbol Levenshtein edit distance
             </span>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         <div className="mt-4 text-center">
           <span className="inline-block text-[11px] font-mono text-[#64748B] px-3 py-1 rounded-full bg-[#151B27]/50 border border-[#252D3B]/50">
@@ -910,9 +1004,15 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         {/* 132-Token Atomic Vocabulary Matrix */}
-        <div className="pt-16">
+        <motion.div
+          variants={scaleRevealVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="pt-16"
+        >
           <VocabularyExplorer />
-        </div>
+        </motion.div>
       </section>
 
       {/* ======================================================== */}
@@ -920,9 +1020,15 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* ======================================================== */}
       <section
         id="act-faq"
-        className="relative z-10 max-w-4xl mx-auto px-6 py-20 scroll-mt-20"
+        className="relative z-10 max-w-4xl mx-auto px-6 py-20 scroll-mt-20 overflow-hidden"
       >
-        <div className="flex flex-col items-center text-center mb-12">
+        <motion.div
+          variants={fadeUpVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="flex flex-col items-center text-center mb-12"
+        >
           <div className="text-xs font-mono text-[#38BDF8] font-semibold mb-2">
             // ACT VII — ARCHITECTURAL TRANSPARENCY
           </div>
@@ -932,14 +1038,20 @@ export const HomePage: React.FC<HomePageProps> = ({
           <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mt-2">
             Technical answers regarding our DenseNet-121 encoder, Transformer decoder, and SymPy CAS integration.
           </p>
-        </div>
+        </motion.div>
 
         {/* Minimal Hairline Accordion (Zero Heavy Card Boxes) */}
-        <div className="divide-y divide-[#252D3B]/60 border-y border-[#252D3B]/60">
+        <motion.div
+          variants={staggerContainerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="divide-y divide-[#252D3B]/60 border-y border-[#252D3B]/60"
+        >
           {FAQS.map((faq, idx) => {
             const isOpen = expandedFaq === idx;
             return (
-              <div key={idx} className="py-4">
+              <motion.div variants={staggerItemVariants} key={idx} className="py-4">
                 <button
                   onClick={() => setExpandedFaq(isOpen ? null : idx)}
                   className="w-full py-2 flex items-center justify-between text-left gap-4 hover:text-[#8B7CFF] transition-colors group"
@@ -967,59 +1079,77 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </section>
 
       {/* ======================================================== */}
       {/* ACT VIII — THE STUDIO PORTAL (GRAND FINALE)              */}
       {/* ======================================================== */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 py-24">
-        <div className="relative p-10 sm:p-16 rounded-3xl bg-gradient-to-b from-[#151B27]/80 to-[#10141D] border border-[#8B7CFF]/40 shadow-glow-hero overflow-hidden text-center flex flex-col items-center">
+      <section className="relative z-10 max-w-7xl mx-auto px-6 py-24 overflow-hidden">
+        <motion.div
+          variants={scaleRevealVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={VIEWPORT_ONCE}
+          className="relative p-10 sm:p-16 rounded-3xl bg-gradient-to-b from-[#151B27]/80 to-[#10141D] border border-[#8B7CFF]/40 shadow-glow-hero overflow-hidden text-center flex flex-col items-center"
+        >
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-48 bg-[#8B7CFF]/20 blur-[110px] rounded-full pointer-events-none" />
 
           <Badge variant="accent" size="sm" dot>
             Production-Ready AI Workspace
           </Badge>
           <h2 className="text-3xl sm:text-6xl font-black text-[#F1F5F9] mt-4 max-w-3xl leading-tight tracking-tight">
-            Accelerate Your Mathematical Workflow.
+            Enter the Scientific Studio Workspace.
           </h2>
           <p className="text-sm sm:text-base text-[#94A3B8] max-w-xl mt-4 leading-relaxed">
             Write equations with digital stylus, snap notebook photographs with your phone, or explore token cross-attention grounding in real time.
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={onLaunchWorkspace}
-              icon={<ArrowRight className="w-4 h-4" />}
-              className="px-8 py-3.5 shadow-glow-accent text-sm font-semibold rounded-2xl"
-            >
-              Enter Studio Workspace
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => setIsQrModalOpen(true)}
-              icon={<Smartphone className="w-4 h-4 text-[#38BDF8]" />}
-              className="rounded-2xl"
-            >
-              Scan Phone Camera
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={onOpenDashboard}
-              icon={<LayoutDashboard className="w-4 h-4 text-[#8B7CFF]" />}
-              className="rounded-2xl"
-            >
-              View Dashboard
-            </Button>
-          </div>
-        </div>
+          <motion.div
+            variants={staggerContainerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={VIEWPORT_ONCE}
+            className="mt-10 flex flex-wrap items-center justify-center gap-4"
+          >
+            <motion.div variants={staggerItemVariants}>
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={onLaunchWorkspace}
+                icon={<ArrowRight className="w-4 h-4" />}
+                className="px-8 py-3.5 shadow-glow-accent text-sm font-semibold rounded-2xl"
+              >
+                Enter Studio Workspace
+              </Button>
+            </motion.div>
+            <motion.div variants={staggerItemVariants}>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => setIsQrModalOpen(true)}
+                icon={<Smartphone className="w-4 h-4 text-[#38BDF8]" />}
+                className="rounded-2xl"
+              >
+                Scan Phone Camera
+              </Button>
+            </motion.div>
+            <motion.div variants={staggerItemVariants}>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={onOpenDashboard}
+                icon={<LayoutDashboard className="w-4 h-4 text-[#8B7CFF]" />}
+                className="rounded-2xl"
+              >
+                View Dashboard
+              </Button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* ======================================================== */}

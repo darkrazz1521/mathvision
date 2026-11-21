@@ -19,6 +19,12 @@ import {
 } from 'lucide-react';
 import { renderLatexToHtml } from '../../utils/latex';
 import { cn } from '../../utils/cn';
+import {
+  fadeUpVariants,
+  staggerContainerVariants,
+  staggerItemVariants,
+  VIEWPORT_ONCE,
+} from '../../utils/motion';
 
 interface PipelineStage {
   id: string;
@@ -215,7 +221,13 @@ export const LiveNeuralPipeline: React.FC<LiveNeuralPipelineProps> = ({
       />
 
       {/* Top Header: Monospace tag, Equation Switcher & Auto-Play Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-8 border-b border-[#252D3B]/60">
+      <motion.div
+        variants={fadeUpVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={VIEWPORT_ONCE}
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-8 border-b border-[#252D3B]/60"
+      >
         <div>
           <div className="flex items-center gap-2">
             <span
@@ -270,17 +282,24 @@ export const LiveNeuralPipeline: React.FC<LiveNeuralPipelineProps> = ({
             )}
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* 6-Stage Interconnected Stepper Scrubber */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-10">
+      <motion.div
+        variants={staggerContainerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={VIEWPORT_ONCE}
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-10"
+      >
         {PIPELINE_STAGES.map((stage, idx) => {
           const Icon = stage.icon;
           const isActive = activeStageIdx === idx;
           const isPassed = activeStageIdx > idx;
 
           return (
-            <button
+            <motion.button
+              variants={staggerItemVariants}
               key={stage.id}
               onClick={() => {
                 setActiveStageIdx(idx);
@@ -332,10 +351,10 @@ export const LiveNeuralPipeline: React.FC<LiveNeuralPipelineProps> = ({
               <span className="text-[10px] text-[#64748B] truncate mt-0.5 font-mono">
                 {stage.technicalSub}
               </span>
-            </button>
+            </motion.button>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Main Interactive Stage Display Viewport (Edge-to-Edge Open Stage) */}
       <div className="rounded-3xl bg-[#090B10] border border-[#252D3B] p-8 sm:p-12 relative min-h-[420px] flex flex-col justify-between overflow-hidden shadow-2xl">
