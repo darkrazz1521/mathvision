@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Home,
   Globe,
   LayoutDashboard,
   Keyboard,
@@ -10,8 +9,8 @@ import {
   ChevronRight,
   Edit2,
   Check,
-  Columns3,
   Sparkles,
+  Server,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Tooltip } from '../ui/Tooltip';
@@ -72,28 +71,23 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="h-14 bg-[#10141D]/90 backdrop-blur-md border-b border-[#252D3B] px-4 flex items-center justify-between shrink-0 select-none z-20">
+    <header className="h-13 min-h-[52px] bg-[#0D111A]/95 backdrop-blur-md border-b border-[#212836] px-4 flex items-center justify-between shrink-0 select-none z-20 shadow-sm">
       {/* Left: Breadcrumbs & Workspace Title */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 text-xs text-[#94A3B8]">
+      <div className="flex items-center gap-2.5 overflow-hidden">
+        <div className="flex items-center gap-1.5 text-xs text-[#94A3B8] shrink-0">
           <span
-            className="font-semibold text-[#F1F5F9] cursor-pointer hover:text-[#8B7CFF] transition-colors"
+            className="font-bold text-[#F8FAFC] cursor-pointer hover:text-[#8B7CFF] transition-colors"
             onClick={() => onSelectTab('home')}
           >
             MathVision
           </span>
-          <ChevronRight className="w-3.5 h-3.5 text-[#64748B]" />
-          <span>{getBreadcrumbLabel()}</span>
-          {currentTab === 'workspace' && (
-            <>
-              <ChevronRight className="w-3.5 h-3.5 text-[#64748B]" />
-            </>
-          )}
+          <ChevronRight className="w-3 h-3 text-[#4B5563]" />
+          <span className="font-medium text-[#CBD5E1]">{getBreadcrumbLabel()}</span>
         </div>
 
         {/* Editable Workspace Title when on workspace tab */}
         {currentTab === 'workspace' && (
-          <>
+          <div className="hidden sm:flex items-center gap-1.5 pl-2 border-l border-[#252D3B]">
             {isEditingTitle ? (
               <form onSubmit={handleSaveTitle} className="flex items-center gap-1">
                 <input
@@ -102,11 +96,11 @@ export const Header: React.FC<HeaderProps> = ({
                   onChange={(e) => setTitleInput(e.target.value)}
                   autoFocus
                   onBlur={() => setIsEditingTitle(false)}
-                  className="bg-[#090B10] border border-[#8B7CFF] rounded px-2 py-0.5 text-xs text-[#F1F5F9] focus:outline-none"
+                  className="bg-[#090B10] border border-[#8B7CFF] rounded-md px-2 py-0.5 text-xs text-[#F8FAFC] focus:outline-none focus:ring-1 focus:ring-[#8B7CFF]"
                 />
                 <button
                   type="submit"
-                  className="p-1 rounded text-emerald-400 hover:bg-[#1E2536]"
+                  className="p-1 rounded text-emerald-400 hover:bg-[#1E2536] transition-colors"
                   aria-label="Save title"
                 >
                   <Check className="w-3.5 h-3.5" />
@@ -118,71 +112,70 @@ export const Header: React.FC<HeaderProps> = ({
                   setTitleInput(workspaceTitle);
                   setIsEditingTitle(true);
                 }}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold text-[#F1F5F9] hover:bg-[#151B27] cursor-pointer transition-colors group"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-semibold text-[#F8FAFC] hover:bg-[#182133] cursor-pointer transition-colors group"
                 title="Click to rename workspace"
               >
-                <span>{workspaceTitle}</span>
+                <span className="truncate max-w-[220px]">{workspaceTitle}</span>
                 <Edit2 className="w-3 h-3 text-[#64748B] group-hover:text-[#8B7CFF] opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
-      {/* Right: Quick actions, connection status, modal triggers */}
-      <div className="flex items-center gap-2">
-        {/* Toggle between Home and Workspace */}
-        {/* App quick switcher */}
-        <div className="flex items-center bg-[#090B10] p-0.5 rounded-xl border border-[#252D3B]">
-          <button
-            onClick={() => onSelectTab('home')}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-[#94A3B8] hover:text-[#F1F5F9] transition-colors"
-            title="Return to Public Website"
-          >
-            <Globe className="w-3.5 h-3.5 text-[#8B7CFF]" />
-            <span className="hidden sm:inline">Public Home</span>
-          </button>
-          <button
-            onClick={() => onSelectTab('dashboard')}
-            className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors',
-              currentTab === 'dashboard'
-                ? 'bg-[#1E2536] text-[#F1F5F9] shadow-sm'
-                : 'text-[#94A3B8] hover:text-[#F1F5F9]'
-            )}
-          >
-            <LayoutDashboard className="w-3.5 h-3.5 text-[#38BDF8]" />
-            <span className="hidden sm:inline">Dashboard</span>
-          </button>
-          <button
-            onClick={() => onSelectTab('workspace')}
-            className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors',
-              currentTab === 'workspace'
-                ? 'bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/40 shadow-sm'
-                : 'text-[#94A3B8] hover:text-[#F1F5F9]'
-            )}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#8B7CFF]" />
-            <span className="hidden sm:inline">Studio Workspace</span>
-          </button>
-        </div>
+      {/* Center: Primary Mode Navigator Pills */}
+      <div className="hidden md:flex items-center bg-[#090B10] p-0.5 rounded-xl border border-[#212836]">
+        <button
+          onClick={() => onSelectTab('home')}
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
+          title="Return to Public Website"
+        >
+          <Globe className="w-3.5 h-3.5 text-[#8B7CFF]" />
+          <span>Public Home</span>
+        </button>
+        <button
+          onClick={() => onSelectTab('dashboard')}
+          className={cn(
+            'flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors',
+            currentTab === 'dashboard'
+              ? 'bg-[#182133] text-[#F8FAFC] shadow-sm'
+              : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+          )}
+        >
+          <LayoutDashboard className="w-3.5 h-3.5 text-[#38BDF8]" />
+          <span>Dashboard</span>
+        </button>
+        <button
+          onClick={() => onSelectTab('workspace')}
+          className={cn(
+            'flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors',
+            currentTab === 'workspace'
+              ? 'bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/30 shadow-sm'
+              : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+          )}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#8B7CFF]" />
+          <span>Studio Workspace</span>
+        </button>
+      </div>
 
+      {/* Right: Engine status, Specs, Documentation, Reset */}
+      <div className="flex items-center gap-1.5">
         {/* Backend live status pill */}
         <Tooltip
           content={
             isBackendConnected
-              ? 'FastAPI HMER server online (INT8 ONNX CPU execution)'
+              ? 'FastAPI HMER server online (v3-Final INT8 ONNX CPU execution)'
               : 'Backend offline. Running interactive simulation mode.'
           }
         >
           <button
             onClick={onOpenSettings}
             className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors',
+              'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium border transition-colors select-none',
               isBackendConnected
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
+                ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/15'
+                : 'bg-amber-500/10 border-amber-500/25 text-amber-400 hover:bg-amber-500/15'
             )}
             aria-label="Backend status"
           >
@@ -192,33 +185,33 @@ export const Header: React.FC<HeaderProps> = ({
                 isBackendConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
               )}
             />
-            <span className="hidden md:inline">
-              {isBackendConnected ? 'FastAPI Online' : 'Simulation Mode'}
+            <span className="hidden sm:inline">
+              {isBackendConnected ? 'FastAPI Online' : 'Simulation'}
             </span>
           </button>
         </Tooltip>
 
         {/* Model Spec button */}
-        <Tooltip content="DenseNet-121 + 3L-Trans v3-Final Specs">
+        <Tooltip content="DenseNetHMER v3-Final Specs (10.63MB)">
           <Button
             size="sm"
             variant="ghost"
             onClick={onOpenModelSpecs}
-            icon={<Cpu className="w-4 h-4 text-[#8B7CFF]" />}
+            icon={<Cpu className="w-3.5 h-3.5 text-[#8B7CFF]" />}
           >
-            <span className="hidden lg:inline">Model</span>
+            <span className="hidden xl:inline">Model</span>
           </Button>
         </Tooltip>
 
         {/* Documentation button */}
-        <Tooltip content="Documentation & Vocabulary">
+        <Tooltip content="Documentation & 132-Token Vocab">
           <Button
             size="sm"
             variant="ghost"
             onClick={onOpenDocs}
-            icon={<HelpCircle className="w-4 h-4 text-[#38BDF8]" />}
+            icon={<HelpCircle className="w-3.5 h-3.5 text-[#38BDF8]" />}
           >
-            <span className="hidden lg:inline">Guide</span>
+            <span className="hidden xl:inline">Guide</span>
           </Button>
         </Tooltip>
 
@@ -228,22 +221,22 @@ export const Header: React.FC<HeaderProps> = ({
             size="sm"
             variant="ghost"
             onClick={onOpenShortcuts}
-            icon={<Keyboard className="w-4 h-4 text-[#94A3B8]" />}
+            icon={<Keyboard className="w-3.5 h-3.5 text-[#94A3B8]" />}
             aria-label="Keyboard Shortcuts"
           />
         </Tooltip>
 
-        {/* Reset / Clear Workspace (when on workspace) */}
+        {/* Reset / Clear Workspace button with clear destructive confirmation */}
         {currentTab === 'workspace' && (
-          <Tooltip content="Clear Active Workspace">
-            <Button
-              size="sm"
-              variant="outline"
+          <Tooltip content="Reset active workspace drawing and output">
+            <button
               onClick={onResetWorkspace}
-              icon={<RotateCcw className="w-3.5 h-3.5" />}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#182133] text-[#94A3B8] border border-[#252D3B] hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-colors ml-1"
+              aria-label="Reset Workspace"
             >
-              <span className="hidden xl:inline">Reset</span>
-            </Button>
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">Reset</span>
+            </button>
           </Tooltip>
         )}
       </div>

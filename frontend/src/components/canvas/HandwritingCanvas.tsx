@@ -418,7 +418,7 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
   }[gridStyle];
 
   return (
-    <div className="flex flex-col h-full bg-[#10141D] rounded-xl border border-[#252D3B] overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-[#0D111A] rounded-xl border border-[#212836] overflow-hidden shadow-sm">
       {/* Top Toolbar */}
       <CanvasControls
         tool={tool}
@@ -440,7 +440,8 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
       <div
         ref={containerRef}
         className={cn(
-          'relative flex-1 w-full overflow-hidden cursor-crosshair select-none touch-none',
+          'relative flex-1 min-h-0 w-full overflow-hidden select-none touch-none',
+          tool === 'pen' ? 'cursor-crosshair' : 'cursor-cell',
           gridClass
         )}
       >
@@ -453,46 +454,62 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
           className="absolute inset-0 block w-full h-full"
         />
 
-        {/* Empty State Overlay */}
+        {/* Empty State Onboarding Overlay */}
         {strokes.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
-            <div className="p-3 rounded-2xl bg-[#151B27]/80 border border-[#252D3B] text-[#8B7CFF] mb-3 backdrop-blur-sm">
+            <div className="p-3.5 rounded-2xl bg-[#141A28]/90 border border-[#212836] text-[#8B7CFF] mb-3 backdrop-blur-md shadow-lg">
               <Sparkles className="w-6 h-6 animate-pulse" />
             </div>
-            <p className="text-sm font-semibold text-[#F1F5F9]">
+            <p className="text-sm font-bold text-[#F8FAFC] tracking-tight">
               Write your mathematical expression here
             </p>
-            <p className="text-xs text-[#94A3B8] max-w-xs mt-1">
-              Use your mouse, stylus, or touch screen. Write numbers, fractions, symbols, or Greek letters.
+            <p className="text-xs text-[#94A3B8] max-w-xs mt-1.5 leading-relaxed">
+              Use your mouse, stylus, or touch screen. Write fractions, exponents, Greek symbols, integrals, or matrices.
             </p>
 
-            <div className="flex items-center gap-2 mt-4 pointer-events-auto">
-              <span className="text-[11px] text-[#94A3B8] flex items-center gap-1">
-                <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Or try sample:
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 pointer-events-auto">
+              <span className="text-[11px] font-mono text-[#94A3B8] flex items-center gap-1 mr-1">
+                <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Or load sample:
               </span>
               <button
                 onClick={() => handleLoadSample('fraction')}
-                className="text-xs px-2.5 py-1 rounded-md bg-[#151B27] hover:bg-[#1E2536] text-[#8B7CFF] border border-[#252D3B] transition-colors"
+                className="text-xs px-2.5 py-1 rounded-lg bg-[#141A28] hover:bg-[#1C253B] text-[#8B7CFF] border border-[#252D3B] hover:border-[#8B7CFF]/40 transition-colors font-mono font-medium"
               >
                 (a + b) / c
               </button>
               <button
                 onClick={() => handleLoadSample('quadratic')}
-                className="text-xs px-2.5 py-1 rounded-md bg-[#151B27] hover:bg-[#1E2536] text-[#8B7CFF] border border-[#252D3B] transition-colors"
+                className="text-xs px-2.5 py-1 rounded-lg bg-[#141A28] hover:bg-[#1C253B] text-[#38BDF8] border border-[#252D3B] hover:border-[#38BDF8]/40 transition-colors font-mono font-medium"
               >
                 x² + 4 = 0
+              </button>
+              <button
+                onClick={() => handleLoadSample('integral')}
+                className="text-xs px-2.5 py-1 rounded-lg bg-[#141A28] hover:bg-[#1C253B] text-emerald-400 border border-[#252D3B] hover:border-emerald-500/40 transition-colors font-mono font-medium"
+              >
+                ∫ x dx
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Canvas Footer Bar with Recognize CTA */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#10141D] border-t border-[#252D3B]">
-        <div className="text-xs text-[#94A3B8] flex items-center gap-2">
-          <span>Strokes: <strong className="text-[#F1F5F9]">{strokes.length}</strong></span>
-          <span className="text-[#252D3B]">•</span>
-          <span>DPI: <strong className="text-[#F1F5F9]">{window.devicePixelRatio || 1}x</strong></span>
+      {/* Canvas Footer Bar with Stroke info and Primary Recognize CTA */}
+      <div className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-[#0B0E16] border-t border-[#212836]">
+        <div className="text-xs text-[#94A3B8] flex items-center gap-2.5 font-mono">
+          <span>
+            Strokes: <strong className="text-[#F8FAFC]">{strokes.length}</strong>
+          </span>
+          <span className="text-[#334155]">•</span>
+          <span>
+            DPI: <strong className="text-[#F8FAFC]">{window.devicePixelRatio || 1}x</strong>
+          </span>
+          {strokes.length > 0 && (
+            <>
+              <span className="text-[#334155]">•</span>
+              <span className="text-emerald-400 text-[11px]">Ink Ready</span>
+            </>
+          )}
         </div>
 
         <Button
@@ -503,6 +520,10 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
           onClick={handleRecognizeSubmit}
           shortcut="Ctrl+Enter"
           icon={<ArrowRight className="w-4 h-4" />}
+          className={cn(
+            'shadow-lg transition-all',
+            strokes.length > 0 && !isRecognizing && 'shadow-glow-accent hover:scale-[1.02]'
+          )}
         >
           Recognize Equation
         </Button>

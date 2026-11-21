@@ -17,13 +17,13 @@ import {
   BrainCircuit,
   Columns3,
   SquareDashedBottomCode,
-  SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
   Maximize2,
-  Minimize2,
-  HelpCircle,
   Lightbulb,
+  Crosshair,
+  ShieldCheck,
+  Binary,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -82,12 +82,12 @@ export const Workspace: React.FC<WorkspaceProps> = ({
     if (viewMode === 'inspect-focus') {
       return {
         left: isLeftCollapsed ? 'hidden' : 'lg:col-span-3',
-        center: isLeftCollapsed ? 'lg:col-span-5' : 'lg:col-span-4',
-        right: isRightCollapsed ? 'hidden' : isLeftCollapsed ? 'lg:col-span-7' : 'lg:col-span-5',
+        center: isLeftCollapsed ? 'lg:col-span-4' : 'lg:col-span-4',
+        right: isRightCollapsed ? 'hidden' : isLeftCollapsed ? 'lg:col-span-8' : 'lg:col-span-5',
       };
     }
 
-    // Balanced Mode:
+    // Balanced Mode (Studio 3-Zone):
     if (isLeftCollapsed && isRightCollapsed) {
       return { left: 'hidden', center: 'lg:col-span-12', right: 'hidden' };
     }
@@ -95,7 +95,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
       return { left: 'hidden', center: 'lg:col-span-6', right: 'lg:col-span-6' };
     }
     if (isRightCollapsed) {
-      return { left: 'lg:col-span-6', center: 'lg:col-span-6', right: 'hidden' };
+      return { left: 'lg:col-span-7', center: 'lg:col-span-5', right: 'hidden' };
     }
     return { left: 'lg:col-span-4', center: 'lg:col-span-4', right: 'lg:col-span-4' };
   };
@@ -103,11 +103,11 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   const colSpans = getColSpan();
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden color-grade-bg text-[#F1F5F9]">
+    <div className="flex-1 min-h-0 flex flex-col h-full w-full overflow-hidden bg-[#090B10] text-[#F1F5F9]">
       {/* ======================================================== */}
       {/* STUDIO TOOLBAR: Layout Switcher, Collapses, Mode Pills   */}
       {/* ======================================================== */}
-      <div className="h-11 px-4 bg-[#10141D]/90 backdrop-blur-md border-b border-[#252D3B] flex items-center justify-between shrink-0 select-none z-10">
+      <div className="h-10 min-h-[40px] px-3.5 bg-[#0D111A] border-b border-[#212836] flex items-center justify-between shrink-0 select-none z-10">
         {/* Left: Input Modality Tabs */}
         <div className="flex items-center gap-2">
           <Tabs
@@ -125,10 +125,10 @@ export const Workspace: React.FC<WorkspaceProps> = ({
             <button
               onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
               className={cn(
-                'hidden lg:flex items-center gap-1 p-1.5 rounded-lg text-xs transition-colors border',
+                'hidden lg:flex items-center gap-1 p-1 rounded-lg text-xs transition-colors border',
                 isLeftCollapsed
                   ? 'bg-[#8B7CFF]/15 text-[#8B7CFF] border-[#8B7CFF]/40'
-                  : 'bg-[#090B10] text-[#94A3B8] border-[#252D3B] hover:text-[#F1F5F9]'
+                  : 'bg-[#090B10] text-[#94A3B8] border-[#212836] hover:text-[#F1F5F9]'
               )}
               aria-label="Toggle input panel"
             >
@@ -138,7 +138,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         </div>
 
         {/* Center: Viewport Mode Switcher (Studio vs Canvas Focus vs Inspect Focus) */}
-        <div className="hidden md:flex items-center gap-1 bg-[#090B10] p-0.5 rounded-xl border border-[#252D3B]">
+        <div className="hidden md:flex items-center gap-1 bg-[#090B10] p-0.5 rounded-xl border border-[#212836]">
           <button
             onClick={() => {
               setViewMode('balanced');
@@ -146,13 +146,13 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               setIsRightCollapsed(false);
             }}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all',
+              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all select-none',
               viewMode === 'balanced' && !isLeftCollapsed && !isRightCollapsed
-                ? 'bg-[#1E2536] text-[#F1F5F9] shadow-sm'
-                : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852] shadow-sm'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
-            <Columns3 className="w-3.5 h-3.5" />
+            <Columns3 className="w-3.5 h-3.5 text-[#8B7CFF]" />
             <span>Studio (3-Zone)</span>
           </button>
 
@@ -163,13 +163,13 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               setIsRightCollapsed(true);
             }}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all',
+              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all select-none',
               viewMode === 'canvas-focus'
-                ? 'bg-[#1E2536] text-[#F1F5F9] shadow-sm'
-                : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852] shadow-sm'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
-            <SquareDashedBottomCode className="w-3.5 h-3.5" />
+            <SquareDashedBottomCode className="w-3.5 h-3.5 text-[#38BDF8]" />
             <span>Canvas Focus</span>
           </button>
 
@@ -179,13 +179,13 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               setIsRightCollapsed(false);
             }}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all',
+              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all select-none',
               viewMode === 'inspect-focus'
-                ? 'bg-[#1E2536] text-[#F1F5F9] shadow-sm'
-                : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852] shadow-sm'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
-            <BrainCircuit className="w-3.5 h-3.5" />
+            <BrainCircuit className="w-3.5 h-3.5 text-emerald-400" />
             <span>Deep Inspection</span>
           </button>
         </div>
@@ -203,10 +203,10 @@ export const Workspace: React.FC<WorkspaceProps> = ({
                 }
               }}
               className={cn(
-                'hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border',
+                'hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border select-none',
                 isRightCollapsed
-                  ? 'bg-[#090B10] text-[#94A3B8] border-[#252D3B] hover:text-[#F1F5F9]'
-                  : 'bg-[#8B7CFF]/15 text-[#8B7CFF] border-[#8B7CFF]/40'
+                  ? 'bg-[#090B10] text-[#94A3B8] border-[#212836] hover:text-[#F1F5F9]'
+                  : 'bg-[#8B7CFF]/15 text-[#8B7CFF] border-[#8B7CFF]/35'
               )}
               aria-label="Toggle intelligence panel"
             >
@@ -218,14 +218,16 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         </div>
       </div>
 
-      {/* Mobile Segmented Navigation Header */}
-      <div className="lg:hidden flex items-center justify-between p-2.5 bg-[#10141D] border-b border-[#252D3B]">
-        <div className="flex items-center gap-1 bg-[#090B10] p-1 rounded-xl border border-[#252D3B] w-full justify-around">
+      {/* Mobile Segmented Navigation Header (<1024px tablet/mobile) */}
+      <div className="lg:hidden flex items-center justify-between p-2 bg-[#0D111A] border-b border-[#212836] shrink-0">
+        <div className="flex items-center gap-1 bg-[#090B10] p-1 rounded-xl border border-[#212836] w-full justify-around">
           <button
             onClick={() => setMobileView('input')}
             className={cn(
               'px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors',
-              mobileView === 'input' ? 'bg-[#1E2536] text-[#F1F5F9]' : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+              mobileView === 'input'
+                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852]'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
             <Pen className="w-3.5 h-3.5" />
@@ -235,10 +237,12 @@ export const Workspace: React.FC<WorkspaceProps> = ({
             onClick={() => setMobileView('recognition')}
             className={cn(
               'px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors',
-              mobileView === 'recognition' ? 'bg-[#1E2536] text-[#F1F5F9]' : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+              mobileView === 'recognition'
+                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852]'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-[#38BDF8]" />
             <span>Output</span>
             {prediction && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
           </button>
@@ -246,10 +250,12 @@ export const Workspace: React.FC<WorkspaceProps> = ({
             onClick={() => setMobileView('explainability')}
             className={cn(
               'px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors',
-              mobileView === 'explainability' ? 'bg-[#1E2536] text-[#F1F5F9]' : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+              mobileView === 'explainability'
+                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852]'
+                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
-            <BrainCircuit className="w-3.5 h-3.5" />
+            <BrainCircuit className="w-3.5 h-3.5 text-[#8B7CFF]" />
             <span>Explain</span>
             {prediction && <span className="w-1.5 h-1.5 rounded-full bg-[#8B7CFF]" />}
           </button>
@@ -257,26 +263,25 @@ export const Workspace: React.FC<WorkspaceProps> = ({
       </div>
 
       {/* ======================================================== */}
-      {/* MAIN WORKSPACE GRID                                      */}
+      {/* MAIN WORKSPACE 3-ZONE GRID                               */}
       {/* ======================================================== */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
         {/* ======================================================== */}
         {/* LEFT PANEL: INPUT (Ink Canvas / Photo Upload)            */}
         {/* ======================================================== */}
         <div
           className={cn(
-            'flex flex-col gap-2.5 h-full overflow-hidden transition-all duration-300',
+            'flex flex-col h-full min-h-0 overflow-hidden transition-all duration-300',
             colSpans.left,
             mobileView === 'input' ? 'flex' : 'hidden lg:flex'
           )}
         >
-          <div className="flex-1 min-h-0 overflow-hidden shadow-elevated rounded-xl">
+          <div className="flex-1 min-h-0 overflow-hidden shadow-sm rounded-xl">
             {inputMode === 'canvas' ? (
               <HandwritingCanvas
                 onRecognize={(blob, previewUrl) => {
                   onRecognize(blob, previewUrl);
                   if (window.innerWidth < 1024) setMobileView('recognition');
-                  // Automatically open right panel when recognized
                   setIsRightCollapsed(false);
                 }}
                 isRecognizing={isRecognizing}
@@ -300,7 +305,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         {/* ======================================================== */}
         <div
           className={cn(
-            'flex flex-col h-full overflow-hidden transition-all duration-300',
+            'flex flex-col h-full min-h-0 overflow-hidden transition-all duration-300',
             colSpans.center,
             mobileView === 'recognition' ? 'flex' : 'hidden lg:flex'
           )}
@@ -313,23 +318,23 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         {/* ======================================================== */}
         <div
           className={cn(
-            'flex flex-col h-full gap-3 overflow-y-auto pr-1 transition-all duration-300',
+            'flex flex-col h-full min-h-0 gap-2.5 overflow-y-auto pr-1 transition-all duration-300',
             colSpans.right,
             mobileView === 'explainability' ? 'flex' : 'hidden lg:flex'
           )}
         >
-          {/* Panel Top Title */}
-          <div className="flex items-center justify-between px-3.5 py-2 bg-[#10141D] rounded-xl border border-[#252D3B] shrink-0 shadow-subtle">
+          {/* Panel Top Title Bar */}
+          <div className="flex items-center justify-between px-3.5 py-2 bg-[#0D111A] rounded-xl border border-[#212836] shrink-0 shadow-sm select-none">
             <div className="flex items-center gap-2">
               <BrainCircuit className="w-4 h-4 text-[#8B7CFF]" />
-              <h3 className="text-xs font-semibold text-[#F1F5F9]">
+              <h3 className="text-xs font-bold text-[#F8FAFC]">
                 Intelligence & Explainability
               </h3>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono text-[#94A3B8]">
-                {prediction ? `${prediction.tokens.length} Symbols` : 'Awaiting Input'}
+                {prediction ? `${prediction.tokens.length} Symbols` : 'Standby'}
               </span>
 
               {prediction && (
@@ -348,10 +353,10 @@ export const Workspace: React.FC<WorkspaceProps> = ({
 
           {prediction ? (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col gap-3"
+              transition={{ duration: 0.25 }}
+              className="flex flex-col gap-2.5"
             >
               {/* Feature 1: Spatial Attention Spotlight */}
               {prediction.preprocessed_image && (
@@ -391,29 +396,37 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               />
             </motion.div>
           ) : (
-            /* Elegant Guided Empty State instead of messy blank cards */
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center rounded-xl bg-[#10141D]/90 border border-[#252D3B] backdrop-blur-md">
-              <div className="w-12 h-12 rounded-2xl bg-[#151B27] border border-[#252D3B] text-[#8B7CFF] flex items-center justify-center mb-3 shadow-glow-accent/20">
+            /* Standby State with Architectural Explanation & Guide */
+            <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-6 text-center rounded-xl bg-[#0D111A] border border-[#212836] shadow-sm overflow-y-auto">
+              <div className="w-12 h-12 rounded-2xl bg-[#141A28] border border-[#212836] text-[#8B7CFF] flex items-center justify-center mb-3 shadow-md">
                 <BrainCircuit className="w-6 h-6 animate-pulse" />
               </div>
-              <h4 className="text-sm font-semibold text-[#F1F5F9]">
-                Neural Inspection Standby
+              <h4 className="text-sm font-bold text-[#F8FAFC]">
+                Neural Explainability Standby
               </h4>
               <p className="text-xs text-[#94A3B8] max-w-xs mt-1.5 leading-relaxed">
-                Draw an expression on the digital canvas or upload notebook photo, then click <strong>Recognize Equation</strong>.
+                Draw an expression or upload a notebook photograph, then click <strong className="text-[#F8FAFC]">Recognize Equation</strong>.
               </p>
 
-              <div className="mt-5 p-3 rounded-lg bg-[#090B10] border border-[#252D3B] text-left w-full max-w-xs">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#38BDF8] mb-1">
+              <div className="mt-5 p-3 rounded-xl bg-[#080B11] border border-[#212836] text-left w-full max-w-xs space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#38BDF8]">
                   <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-                  <span>What appears here:</span>
+                  <span>Explainability Features:</span>
                 </div>
-                <ul className="text-[11px] text-[#94A3B8] space-y-1 list-disc list-inside">
-                  <li>Decoder cross-attention spotlight</li>
-                  <li>Token confidence & Top-3 alternatives</li>
-                  <li>Symbol-by-symbol correction controls</li>
-                  <li>SymPy symbolic simplification</li>
-                </ul>
+                <div className="space-y-1.5 text-[11px] text-[#94A3B8]">
+                  <div className="flex items-start gap-2">
+                    <Crosshair className="w-3.5 h-3.5 text-[#8B7CFF] shrink-0 mt-0.5" />
+                    <span>Cross-attention 2D spatial spotlight per emitted token</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Binary className="w-3.5 h-3.5 text-[#38BDF8] shrink-0 mt-0.5" />
+                    <span>Beam search alternative token probability inspection</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>SymPy Computer Algebra System syntactic verification</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -432,7 +445,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-2 max-h-[75vh] overflow-y-auto">
             {/* Left: High-Resolution Feature Map & Spotlight (6 cols) */}
             <div className="lg:col-span-6 flex flex-col gap-4">
-              <span className="text-xs font-semibold text-[#8B7CFF] uppercase tracking-wider block">
+              <span className="text-xs font-semibold text-[#8B7CFF] uppercase tracking-wider block font-mono">
                 DenseNet-121 Feature Memory & Attention Grid
               </span>
 
@@ -457,12 +470,8 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               )}
             </div>
 
-            {/* Right: Token Hypotheses & SymPy Verification (6 cols) */}
+            {/* Right: Detailed Token Sequence & SymPy Verification (6 cols) */}
             <div className="lg:col-span-6 flex flex-col gap-4">
-              <span className="text-xs font-semibold text-[#38BDF8] uppercase tracking-wider block">
-                Beam Search Token Predictions & CAS Tree
-              </span>
-
               <TokenInspector
                 tokens={prediction.tokens}
                 activeTokenIndex={activeTokenIndex}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, RotateCcw, Code, AlertCircle } from 'lucide-react';
+import { Copy, Check, RotateCcw, Code, AlertCircle, Sparkles, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { renderLatexToHtml } from '../../utils/latex';
 import { Tooltip } from '../ui/Tooltip';
@@ -22,6 +22,7 @@ export const LatexEditor: React.FC<LatexEditorProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState<'both' | 'rendered' | 'code'>('both');
+  const [scale, setScale] = useState<number>(1.0);
 
   const { html, error: katexError } = renderLatexToHtml(currentLatex);
 
@@ -31,79 +32,96 @@ export const LatexEditor: React.FC<LatexEditorProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const cycleScale = () => {
+    setScale((prev) => (prev === 1.0 ? 1.25 : prev === 1.25 ? 1.5 : 1.0));
+  };
+
   return (
-    <div className="flex flex-col h-full bg-[#10141D] rounded-xl border border-[#252D3B] overflow-hidden">
-      {/* Editor Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#151B27] border-b border-[#252D3B]">
+    <div className="flex flex-col h-full min-h-0 bg-[#0D111A] rounded-xl border border-[#212836] overflow-hidden shadow-sm">
+      {/* Editor Sub-Header Toolbar */}
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#141A28] border-b border-[#212836] shrink-0 select-none">
         <div className="flex items-center gap-2">
           <Code className="w-4 h-4 text-[#8B7CFF]" />
-          <span className="text-xs font-semibold text-[#F1F5F9]">Mathematical Output</span>
+          <span className="text-xs font-bold text-[#F8FAFC]">Mathematical Output</span>
           {isModified && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/30">
+            <span className="px-1.5 py-0.2 rounded font-mono text-[10px] font-semibold bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/30">
               Edited
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-[#090B10] p-0.5 rounded-lg border border-[#252D3B]">
+          {/* View Mode Segmented Controls */}
+          <div className="flex items-center bg-[#090B10] p-0.5 rounded-lg border border-[#212836]">
             <button
               onClick={() => setViewMode('both')}
               className={cn(
-                'px-2 py-1 text-xs rounded transition-colors',
+                'px-2 py-1 text-xs font-medium rounded-md transition-colors',
                 viewMode === 'both'
-                  ? 'bg-[#1E2536] text-[#F1F5F9]'
-                  : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+                  ? 'bg-[#182133] text-[#F8FAFC] shadow-sm'
+                  : 'text-[#94A3B8] hover:text-[#F8FAFC]'
               )}
-              title="Split View"
+              title="Split preview & source view"
             >
               Split
             </button>
             <button
               onClick={() => setViewMode('rendered')}
               className={cn(
-                'px-2 py-1 text-xs rounded transition-colors',
+                'px-2 py-1 text-xs font-medium rounded-md transition-colors',
                 viewMode === 'rendered'
-                  ? 'bg-[#1E2536] text-[#F1F5F9]'
-                  : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+                  ? 'bg-[#182133] text-[#F8FAFC] shadow-sm'
+                  : 'text-[#94A3B8] hover:text-[#F8FAFC]'
               )}
-              title="Rendered Only"
+              title="Mathematical preview only"
             >
               Math
             </button>
             <button
               onClick={() => setViewMode('code')}
               className={cn(
-                'px-2 py-1 text-xs rounded transition-colors',
+                'px-2 py-1 text-xs font-medium rounded-md transition-colors',
                 viewMode === 'code'
-                  ? 'bg-[#1E2536] text-[#F1F5F9]'
-                  : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+                  ? 'bg-[#182133] text-[#F8FAFC] shadow-sm'
+                  : 'text-[#94A3B8] hover:text-[#F8FAFC]'
               )}
-              title="LaTeX Code Only"
+              title="LaTeX source code only"
             >
               LaTeX
             </button>
           </div>
 
+          {/* Scale preview toggle */}
+          {viewMode !== 'code' && (
+            <Tooltip content={`Preview Scale: ${scale}x (click to change)`}>
+              <button
+                onClick={cycleScale}
+                className="px-2 py-1 rounded-lg text-[11px] font-mono font-semibold bg-[#090B10] text-[#94A3B8] hover:text-[#8B7CFF] border border-[#212836] transition-colors"
+                aria-label="Toggle math font scale"
+              >
+                {scale}x
+              </button>
+            </Tooltip>
+          )}
+
           {/* Reset to AI Prediction */}
           {isModified && (
-            <Tooltip content="Reset to AI Prediction">
+            <Tooltip content="Revert to raw model output">
               <Button
-                size="sm"
+                size="xs"
                 variant="subtle"
                 onClick={onReset}
-                icon={<RotateCcw className="w-3.5 h-3.5" />}
+                icon={<RotateCcw className="w-3 h-3" />}
               >
-                Reset
+                Revert
               </Button>
             </Tooltip>
           )}
 
           {/* Copy LaTeX */}
-          <Tooltip content={copied ? 'Copied to Clipboard!' : 'Copy LaTeX'}>
+          <Tooltip content={copied ? 'Copied to Clipboard!' : 'Copy LaTeX source'}>
             <Button
-              size="sm"
+              size="xs"
               variant={copied ? 'primary' : 'secondary'}
               onClick={handleCopy}
               icon={copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -114,47 +132,61 @@ export const LatexEditor: React.FC<LatexEditorProps> = ({
         </div>
       </div>
 
-      {/* Editor Content Area */}
-      <div className="flex-1 flex flex-col p-4 gap-4 overflow-y-auto">
-        {/* Rendered Math Display Box */}
+      {/* Main Workspace Body - Flex Stretches 100% to fill container */}
+      <div className="flex-1 min-h-0 flex flex-col p-3 gap-3 overflow-hidden">
+        {/* Rendered Math Preview Stage */}
         {(viewMode === 'both' || viewMode === 'rendered') && (
-          <div className="flex flex-col rounded-xl bg-[#090B10] border border-[#252D3B] p-6 min-h-[140px] items-center justify-center relative overflow-x-auto shadow-inner">
+          <div
+            className={cn(
+              'flex flex-col rounded-xl bg-[#080B11] border border-[#212836] p-4 items-center justify-center relative overflow-x-auto overflow-y-auto shadow-inner transition-all',
+              viewMode === 'both' ? 'flex-1 min-h-[140px]' : 'h-full flex-1 min-h-[220px]'
+            )}
+          >
             {katexError ? (
-              <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 px-3 py-2 rounded-lg border border-rose-500/30">
+              <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 px-3.5 py-2.5 rounded-lg border border-rose-500/30 max-w-md">
                 <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>KaTeX Syntax Error: {katexError}</span>
+                <span className="font-mono text-[11px]">KaTeX Error: {katexError}</span>
               </div>
             ) : html ? (
               <div
-                className="select-text text-center text-[#F1F5F9] font-math"
+                className="select-text text-center text-[#F8FAFC] font-math transition-transform duration-200"
+                style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}
                 dangerouslySetInnerHTML={{ __html: html }}
               />
             ) : (
-              <div className="text-xs text-[#94A3B8] italic">No mathematical expression</div>
+              <div className="text-xs text-[#64748B] italic">No mathematical expression generated</div>
             )}
-            <div className="absolute bottom-2 right-3 text-[10px] text-[#64748B] font-mono uppercase tracking-wider select-none">
-              KaTeX Live Preview
+
+            <div className="absolute bottom-2 right-3 text-[9px] text-[#475569] font-mono uppercase tracking-widest select-none pointer-events-none">
+              KaTeX High-Precision Preview
             </div>
           </div>
         )}
 
-        {/* Editable LaTeX Code Area */}
+        {/* Editable LaTeX Monospace Source Box */}
         {(viewMode === 'both' || viewMode === 'code') && (
-          <div className="flex flex-col flex-1 gap-1.5">
-            <div className="flex items-center justify-between text-xs text-[#94A3B8]">
-              <span className="font-mono">LaTeX Source</span>
+          <div
+            className={cn(
+              'flex flex-col gap-1.5 overflow-hidden',
+              viewMode === 'both' ? 'flex-1 min-h-[120px]' : 'h-full flex-1 min-h-[220px]'
+            )}
+          >
+            <div className="flex items-center justify-between text-xs text-[#94A3B8] shrink-0">
+              <span className="font-mono text-[11px] font-semibold flex items-center gap-1.5">
+                <Code className="w-3.5 h-3.5 text-[#38BDF8]" />
+                LaTeX Source
+              </span>
               {originalLatex !== currentLatex && (
-                <span className="text-[11px] text-[#8B7CFF]">
-                  Original: <code className="font-mono">{originalLatex}</code>
+                <span className="text-[10px] text-[#8B7CFF] truncate max-w-xs font-mono">
+                  Initial: <code>{originalLatex}</code>
                 </span>
               )}
             </div>
             <textarea
               value={currentLatex}
               onChange={(e) => onLatexChange(e.target.value)}
-              placeholder="Enter or edit LaTeX expression..."
-              rows={4}
-              className="w-full flex-1 min-h-[90px] font-mono text-sm bg-[#090B10] text-[#F1F5F9] p-3 rounded-xl border border-[#252D3B] focus:border-[#8B7CFF] focus:outline-none focus:ring-1 focus:ring-[#8B7CFF] transition-all resize-none selection:bg-[#8B7CFF]/30"
+              placeholder="LaTeX tokens appear here. You can manually edit braces, exponents, or commands..."
+              className="w-full flex-1 min-h-0 font-mono text-xs sm:text-sm bg-[#080B11] text-[#F8FAFC] p-3 rounded-xl border border-[#212836] focus:border-[#8B7CFF] focus:outline-none focus:ring-1 focus:ring-[#8B7CFF] transition-all resize-none selection:bg-[#8B7CFF]/30 leading-relaxed"
               spellCheck={false}
             />
           </div>

@@ -6,7 +6,17 @@ import { formatConfidence } from '../../utils/latex';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Tooltip } from '../ui/Tooltip';
-import { Bookmark, BookmarkCheck, Sparkles, Layers, Clock, AlertTriangle } from 'lucide-react';
+import {
+  Bookmark,
+  BookmarkCheck,
+  Sparkles,
+  Layers,
+  Clock,
+  AlertTriangle,
+  Lightbulb,
+  CheckCircle2,
+  Cpu,
+} from 'lucide-react';
 import { saveHistoryEntry } from '../../services/historyStorage';
 import { useToast } from '../ui/Toast';
 
@@ -52,25 +62,25 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full gap-3 overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 gap-2.5 overflow-hidden">
       {/* Top Status & Metrics Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-[#10141D] rounded-xl border border-[#252D3B]">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 bg-[#0D111A] rounded-xl border border-[#212836] shrink-0 select-none shadow-sm">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-[#8B7CFF]/15 text-[#8B7CFF]">
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-3.5 h-3.5" />
           </div>
-          <div>
-            <h3 className="text-xs font-semibold text-[#F1F5F9] leading-none">
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-bold text-[#F8FAFC] leading-none">
               Recognition Output
             </h3>
-            <span className="text-[10px] text-[#94A3B8]">
-              DenseNet-121 + Beam Search Decoder
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#182133] text-[#38BDF8] border border-[#2B3852]">
+              v3-Final
             </span>
           </div>
         </div>
 
         {prediction && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {/* Confidence Badge */}
             <Tooltip content="Mean token emission confidence from beam search">
               <Badge
@@ -78,12 +88,12 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
                 dot
                 size="sm"
               >
-                {formatConfidence(prediction.avg_confidence)} Confidence
+                {formatConfidence(prediction.avg_confidence)} Conf
               </Badge>
             </Tooltip>
 
             {/* Latency Badge */}
-            <Tooltip content="End-to-end CPU inference + SymPy latency">
+            <Tooltip content="End-to-end CPU inference + SymPy validation latency">
               <Badge variant="cyan" size="sm">
                 <Clock className="w-3 h-3 mr-1 inline" />
                 {prediction.latency_ms} ms
@@ -91,7 +101,7 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
             </Tooltip>
 
             {/* Save Equation Button */}
-            <Tooltip content={isSaved ? 'Saved!' : 'Save to Favorites'}>
+            <Tooltip content={isSaved ? 'Saved to Favorites!' : 'Save to Favorites'}>
               <Button
                 size="xs"
                 variant={isSaved ? 'primary' : 'outline'}
@@ -107,27 +117,30 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
 
       {/* Pipeline Progress Indicator */}
       {(processingStatus !== 'idle' || prediction) && (
-        <PipelineProgress
-          status={processingStatus}
-          currentMessage={currentStepMessage}
-          latencyMs={prediction?.latency_ms}
-        />
+        <div className="shrink-0">
+          <PipelineProgress
+            status={processingStatus}
+            currentMessage={currentStepMessage}
+            latencyMs={prediction?.latency_ms}
+          />
+        </div>
       )}
 
-      {/* Main LaTeX & KaTeX Editor */}
+      {/* Main LaTeX & KaTeX Editor / Standby State */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col gap-2">
         {prediction && (prediction.is_ood || prediction.warning) && (
-          <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs shadow-sm shrink-0">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs shadow-sm shrink-0">
             <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-            <div className="flex-1">
-              <span className="font-semibold text-amber-200">Ambiguous Input Warning: </span>
+            <div className="flex-1 text-[11px] leading-snug">
+              <strong className="text-amber-200">Scribble Warning: </strong>
               <span>
                 {prediction.warning ||
-                  'Low confidence — input may not be a valid mathematical expression.'}
+                  'Low confidence — handwriting may contain ambiguous non-mathematical strokes.'}
               </span>
             </div>
           </div>
         )}
+
         {prediction ? (
           <LatexEditor
             originalLatex={prediction.latex}
@@ -137,16 +150,43 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
             isModified={isModified}
           />
         ) : (
-          <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-[#10141D] rounded-xl border border-[#252D3B]">
-            <div className="p-4 rounded-2xl bg-[#151B27] border border-[#252D3B] text-[#94A3B8] mb-3">
-              <Layers className="w-8 h-8 opacity-40" />
+          /* Scientific Standby Guided Screen */
+          <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-6 text-center bg-[#0D111A] rounded-xl border border-[#212836] shadow-sm overflow-y-auto">
+            <div className="p-3.5 rounded-2xl bg-[#141A28] border border-[#212836] text-[#8B7CFF] mb-3.5 shadow-md">
+              <Layers className="w-7 h-7 opacity-80" />
             </div>
-            <h4 className="text-sm font-semibold text-[#F1F5F9]">
+            <h4 className="text-sm font-bold text-[#F8FAFC]">
               Ready for Mathematical Recognition
             </h4>
-            <p className="text-xs text-[#94A3B8] max-w-sm mt-1">
-              Draw an equation on the digital canvas or upload a notebook photograph, then click <strong>Recognize Equation</strong>.
+            <p className="text-xs text-[#94A3B8] max-w-sm mt-1.5 leading-relaxed">
+              Inscribe an equation on the canvas or ingest a photograph, then click <strong className="text-[#F8FAFC]">Recognize Equation</strong>.
             </p>
+
+            <div className="mt-6 grid grid-cols-1 gap-2 w-full max-w-xs text-left">
+              <div className="p-2.5 rounded-xl bg-[#080B11] border border-[#212836] flex items-start gap-2.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="text-[11px]">
+                  <span className="font-semibold text-[#CBD5E1] block">Two-Dimensional Syntax</span>
+                  <span className="text-[#64748B]">Fractions, exponents, square roots, matrices</span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-[#080B11] border border-[#212836] flex items-start gap-2.5">
+                <Cpu className="w-3.5 h-3.5 text-[#38BDF8] shrink-0 mt-0.5" />
+                <div className="text-[11px]">
+                  <span className="font-semibold text-[#CBD5E1] block">DenseNet-121 + Beam Search</span>
+                  <span className="text-[#64748B]">Real-time INT8 CPU inference in ~120ms</span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-[#080B11] border border-[#212836] flex items-start gap-2.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#8B7CFF] shrink-0 mt-0.5" />
+                <div className="text-[11px]">
+                  <span className="font-semibold text-[#CBD5E1] block">SymPy Computer Algebra</span>
+                  <span className="text-[#64748B]">Automated mathematical syntax verification</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

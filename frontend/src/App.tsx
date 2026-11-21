@@ -75,6 +75,7 @@ export const MainApp: React.FC = () => {
   const [isDocsOpen, setIsDocsOpen] = useState(false);
   const [isModelSpecsOpen, setIsModelSpecsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   // Backend connection status
   const [isBackendConnected, setIsBackendConnected] = useState(false);
@@ -408,7 +409,7 @@ export const MainApp: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#090B10] text-[#F1F5F9]">
+    <div className="flex h-[100dvh] w-screen overflow-hidden bg-[#090B10] text-[#F1F5F9]">
       {/* Collapsible Left Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -425,7 +426,7 @@ export const MainApp: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col h-full overflow-hidden">
         {/* Top Header Navigation */}
         <Header
           currentTab={currentTab}
@@ -437,11 +438,11 @@ export const MainApp: React.FC = () => {
           onOpenShortcuts={() => setIsShortcutsOpen(true)}
           onOpenDocs={() => setIsDocsOpen(true)}
           onOpenModelSpecs={() => setIsModelSpecsOpen(true)}
-          onResetWorkspace={handleClearWorkspace}
+          onResetWorkspace={() => setIsResetConfirmOpen(true)}
         />
 
         {/* View Switcher based on currentTab */}
-        <main className="flex-1 overflow-hidden relative">
+        <main className="flex-1 min-h-0 overflow-hidden relative flex flex-col">
           {currentTab === 'dashboard' && (
             <DashboardView
               onStartCanvas={() => {
@@ -578,6 +579,38 @@ export const MainApp: React.FC = () => {
         maxWidth="md"
       >
         <ShortcutsModal />
+      </Modal>
+
+      {/* Reset Active Workspace Confirmation Modal */}
+      <Modal
+        isOpen={isResetConfirmOpen}
+        onClose={() => setIsResetConfirmOpen(false)}
+        title="Reset Active Workspace?"
+        subtitle="Confirmation required to discard active drawing"
+        maxWidth="sm"
+      >
+        <div className="flex flex-col gap-4 p-1">
+          <p className="text-xs text-[#94A3B8] leading-relaxed">
+            Are you sure you want to clear your current drawing and recognition results? All unsaved strokes and mathematical edits in this session will be reset.
+          </p>
+          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#252D3B]">
+            <button
+              onClick={() => setIsResetConfirmOpen(false)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#1E2536] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                handleClearWorkspace();
+                setIsResetConfirmOpen(false);
+              }}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/40 hover:bg-rose-500/30 transition-colors shadow-sm"
+            >
+              Reset Workspace
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -15,11 +15,11 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
   latencyMs,
 }) => {
   const steps = [
-    { id: 'preparing', label: 'Input Ingestion', icon: Scan },
-    { id: 'preprocessing', label: 'Morphological Binarization', icon: Layers },
-    { id: 'features', label: 'DenseNet-121 Encoder', icon: Cpu },
-    { id: 'decoding', label: 'Transformer Beam Search', icon: Binary },
-    { id: 'verifying', label: 'SymPy & Syntax Verification', icon: Sparkles },
+    { id: 'preparing', label: 'Ingestion', icon: Scan },
+    { id: 'preprocessing', label: 'Binarize', icon: Layers },
+    { id: 'features', label: 'DenseNet', icon: Cpu },
+    { id: 'decoding', label: 'Decoder', icon: Binary },
+    { id: 'verifying', label: 'SymPy', icon: Sparkles },
   ];
 
   const getStepState = (stepIndex: number) => {
@@ -41,47 +41,48 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 p-4 rounded-xl bg-[#10141D] border border-[#252D3B]">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] flex items-center gap-1.5">
+    <div className="flex flex-col gap-2 p-2.5 rounded-xl bg-[#0D111A] border border-[#212836] select-none shadow-sm">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-mono text-[11px] font-semibold text-[#94A3B8] flex items-center gap-1.5">
           <Cpu className="w-3.5 h-3.5 text-[#8B7CFF]" />
           Inference Pipeline
         </span>
         {latencyMs !== undefined && (
-          <span className="text-xs font-mono text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-0.5 rounded border border-[#38BDF8]/20">
+          <span className="text-[10px] font-mono text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-0.5 rounded border border-[#38BDF8]/20">
             {latencyMs.toFixed(1)} ms
           </span>
         )}
       </div>
 
-      <div className="grid grid-cols-5 gap-2 pt-1">
+      <div className="grid grid-cols-5 gap-1.5 pt-0.5">
         {steps.map((step, idx) => {
           const state = getStepState(idx);
           const Icon = step.icon;
 
           return (
-            <div key={step.id} className="flex flex-col items-center text-center gap-1.5">
+            <div key={step.id} className="flex flex-col items-center text-center gap-1">
               <div
                 className={cn(
-                  'w-8 h-8 rounded-lg flex items-center justify-center border transition-all duration-300',
-                  state === 'completed' && 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+                  'w-6 h-6 rounded-lg flex items-center justify-center border transition-all duration-300',
+                  state === 'completed' && 'bg-emerald-500/20 text-emerald-400 border-emerald-500/35',
                   state === 'active' && 'bg-[#8B7CFF]/20 text-[#8B7CFF] border-[#8B7CFF] animate-pulse',
-                  state === 'pending' && 'bg-[#090B10] text-[#64748B] border-[#252D3B]',
-                  state === 'error' && 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                  state === 'pending' && 'bg-[#080B11] text-[#475569] border-[#212836]',
+                  state === 'error' && 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                 )}
+                title={step.label}
               >
                 {state === 'completed' ? (
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-3.5 h-3.5" />
                 ) : state === 'active' ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-[#8B7CFF]" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#8B7CFF]" />
                 ) : (
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3 h-3" />
                 )}
               </div>
               <span
                 className={cn(
-                  'text-[10px] font-medium leading-tight line-clamp-1',
-                  state === 'active' ? 'text-[#F1F5F9]' : 'text-[#64748B]'
+                  'text-[9px] font-mono font-medium leading-none line-clamp-1',
+                  state === 'active' ? 'text-[#F8FAFC]' : state === 'completed' ? 'text-[#CBD5E1]' : 'text-[#64748B]'
                 )}
               >
                 {step.label}
@@ -92,7 +93,7 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
       </div>
 
       {currentMessage && status !== 'idle' && (
-        <div className="text-center text-xs text-[#94A3B8] mt-1 italic animate-pulse">
+        <div className="text-center text-[10px] text-[#94A3B8] font-mono truncate italic animate-pulse">
           {currentMessage}
         </div>
       )}

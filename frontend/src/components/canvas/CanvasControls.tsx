@@ -1,5 +1,15 @@
-import React from 'react';
-import { Pen, Eraser, RotateCcw, RotateCw, Trash2, Download, Grid, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Pen,
+  Eraser,
+  RotateCcw,
+  RotateCw,
+  Trash2,
+  Download,
+  Grid,
+  Sparkles,
+  ChevronDown,
+} from 'lucide-react';
 import { CanvasTool, GridStyle } from '../../types/workspace';
 import { Tooltip } from '../ui/Tooltip';
 import { cn } from '../../utils/cn';
@@ -35,170 +45,191 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
   onExportPng,
   onLoadSample,
 }) => {
-  const strokeSizes = [2, 4, 6, 8];
+  const [isSampleDropdownOpen, setIsSampleDropdownOpen] = useState(false);
+
+  const strokeSizes = [
+    { size: 2, label: 'Fine (2px)' },
+    { size: 4, label: 'Standard (4px)' },
+    { size: 6, label: 'Bold (6px)' },
+    { size: 8, label: 'Marker (8px)' },
+  ];
 
   const gridStyles: { id: GridStyle; label: string }[] = [
     { id: 'dots', label: 'Dot Grid' },
-    { id: 'lines', label: 'Graph Lines' },
     { id: 'ruled', label: 'Ruled Lines' },
+    { id: 'lines', label: 'Graph Paper' },
     { id: 'none', label: 'Blank Paper' },
   ];
 
+  const sampleEquations = [
+    { id: 'fraction', label: 'Fraction: (a + b) / c', formula: '\\frac{a+b}{c}' },
+    { id: 'quadratic', label: 'Quadratic: x² + 4 = 0', formula: 'x^2 + 4 = 0' },
+    { id: 'integral', label: 'Calculus: ∫ x dx', formula: '\\int x dx' },
+  ];
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#10141D] border-b border-[#252D3B]">
-      {/* Tool selector: Pen / Eraser */}
-      <div className="flex items-center gap-1 bg-[#090B10] p-1 rounded-lg border border-[#252D3B]">
-        <Tooltip content="Pen Tool (P)" shortcut="P">
-          <button
-            onClick={() => setTool('pen')}
-            className={cn(
-              'p-1.5 rounded-md transition-all text-xs flex items-center gap-1.5',
-              tool === 'pen'
-                ? 'bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/40'
-                : 'text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#151B27]'
-            )}
-            aria-label="Pen tool"
-          >
-            <Pen className="w-3.5 h-3.5" />
-            <span className="text-xs font-medium">Pen</span>
-          </button>
-        </Tooltip>
+    <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#0D111A] border-b border-[#212836] select-none">
+      {/* Left Cluster: Tool selector (Pen/Eraser) & Stroke size */}
+      <div className="flex items-center gap-2">
+        {/* Pen / Eraser Segmented Switch */}
+        <div className="flex items-center gap-0.5 bg-[#090B10] p-1 rounded-xl border border-[#212836]">
+          <Tooltip content="Digital Pen (P)" shortcut="P">
+            <button
+              onClick={() => setTool('pen')}
+              className={cn(
+                'px-2.5 py-1 rounded-lg transition-all text-xs font-medium flex items-center gap-1.5',
+                tool === 'pen'
+                  ? 'bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/35 shadow-sm'
+                  : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#141A28]'
+              )}
+              aria-label="Pen tool"
+            >
+              <Pen className="w-3.5 h-3.5" />
+              <span>Pen</span>
+            </button>
+          </Tooltip>
 
-        <Tooltip content="Eraser Tool (E)" shortcut="E">
-          <button
-            onClick={() => setTool('eraser')}
-            className={cn(
-              'p-1.5 rounded-md transition-all text-xs flex items-center gap-1.5',
-              tool === 'eraser'
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                : 'text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#151B27]'
-            )}
-            aria-label="Eraser tool"
-          >
-            <Eraser className="w-3.5 h-3.5" />
-            <span className="text-xs font-medium">Eraser</span>
-          </button>
-        </Tooltip>
-      </div>
+          <Tooltip content="Ink Eraser (E)" shortcut="E">
+            <button
+              onClick={() => setTool('eraser')}
+              className={cn(
+                'px-2.5 py-1 rounded-lg transition-all text-xs font-medium flex items-center gap-1.5',
+                tool === 'eraser'
+                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/35 shadow-sm'
+                  : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#141A28]'
+              )}
+              aria-label="Eraser tool"
+            >
+              <Eraser className="w-3.5 h-3.5" />
+              <span>Eraser</span>
+            </button>
+          </Tooltip>
+        </div>
 
-      {/* Stroke width selector */}
-      <div className="flex items-center gap-1.5 bg-[#090B10] px-2 py-1 rounded-lg border border-[#252D3B]">
-        <span className="text-[11px] text-[#94A3B8] select-none mr-0.5">Size</span>
-        {strokeSizes.map((size) => (
-          <button
-            key={size}
-            onClick={() => setStrokeWidth(size)}
-            className={cn(
-              'w-5 h-5 rounded flex items-center justify-center transition-colors',
-              strokeWidth === size
-                ? 'bg-[#1E2536] text-[#8B7CFF]'
-                : 'text-[#94A3B8] hover:text-[#F1F5F9]'
-            )}
-            aria-label={`Stroke width ${size}px`}
-          >
-            <span
-              className="rounded-full bg-current"
-              style={{ width: `${Math.max(2, size)}px`, height: `${Math.max(2, size)}px` }}
-            />
-          </button>
-        ))}
-      </div>
-
-      {/* Grid Pattern Selector */}
-      <div className="flex items-center gap-1 bg-[#090B10] px-2 py-1 rounded-lg border border-[#252D3B]">
-        <Grid className="w-3.5 h-3.5 text-[#94A3B8]" />
-        <select
-          value={gridStyle}
-          onChange={(e) => setGridStyle(e.target.value as GridStyle)}
-          className="bg-transparent text-xs text-[#F1F5F9] focus:outline-none cursor-pointer pr-1"
-          aria-label="Grid paper background style"
-        >
-          {gridStyles.map((g) => (
-            <option key={g.id} value={g.id} className="bg-[#10141D] text-[#F1F5F9]">
-              {g.label}
-            </option>
+        {/* Stroke width selector */}
+        <div className="hidden sm:flex items-center gap-1 bg-[#090B10] px-2 py-1 rounded-xl border border-[#212836]">
+          {strokeSizes.map(({ size, label }) => (
+            <Tooltip key={size} content={label}>
+              <button
+                onClick={() => setStrokeWidth(size)}
+                className={cn(
+                  'w-6 h-6 rounded-lg flex items-center justify-center transition-all',
+                  strokeWidth === size
+                    ? 'bg-[#182133] text-[#8B7CFF] border border-[#2B3852]'
+                    : 'text-[#64748B] hover:text-[#94A3B8] hover:bg-[#141A28]'
+                )}
+                aria-label={label}
+              >
+                <span
+                  className="rounded-full bg-current transition-all"
+                  style={{ width: `${Math.max(2, size)}px`, height: `${Math.max(2, size)}px` }}
+                />
+              </button>
+            </Tooltip>
           ))}
-        </select>
+        </div>
       </div>
 
-      {/* Undo / Redo / Clear / Export */}
-      <div className="flex items-center gap-1">
-        <Tooltip content="Undo Stroke" shortcut="Ctrl+Z">
-          <button
-            onClick={onUndo}
-            disabled={!canUndo}
-            className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#1E2536] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            aria-label="Undo stroke"
+      {/* Right Cluster: Background Grid, Undo/Redo, Samples, Clear */}
+      <div className="flex items-center gap-1.5">
+        {/* Background Paper Selector */}
+        <div className="flex items-center gap-1.5 bg-[#090B10] px-2.5 py-1 rounded-xl border border-[#212836]">
+          <Grid className="w-3.5 h-3.5 text-[#8B7CFF]" />
+          <select
+            value={gridStyle}
+            onChange={(e) => setGridStyle(e.target.value as GridStyle)}
+            className="bg-transparent text-xs text-[#CBD5E1] focus:outline-none cursor-pointer pr-1"
+            aria-label="Notebook paper background style"
           >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-        </Tooltip>
+            {gridStyles.map((g) => (
+              <option key={g.id} value={g.id} className="bg-[#10141D] text-[#F8FAFC]">
+                {g.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <Tooltip content="Redo Stroke" shortcut="Ctrl+Shift+Z">
+        {/* Sample Loader Dropdown */}
+        <div className="relative">
           <button
-            onClick={onRedo}
-            disabled={!canRedo}
-            className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#1E2536] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            aria-label="Redo stroke"
+            onClick={() => setIsSampleDropdownOpen(!isSampleDropdownOpen)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-medium bg-[#141A28] text-[#8B7CFF] border border-[#2B3852] hover:bg-[#1C263B] transition-colors"
+            title="Load mathematical sample equation"
           >
-            <RotateCw className="w-4 h-4" />
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Sample</span>
+            <ChevronDown className="w-3 h-3 text-[#94A3B8]" />
           </button>
-        </Tooltip>
 
+          {isSampleDropdownOpen && (
+            <div className="absolute right-0 top-full mt-1 w-52 bg-[#0D111A] border border-[#252D3B] rounded-xl shadow-xl z-50 p-1 flex flex-col gap-0.5">
+              <span className="text-[10px] font-mono uppercase text-[#64748B] px-2 py-1 font-semibold">
+                Quick Handwriting Demos
+              </span>
+              {sampleEquations.map((sample) => (
+                <button
+                  key={sample.id}
+                  onClick={() => {
+                    onLoadSample(sample.id);
+                    setIsSampleDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#F8FAFC] hover:bg-[#182133] hover:text-[#8B7CFF] transition-colors flex items-center justify-between"
+                >
+                  <span>{sample.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* History: Undo & Redo */}
+        <div className="flex items-center gap-0.5 bg-[#090B10] p-0.5 rounded-xl border border-[#212836]">
+          <Tooltip content="Undo Stroke" shortcut="Ctrl+Z">
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#182133] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Undo stroke"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
+
+          <Tooltip content="Redo Stroke" shortcut="Ctrl+Shift+Z">
+            <button
+              onClick={onRedo}
+              disabled={!canRedo}
+              className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#182133] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              aria-label="Redo stroke"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
+        </div>
+
+        {/* Clear Canvas */}
         <Tooltip content="Clear Canvas">
           <button
             onClick={onClear}
-            className="p-1.5 rounded-lg text-[#94A3B8] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+            disabled={!canUndo}
+            className="p-1.5 rounded-xl bg-[#090B10] text-[#94A3B8] border border-[#212836] hover:text-rose-400 hover:border-rose-500/30 hover:bg-rose-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label="Clear canvas"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </Tooltip>
 
-        <Tooltip content="Export Canvas PNG">
+        {/* Export PNG */}
+        <Tooltip content="Download Canvas PNG">
           <button
             onClick={onExportPng}
-            className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#38BDF8] hover:bg-[#38BDF8]/10 transition-colors"
+            disabled={!canUndo}
+            className="p-1.5 rounded-xl bg-[#090B10] text-[#94A3B8] border border-[#212836] hover:text-[#38BDF8] hover:border-[#38BDF8]/30 hover:bg-[#38BDF8]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label="Export canvas PNG"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
           </button>
         </Tooltip>
-
-        {/* Quick Sample Expression Dropdown */}
-        <div className="relative group">
-          <Tooltip content="Load Example Strokes">
-            <button
-              className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#8B7CFF] hover:bg-[#8B7CFF]/10 transition-colors"
-              aria-label="Load sample handwriting"
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-          </Tooltip>
-          <div className="absolute right-0 top-full mt-1 w-48 py-1 bg-[#151B27] border border-[#252D3B] rounded-xl shadow-elevated hidden group-hover:block z-30">
-            <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">
-              Sample Handwriting
-            </div>
-            <button
-              onClick={() => onLoadSample('fraction')}
-              className="w-full text-left px-3 py-1.5 text-xs text-[#F1F5F9] hover:bg-[#1E2536] hover:text-[#8B7CFF] transition-colors"
-            >
-              Fraction: (a + b) / c
-            </button>
-            <button
-              onClick={() => onLoadSample('quadratic')}
-              className="w-full text-left px-3 py-1.5 text-xs text-[#F1F5F9] hover:bg-[#1E2536] hover:text-[#8B7CFF] transition-colors"
-            >
-              Quadratic Formula
-            </button>
-            <button
-              onClick={() => onLoadSample('integral')}
-              className="w-full text-left px-3 py-1.5 text-xs text-[#F1F5F9] hover:bg-[#1E2536] hover:text-[#8B7CFF] transition-colors"
-            >
-              Definite Integral
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
