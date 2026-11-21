@@ -127,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="font-bold text-sm text-[#F1F5F9] tracking-tight leading-none flex items-center gap-1.5">
                   MathVision
                   <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/30">
-                    v2.0
+                    v3-Final
                   </span>
                 </span>
                 <span className="text-[10px] text-[#94A3B8] font-mono mt-0.5">

@@ -76,7 +76,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 Mathematical Intelligence Dashboard
               </h1>
               <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl mt-1.5 leading-relaxed">
-                DenseNet-121 stride-8 convolutional encoder with 3-layer Pre-LN Transformer decoder. Quantized to INT8 ONNX for sub-150ms inference.
+                DenseNet-121 stride-8 convolutional encoder with 3-layer Pre-LN Transformer decoder (v3-Final). Quantized to INT8 ONNX for sub-150ms inference.
               </p>
             </div>
 
@@ -107,7 +107,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#151B27] border border-[#252D3B] text-xs font-mono text-[#38BDF8] hover:border-[#38BDF8]/50 transition-colors"
               >
                 <Cpu className="w-3.5 h-3.5" />
-                <span>12.82 MB INT8</span>
+                <span>10.63 MB INT8</span>
               </button>
             </div>
           </div>
@@ -124,7 +124,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div className="p-3 rounded-xl bg-[#090B10] border border-[#252D3B]">
               <span className="text-[11px] text-[#94A3B8] uppercase font-mono block">ExpRate (Exact)</span>
-              <span className="text-lg font-bold font-mono text-[#34D399] mt-0.5 block">32.84%</span>
+              <span className="text-lg font-bold font-mono text-[#34D399] mt-0.5 block">32.78%</span>
             </div>
             <div className="p-3 rounded-xl bg-[#090B10] border border-[#252D3B]">
               <span className="text-[11px] text-[#94A3B8] uppercase font-mono block">Equations Saved</span>

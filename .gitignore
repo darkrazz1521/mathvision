@@ -29,6 +29,7 @@ node_modules/
 frontend/node_modules/
 frontend/dist/
 dist/
+scratch/
 .DS_Store
 Thumbs.db
 

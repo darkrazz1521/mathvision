@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sympy.parsing.latex import parse_latex
 import sympy as sp
 
-app = FastAPI(title="MathVision HMER API", version="2.0")
+app = FastAPI(title="MathVision HMER API", version="3.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,13 +24,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. Load Vocabulary & INT8 ONNX Sessions
+# 1. Load Vocabulary & INT8 ONNX Sessions (V3-Final DenseNet121-S8 + Transformer)
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 VOCAB_PATH = os.path.join(BASE_DIR, "vocab.json")
 if not os.path.exists(VOCAB_PATH):
     VOCAB_PATH = os.path.join(BASE_DIR, "..", "crohme23_packed", "vocab.json")
+
+# Primary: backend/models/encoder_int8.onnx (v3_final INT8)
 ENC_PATH   = os.path.join(BASE_DIR, "models", "encoder_int8.onnx")
 DEC_PATH   = os.path.join(BASE_DIR, "models", "decoder_int8.onnx")
+
+# Fallback: checkpoints/encoder_v3_int8.onnx
+if not os.path.exists(ENC_PATH):
+    alt_enc = os.path.join(BASE_DIR, "..", "checkpoints", "encoder_v3_int8.onnx")
+    if os.path.exists(alt_enc):
+        ENC_PATH = alt_enc
+if not os.path.exists(DEC_PATH):
+    alt_dec = os.path.join(BASE_DIR, "..", "checkpoints", "decoder_v3_int8.onnx")
+    if os.path.exists(alt_dec):
+        DEC_PATH = alt_dec
+
+MODEL_VERSION = "v3_final"
+MODEL_CHECKPOINT = "densenet_s8_v3_final.pth"
 
 with open(VOCAB_PATH, "r", encoding="utf-8") as f:
     vocab_data = json.load(f)
@@ -240,7 +255,9 @@ def root():
     return {
         "status": "ok",
         "service": "MathVision HMER API",
-        "version": "2.0",
+        "version": "3.0",
+        "model_version": MODEL_VERSION,
+        "checkpoint": MODEL_CHECKPOINT,
         "timestamp": time.time(),
     }
 
@@ -249,6 +266,9 @@ def health():
     return {
         "status": "ok",
         "service": "MathVision HMER API",
+        "version": "3.0",
+        "model_version": MODEL_VERSION,
+        "checkpoint": MODEL_CHECKPOINT,
         "vocab_size": len(VOCAB),
         "models_loaded": enc_sess is not None and dec_sess is not None,
         "timestamp": time.time(),
@@ -259,6 +279,7 @@ def alive():
     return {
         "status": "alive",
         "uptime": "ok",
+        "model_version": MODEL_VERSION,
         "timestamp": time.time(),
     }
 
@@ -312,6 +333,7 @@ async def predict(
         "syntax_valid": syntax_ok,
         "sympy": sympy_info,
         "preprocessed_image": b64_img,
+        "model_version": MODEL_VERSION,
         "latency_ms": round((time.time() - t0) * 1000, 1),
     }
 

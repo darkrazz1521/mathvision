@@ -5,6 +5,9 @@
 export interface HealthResponse {
   status: string;
   vocab_size: number;
+  version?: string;
+  model_version?: string;
+  checkpoint?: string;
 }
 
 export interface TokenAlternative {
@@ -35,6 +38,7 @@ export interface PredictResponse {
   syntax_valid: boolean;
   sympy: SympyVerification;
   preprocessed_image: string; // Base64 data URL
+  model_version?: string;
   latency_ms: number;
 }
 

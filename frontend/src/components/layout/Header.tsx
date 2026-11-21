@@ -199,7 +199,7 @@ export const Header: React.FC<HeaderProps> = ({
         </Tooltip>
 
         {/* Model Spec button */}
-        <Tooltip content="DenseNet-121 + 3L-Trans Specs">
+        <Tooltip content="DenseNet-121 + 3L-Trans v3-Final Specs">
           <Button
             size="sm"
             variant="ghost"
