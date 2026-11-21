@@ -137,8 +137,8 @@ export const TokenInspector: React.FC<TokenInspectorProps> = ({
               </code>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-[#94A3B8]">Confidence:</span>
+            <div className="flex items-center gap-2" title="Individual token softmax emission probability at this decoding step">
+              <span className="text-xs text-[#94A3B8]">Token Conf:</span>
               <span
                 className={cn(
                   'text-xs font-mono font-semibold',

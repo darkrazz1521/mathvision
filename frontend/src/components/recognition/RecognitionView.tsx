@@ -81,19 +81,19 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
 
         {prediction && (
           <div className="flex items-center gap-1.5">
-            {/* Confidence Badge */}
-            <Tooltip content="Mean token emission confidence from beam search">
+            {/* Sequence Mean Confidence Badge */}
+            <Tooltip content="Mean token emission confidence across the decoded sequence">
               <Badge
                 variant={prediction.avg_confidence > 0.85 ? 'success' : 'warning'}
                 dot
                 size="sm"
               >
-                {formatConfidence(prediction.avg_confidence)} Conf
+                {formatConfidence(prediction.avg_confidence)} Seq Avg
               </Badge>
             </Tooltip>
 
             {/* Latency Badge */}
-            <Tooltip content="End-to-end CPU inference + SymPy validation latency">
+            <Tooltip content="Measured end-to-end CPU inference + SymPy validation latency">
               <Badge variant="cyan" size="sm">
                 <Clock className="w-3 h-3 mr-1 inline" />
                 {prediction.latency_ms} ms
@@ -115,13 +115,15 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
         )}
       </div>
 
-      {/* Pipeline Progress Indicator */}
+      {/* Pipeline Progress Indicator with truthful verification status */}
       {(processingStatus !== 'idle' || prediction) && (
         <div className="shrink-0">
           <PipelineProgress
             status={processingStatus}
             currentMessage={currentStepMessage}
             latencyMs={prediction?.latency_ms}
+            sympyValid={prediction?.sympy?.valid}
+            syntaxValid={prediction?.syntax_valid}
           />
         </div>
       )}
@@ -175,7 +177,7 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
                 <Cpu className="w-3.5 h-3.5 text-[#38BDF8] shrink-0 mt-0.5" />
                 <div className="text-[11px]">
                   <span className="font-semibold text-[#CBD5E1] block">DenseNet-121 + Beam Search</span>
-                  <span className="text-[#64748B]">Real-time INT8 CPU inference in ~120ms</span>
+                  <span className="text-[#64748B]">Real-time INT8 CPU inference (device-dependent)</span>
                 </div>
               </div>
 

@@ -152,16 +152,16 @@ export const AttentionSpotlight: React.FC<AttentionSpotlightProps> = ({
       )}
 
       {/* Spotlight Canvas / Image Display */}
-      <div className="p-3 bg-[#090B10] flex flex-col items-center justify-center">
+      <div className="p-3 bg-[#080B11] flex flex-col items-center justify-center">
         <div
           ref={containerRef}
-          className="relative inline-block max-w-full rounded-lg overflow-hidden border border-[#252D3B] bg-white shadow-inner select-none"
+          className="relative inline-block max-w-full rounded-lg overflow-hidden border border-[#212836] bg-white shadow-inner select-none"
         >
           {/* Preprocessed Image from DenseNet Canvas */}
           <img
             src={preprocessedImage}
             alt="Preprocessed feature canvas"
-            className="block max-h-36 w-auto object-contain pointer-events-none"
+            className="block max-h-44 sm:max-h-52 w-auto object-contain pointer-events-none"
           />
 
           {/* Attention Spotlight Marker */}
@@ -250,9 +250,12 @@ export const AttentionSpotlight: React.FC<AttentionSpotlightProps> = ({
           </div>
         </div>
 
-        <p className="text-[10px] text-[#64748B] mt-2 text-center">
-          DenseNet 12×W/8 feature memory cross-attention peak normalized to input coordinate bounds.
-        </p>
+        {/* Legend */}
+        <div className="w-full flex items-center justify-between text-[10px] text-[#64748B] font-mono mt-2 pt-2 border-t border-[#1C2333] px-1">
+          <span>Target: <strong className="text-[#8B7CFF]">{activeToken?.token || 'None'}</strong></span>
+          <span>Coords: <strong className="text-[#CBD5E1]">{hasCoords ? `(${activeToken!.x.toFixed(2)}, ${activeToken!.y.toFixed(2)})` : 'N/A'}</strong></span>
+          <span className="text-[#475569]">DenseNet 2D Grounding</span>
+        </div>
       </div>
     </div>
   );

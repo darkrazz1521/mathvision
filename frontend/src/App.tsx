@@ -409,7 +409,7 @@ export const MainApp: React.FC = () => {
   }
 
   return (
-    <div className="flex h-[100dvh] w-screen overflow-hidden bg-[#090B10] text-[#F1F5F9]">
+    <div className="flex h-full h-screen h-[100dvh] w-full w-screen overflow-hidden bg-[#090B10] text-[#F1F5F9]">
       {/* Collapsible Left Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -426,7 +426,7 @@ export const MainApp: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 min-h-0 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col h-full w-full overflow-hidden">
         {/* Top Header Navigation */}
         <Header
           currentTab={currentTab}
@@ -442,7 +442,7 @@ export const MainApp: React.FC = () => {
         />
 
         {/* View Switcher based on currentTab */}
-        <main className="flex-1 min-h-0 overflow-hidden relative flex flex-col">
+        <main className="flex-1 min-h-0 overflow-hidden relative flex flex-col h-full">
           {currentTab === 'dashboard' && (
             <DashboardView
               onStartCanvas={() => {

@@ -126,12 +126,12 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#10141D] rounded-xl border border-[#252D3B] overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-[#0D111A] rounded-xl border border-[#212836] overflow-hidden shadow-sm">
       {/* Top Header / Mode Switcher */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#10141D] border-b border-[#252D3B]">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#141A28] border-b border-[#212836] shrink-0 select-none">
         <div className="flex items-center gap-2">
           <ImageIcon className="w-4 h-4 text-[#38BDF8]" />
-          <span className="text-xs font-semibold text-[#F1F5F9]">Notebook Photo Ingestion</span>
+          <span className="text-xs font-bold text-[#F8FAFC]">Notebook Photo Ingestion</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -146,14 +146,14 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
           </button>
 
           {preprocessedImage && previewUrl && (
-            <div className="flex items-center gap-1 bg-[#090B10] p-1 rounded-lg border border-[#252D3B]">
+            <div className="flex items-center gap-1 bg-[#090B10] p-0.5 rounded-lg border border-[#212836]">
               <button
                 onClick={() => setShowPreprocessed(false)}
                 className={cn(
-                  'px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
+                  'px-2 py-0.5 text-xs font-medium rounded-md transition-colors',
                   !showPreprocessed
-                    ? 'bg-[#1E2536] text-[#F1F5F9]'
-                    : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+                    ? 'bg-[#182133] text-[#F8FAFC]'
+                    : 'text-[#94A3B8] hover:text-[#F8FAFC]'
                 )}
               >
                 Original Photo
@@ -161,10 +161,10 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
               <button
                 onClick={() => setShowPreprocessed(true)}
                 className={cn(
-                  'px-2.5 py-1 text-xs font-medium rounded-md transition-colors flex items-center gap-1',
+                  'px-2 py-0.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1',
                   showPreprocessed
                     ? 'bg-[#8B7CFF]/20 text-[#8B7CFF]'
-                    : 'text-[#94A3B8] hover:text-[#F1F5F9]'
+                    : 'text-[#94A3B8] hover:text-[#F8FAFC]'
                 )}
               >
                 <span>Preprocessed</span>
@@ -176,7 +176,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
       </div>
 
       {/* Main Upload / Preview Area */}
-      <div className="flex-1 p-4 flex flex-col justify-center items-center overflow-hidden">
+      <div className="flex-1 min-h-0 p-3.5 flex flex-col justify-center items-center overflow-hidden">
         {!previewUrl ? (
           <div
             onDragOver={handleDragOver}
@@ -184,10 +184,10 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              'w-full h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200',
+              'w-full max-w-lg h-full max-h-[380px] flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all duration-200',
               isDragging
                 ? 'border-[#8B7CFF] bg-[#8B7CFF]/10 scale-[0.99]'
-                : 'border-[#252D3B] hover:border-[#38BDF8]/60 bg-[#090B10]/50 hover:bg-[#151B27]/40'
+                : 'border-[#252D3B] hover:border-[#38BDF8]/60 bg-[#090B10]/60 hover:bg-[#141A28]/50'
             )}
           >
             <input
@@ -202,18 +202,18 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
               }}
             />
 
-            <div className="p-4 rounded-2xl bg-[#151B27] border border-[#252D3B] text-[#38BDF8] mb-3 shadow-elevated">
-              <Upload className="w-7 h-7" />
+            <div className="p-3 rounded-2xl bg-[#141A28] border border-[#212836] text-[#38BDF8] mb-3 shadow-md">
+              <Upload className="w-6 h-6" />
             </div>
 
-            <p className="text-sm font-semibold text-[#F1F5F9]">
+            <p className="text-xs sm:text-sm font-semibold text-[#F8FAFC]">
               Drag and drop your handwritten mathematics photo
             </p>
-            <p className="text-xs text-[#94A3B8] max-w-sm mt-1">
-              Supports PNG, JPG, or JPEG up to 10 MB. Works with lined notebooks, graph paper, and whiteboard shots.
+            <p className="text-[11px] text-[#94A3B8] max-w-sm mt-1 leading-relaxed">
+              Supports PNG, JPG, JPEG, WEBP up to 10 MB. Works with notebook pages, graph sheets, or whiteboards.
             </p>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <Button
                 size="sm"
                 variant="secondary"
@@ -234,53 +234,53 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
                   setIsQrModalOpen(true);
                 }}
               >
-                Scan with Phone Camera (QR)
+                Scan with Phone (QR)
               </Button>
             </div>
           </div>
         ) : (
-          <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#090B10] rounded-xl border border-[#252D3B] p-3 overflow-hidden">
+          <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#080B11] rounded-xl border border-[#212836] p-3 overflow-hidden">
             {/* Image Preview with Toggle Support */}
-            <div className="relative max-w-full max-h-[70vh] flex items-center justify-center overflow-hidden rounded-lg">
+            <div className="relative max-w-full max-h-full flex items-center justify-center overflow-hidden rounded-lg">
               <img
                 src={showPreprocessed && preprocessedImage ? preprocessedImage : previewUrl}
                 alt="Handwritten math preview"
-                className="max-h-full max-w-full object-contain rounded-lg border border-[#252D3B]"
+                className="max-h-[60vh] max-w-full object-contain rounded-lg border border-[#212836] shadow-sm"
               />
 
               {showPreprocessed && (
-                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-sm border border-emerald-500/40 text-[11px] font-mono text-emerald-400">
+                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-md bg-black/85 backdrop-blur-sm border border-emerald-500/40 text-[10px] font-mono text-emerald-400">
                   Adaptive Threshold & Denoised Ink Crop
                 </div>
               )}
 
               {!showPreprocessed && (
-                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-sm border border-[#8B7CFF]/40 text-[11px] font-mono text-[#8B7CFF] flex items-center gap-1.5">
+                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-md bg-black/85 backdrop-blur-sm border border-[#8B7CFF]/40 text-[10px] font-mono text-[#8B7CFF] flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Photo Ready • Awaiting Confirmation</span>
+                  <span>Photo Ready • Ready to Recognize</span>
                 </div>
               )}
             </div>
 
             {/* Quick Actions overlay */}
-            <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-[#10141D]/90 backdrop-blur-md p-1.5 rounded-xl border border-[#252D3B] shadow-elevated">
+            <div className="absolute top-3 right-3 flex items-center gap-1 bg-[#0D111A]/90 backdrop-blur-md p-1 rounded-xl border border-[#212836] shadow-md">
               <button
                 onClick={() => setIsQrModalOpen(true)}
                 className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#8B7CFF] hover:bg-[#8B7CFF]/10 transition-colors flex items-center gap-1 text-xs"
                 title="Scan new photo with Phone"
                 aria-label="Scan new photo with Phone"
               >
-                <QrCode className="w-4 h-4" />
-                <span className="hidden sm:inline">Phone QR</span>
+                <QrCode className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Phone QR</span>
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F1F5F9] hover:bg-[#1E2536] transition-colors flex items-center gap-1 text-xs"
+                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#182133] transition-colors flex items-center gap-1 text-xs"
                 title="Replace Image"
                 aria-label="Replace Image"
               >
-                <RefreshCw className="w-4 h-4" />
-                <span className="hidden sm:inline">Replace</span>
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Replace</span>
               </button>
               <button
                 onClick={handleRemove}
@@ -288,7 +288,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 title="Remove Image"
                 aria-label="Remove Image"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -308,15 +308,15 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
       </div>
 
       {/* Preprocessing Features Callout Banner */}
-      <div className="px-4 py-2.5 bg-[#090B10]/70 border-t border-[#252D3B] text-xs text-[#94A3B8] flex items-start gap-2">
-        <Info className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" />
-        <p className="leading-snug">
-          <strong>Notebook Preprocessing:</strong> Automatically removes paper shadows via Gaussian background division, isolates dark ink from ruled/grid lines, and tight-crops bounding boxes.
+      <div className="px-3.5 py-2 bg-[#080B11] border-t border-[#212836] text-[11px] text-[#94A3B8] flex items-center gap-2 shrink-0">
+        <Info className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
+        <p className="leading-tight truncate">
+          <strong className="text-[#CBD5E1]">Notebook Preprocessing:</strong> Shadow removal, ink isolation, line subtraction, & auto tight-cropping.
         </p>
       </div>
 
       {/* Footer Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#10141D] border-t border-[#252D3B]">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#0B0E16] border-t border-[#212836] shrink-0">
         <div className="text-xs text-[#94A3B8]">
           {imageMeta ? (
             <span>

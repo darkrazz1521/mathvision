@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, CheckCircle2, Cpu, Scan, Binary, Sparkles, Layers } from 'lucide-react';
+import { Loader2, CheckCircle2, Cpu, Scan, Binary, Sparkles, Layers, Minus, AlertCircle } from 'lucide-react';
 import { ProcessingStatus } from '../../types/workspace';
 import { cn } from '../../utils/cn';
 
@@ -7,12 +7,16 @@ interface PipelineProgressProps {
   status: ProcessingStatus;
   currentMessage?: string;
   latencyMs?: number;
+  sympyValid?: boolean;
+  syntaxValid?: boolean;
 }
 
 export const PipelineProgress: React.FC<PipelineProgressProps> = ({
   status,
   currentMessage,
   latencyMs,
+  sympyValid,
+  syntaxValid,
 }) => {
   const steps = [
     { id: 'preparing', label: 'Ingestion', icon: Scan },
@@ -22,9 +26,18 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
     { id: 'verifying', label: 'SymPy', icon: Sparkles },
   ];
 
-  const getStepState = (stepIndex: number) => {
+  const getStepState = (stepIndex: number): 'completed' | 'active' | 'pending' | 'error' | 'unavailable' | 'warning' => {
     if (status === 'error') return 'error';
-    if (status === 'success') return 'completed';
+    if (status === 'success') {
+      if (stepIndex === 4) {
+        // Truthful SymPy verification state: only mark completed if SymPy parse actually succeeded
+        return sympyValid ? 'completed' : 'unavailable';
+      }
+      if (stepIndex === 3 && syntaxValid === false) {
+        return 'warning';
+      }
+      return 'completed';
+    }
 
     const stageMap: Record<string, number> = {
       idle: -1,
@@ -67,14 +80,24 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
                   state === 'completed' && 'bg-emerald-500/20 text-emerald-400 border-emerald-500/35',
                   state === 'active' && 'bg-[#8B7CFF]/20 text-[#8B7CFF] border-[#8B7CFF] animate-pulse',
                   state === 'pending' && 'bg-[#080B11] text-[#475569] border-[#212836]',
+                  state === 'unavailable' && 'bg-[#182133] text-[#64748B] border-[#2B3852]',
+                  state === 'warning' && 'bg-amber-500/15 text-amber-400 border-amber-500/30',
                   state === 'error' && 'bg-rose-500/15 text-rose-400 border-rose-500/30'
                 )}
-                title={step.label}
+                title={
+                  state === 'unavailable'
+                    ? `${step.label}: Expression not parseable in SymPy CAS (verification skipped)`
+                    : step.label
+                }
               >
                 {state === 'completed' ? (
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 ) : state === 'active' ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-[#8B7CFF]" />
+                ) : state === 'unavailable' ? (
+                  <Minus className="w-3.5 h-3.5" />
+                ) : state === 'warning' ? (
+                  <AlertCircle className="w-3.5 h-3.5" />
                 ) : (
                   <Icon className="w-3 h-3" />
                 )}
@@ -82,10 +105,16 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
               <span
                 className={cn(
                   'text-[9px] font-mono font-medium leading-none line-clamp-1',
-                  state === 'active' ? 'text-[#F8FAFC]' : state === 'completed' ? 'text-[#CBD5E1]' : 'text-[#64748B]'
+                  state === 'active'
+                    ? 'text-[#F8FAFC]'
+                    : state === 'completed'
+                    ? 'text-[#CBD5E1]'
+                    : state === 'unavailable'
+                    ? 'text-[#64748B]'
+                    : 'text-[#64748B]'
                 )}
               >
-                {step.label}
+                {state === 'unavailable' ? 'N/A' : step.label}
               </span>
             </div>
           );

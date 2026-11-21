@@ -138,53 +138,52 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       className={cn(
-        'relative flex flex-col justify-between bg-[#0D111A] border-r border-[#212836] transition-all duration-300 z-20 shrink-0 select-none shadow-2xl',
+        'relative flex flex-col h-full min-h-0 bg-[#0D111A] border-r border-[#212836] transition-all duration-300 z-20 shrink-0 select-none shadow-2xl',
         isCollapsed ? 'w-16' : 'w-60'
       )}
     >
       {/* Top Header: Brand logo and collapse button */}
-      <div className="flex flex-col">
-        <div className="flex items-center justify-between px-3.5 h-14 border-b border-[#212836]">
-          <div
-            className="flex items-center gap-2.5 overflow-hidden cursor-pointer group"
-            onClick={() => onSelectTab('home')}
-            title="Return to Public Homepage"
-          >
-            <div className="relative">
-              <img
-                src="/logo.svg"
-                alt="MathVision"
-                className="w-8 h-8 shrink-0 rounded-lg shadow-glow-accent group-hover:scale-105 transition-transform"
-              />
-              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#090B10]" />
-            </div>
-            {!isCollapsed && (
-              <div className="flex flex-col overflow-hidden">
-                <span className="font-extrabold text-sm text-[#F8FAFC] tracking-tight leading-none flex items-center gap-1.5">
-                  MathVision
-                  <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/30">
-                    v3-Final
-                  </span>
-                </span>
-                <span className="text-[10px] text-[#94A3B8] font-mono mt-0.5 truncate">
-                  Scientific HMER IDE
-                </span>
-              </div>
-            )}
+      <div className="flex items-center justify-between px-3.5 h-14 border-b border-[#212836] shrink-0">
+        <div
+          className="flex items-center gap-2.5 overflow-hidden cursor-pointer group"
+          onClick={() => onSelectTab('home')}
+          title="Return to Public Homepage"
+        >
+          <div className="relative">
+            <img
+              src="/logo.svg"
+              alt="MathVision"
+              className="w-8 h-8 shrink-0 rounded-lg shadow-glow-accent group-hover:scale-105 transition-transform"
+            />
+            <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#090B10]" />
           </div>
-
-          <button
-            onClick={onToggleCollapse}
-            className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#1A2233] transition-colors"
-            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            aria-label="Toggle sidebar collapse"
-          >
-            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
+          {!isCollapsed && (
+            <div className="flex flex-col overflow-hidden">
+              <span className="font-extrabold text-sm text-[#F8FAFC] tracking-tight leading-none flex items-center gap-1.5">
+                MathVision
+                <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/30">
+                  v3-Final
+                </span>
+              </span>
+              <span className="text-[10px] text-[#94A3B8] font-mono mt-0.5 truncate">
+                Scientific HMER IDE
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Categorized Navigation Sections */}
-        <div className="flex flex-col gap-4 p-2.5 overflow-y-auto">
+        <button
+          onClick={onToggleCollapse}
+          className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#1A2233] transition-colors"
+          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          aria-label="Toggle sidebar collapse"
+        >
+          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {/* Categorized Navigation Sections */}
+      <div className="flex-1 min-h-0 flex flex-col gap-4 p-2.5 overflow-y-auto">
           {sections.map((section, sIdx) => (
             <div key={sIdx} className="flex flex-col gap-1">
               {!isCollapsed && (
@@ -258,10 +257,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           ))}
         </div>
-      </div>
 
       {/* Bottom Area: Live Engine Status & Local Researcher Profile */}
-      <div className="p-2.5 border-t border-[#212836] flex flex-col gap-2 bg-[#0B0E16]">
+      <div className="p-2.5 border-t border-[#212836] flex flex-col gap-2 bg-[#0B0E16] mt-auto shrink-0">
         {/* Backend status pill */}
         <div
           onClick={() => onSelectTab('settings')}
