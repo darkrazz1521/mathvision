@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Globe,
   LayoutDashboard,
@@ -124,10 +125,10 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Center: Primary Mode Navigator Pills */}
-      <div className="hidden md:flex items-center bg-[#090B10] p-0.5 rounded-xl border border-[#212836]">
+      <div className="hidden md:flex items-center relative bg-[#090B10] p-0.5 rounded-xl border border-[#212836]">
         <button
           onClick={() => onSelectTab('home')}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
+          className="relative flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] transition-colors z-10"
           title="Return to Public Website"
         >
           <Globe className="w-3.5 h-3.5 text-[#8B7CFF]" />
@@ -136,24 +137,38 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={() => onSelectTab('dashboard')}
           className={cn(
-            'flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors',
+            'relative flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors z-10',
             currentTab === 'dashboard'
-              ? 'bg-[#182133] text-[#F8FAFC] shadow-sm'
+              ? 'text-[#F8FAFC]'
               : 'text-[#94A3B8] hover:text-[#F8FAFC]'
           )}
         >
+          {currentTab === 'dashboard' && (
+            <motion.div
+              layoutId="activeHeaderPill"
+              className="absolute inset-0 bg-[#182133] border border-[#2B3852] rounded-lg -z-10 shadow-sm"
+              transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+            />
+          )}
           <LayoutDashboard className="w-3.5 h-3.5 text-[#38BDF8]" />
           <span>Dashboard</span>
         </button>
         <button
           onClick={() => onSelectTab('workspace')}
           className={cn(
-            'flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors',
+            'relative flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors z-10',
             currentTab === 'workspace'
-              ? 'bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/30 shadow-sm'
+              ? 'text-[#8B7CFF]'
               : 'text-[#94A3B8] hover:text-[#F8FAFC]'
           )}
         >
+          {currentTab === 'workspace' && (
+            <motion.div
+              layoutId="activeHeaderPill"
+              className="absolute inset-0 bg-[#8B7CFF]/15 border border-[#8B7CFF]/35 rounded-lg -z-10 shadow-sm"
+              transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+            />
+          )}
           <Sparkles className="w-3.5 h-3.5 text-[#8B7CFF]" />
           <span>Studio Workspace</span>
         </button>

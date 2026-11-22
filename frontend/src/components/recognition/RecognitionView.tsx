@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { LatexEditor } from './LatexEditor';
 import { PipelineProgress } from './PipelineProgress';
 import { WorkspaceState, WorkspaceActions } from '../../types/workspace';
@@ -80,7 +81,12 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
         </div>
 
         {prediction && (
-          <div className="flex items-center gap-1.5">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.25 }}
+            className="flex items-center gap-1.5"
+          >
             {/* Sequence Mean Confidence Badge */}
             <Tooltip content="Mean token emission confidence across the decoded sequence">
               <Badge
@@ -111,7 +117,7 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
                 {isSaved ? 'Saved' : 'Save'}
               </Button>
             </Tooltip>
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -144,13 +150,20 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
         )}
 
         {prediction ? (
-          <LatexEditor
-            originalLatex={prediction.latex}
-            currentLatex={editedLatex}
-            onLatexChange={actions.setEditedLatex}
-            onReset={actions.resetToOriginalPrediction}
-            isModified={isModified}
-          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="flex-1 min-h-0 flex flex-col overflow-hidden"
+          >
+            <LatexEditor
+              originalLatex={prediction.latex}
+              currentLatex={editedLatex}
+              onLatexChange={actions.setEditedLatex}
+              onReset={actions.resetToOriginalPrediction}
+              isModified={isModified}
+            />
+          </motion.div>
         ) : (
           /* Scientific Standby Guided Screen */
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-6 text-center bg-[#0D111A] rounded-xl border border-[#212836] shadow-sm overflow-y-auto">

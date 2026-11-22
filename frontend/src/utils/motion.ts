@@ -104,3 +104,75 @@ export const slideRightVariants: Variants = {
     },
   }),
 };
+
+/**
+ * Standard Spring Physics Presets
+ */
+export const SPRING_SNAPPY = {
+  type: 'spring',
+  stiffness: 500,
+  damping: 32,
+} as const;
+
+export const SPRING_GENTLE = {
+  type: 'spring',
+  stiffness: 350,
+  damping: 28,
+} as const;
+
+export const SPRING_LAYOUT = {
+  type: 'spring',
+  stiffness: 380,
+  damping: 34,
+} as const;
+
+/**
+ * Preset E: Coordinated Workspace Panels Entrance
+ */
+export const panelEntranceVariants: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (customDelay: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.45,
+      ease: SMOOTH_EASE,
+      delay: customDelay,
+    },
+  }),
+};
+
+/**
+ * Preset F: Token Sequence Stagger
+ */
+export const tokenSequenceVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.035,
+    },
+  },
+};
+
+export const tokenChipVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.92, y: 4 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 450,
+      damping: 26,
+    },
+  },
+};
+
+/**
+ * Preset G: Micro-Interaction Button Presses
+ */
+export const buttonPress = {
+  tap: { scale: 0.96 },
+  hover: { scale: 1.02 },
+} as const;

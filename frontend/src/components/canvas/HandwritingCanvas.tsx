@@ -525,7 +525,7 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
             strokes.length > 0 && !isRecognizing && 'shadow-glow-accent hover:scale-[1.02]'
           )}
         >
-          Recognize Equation
+          {isRecognizing ? 'Recognizing Expression...' : 'Recognize Equation'}
         </Button>
       </div>
     </div>

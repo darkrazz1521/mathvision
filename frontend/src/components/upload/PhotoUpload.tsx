@@ -345,7 +345,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
             onClick={handleSubmit}
             icon={<ArrowRight className="w-4 h-4" />}
           >
-            Recognize Photo
+            {isRecognizing ? 'Processing Photo...' : 'Recognize Photo'}
           </Button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Copy, Check, RotateCcw, Code, AlertCircle, Sparkles, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { renderLatexToHtml } from '../../utils/latex';
@@ -52,41 +53,62 @@ export const LatexEditor: React.FC<LatexEditorProps> = ({
 
         <div className="flex items-center gap-1.5">
           {/* View Mode Segmented Controls */}
-          <div className="flex items-center bg-[#090B10] p-0.5 rounded-lg border border-[#212836]">
+          <div className="flex items-center relative bg-[#090B10] p-0.5 rounded-lg border border-[#212836]">
             <button
               onClick={() => setViewMode('both')}
               className={cn(
-                'px-2 py-1 text-xs font-medium rounded-md transition-colors',
+                'relative px-2 py-1 text-xs font-medium rounded-md transition-colors z-10',
                 viewMode === 'both'
-                  ? 'bg-[#182133] text-[#F8FAFC] shadow-sm'
+                  ? 'text-[#F8FAFC]'
                   : 'text-[#94A3B8] hover:text-[#F8FAFC]'
               )}
               title="Split preview & source view"
             >
+              {viewMode === 'both' && (
+                <motion.div
+                  layoutId="activeLatexViewMode"
+                  className="absolute inset-0 bg-[#182133] rounded-md -z-10 shadow-sm"
+                  transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                />
+              )}
               Split
             </button>
             <button
               onClick={() => setViewMode('rendered')}
               className={cn(
-                'px-2 py-1 text-xs font-medium rounded-md transition-colors',
+                'relative px-2 py-1 text-xs font-medium rounded-md transition-colors z-10',
                 viewMode === 'rendered'
-                  ? 'bg-[#182133] text-[#F8FAFC] shadow-sm'
+                  ? 'text-[#F8FAFC]'
                   : 'text-[#94A3B8] hover:text-[#F8FAFC]'
               )}
               title="Mathematical preview only"
             >
+              {viewMode === 'rendered' && (
+                <motion.div
+                  layoutId="activeLatexViewMode"
+                  className="absolute inset-0 bg-[#182133] rounded-md -z-10 shadow-sm"
+                  transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                />
+              )}
               Math
             </button>
             <button
               onClick={() => setViewMode('code')}
               className={cn(
-                'px-2 py-1 text-xs font-medium rounded-md transition-colors',
+                'relative px-2 py-1 text-xs font-medium rounded-md transition-colors z-10',
                 viewMode === 'code'
-                  ? 'bg-[#182133] text-[#F8FAFC] shadow-sm'
+                  ? 'text-[#F8FAFC]'
                   : 'text-[#94A3B8] hover:text-[#F8FAFC]'
               )}
               title="LaTeX source code only"
             >
+              {viewMode === 'code' && (
+                <motion.div
+                  layoutId="activeLatexViewMode"
+                  className="absolute inset-0 bg-[#182133] rounded-md -z-10 shadow-sm"
+                  transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                />
+              )}
               LaTeX
             </button>
           </div>

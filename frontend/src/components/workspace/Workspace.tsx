@@ -138,7 +138,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         </div>
 
         {/* Center: Viewport Mode Switcher (Studio vs Canvas Focus vs Inspect Focus) */}
-        <div className="hidden md:flex items-center gap-1 bg-[#090B10] p-0.5 rounded-xl border border-[#212836]">
+        <div className="hidden md:flex items-center relative gap-1 bg-[#090B10] p-0.5 rounded-xl border border-[#212836]">
           <button
             onClick={() => {
               setViewMode('balanced');
@@ -146,12 +146,19 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               setIsRightCollapsed(false);
             }}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all select-none',
+              'relative flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors select-none z-10',
               viewMode === 'balanced' && !isLeftCollapsed && !isRightCollapsed
-                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852] shadow-sm'
+                ? 'text-[#F8FAFC]'
                 : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
+            {viewMode === 'balanced' && !isLeftCollapsed && !isRightCollapsed && (
+              <motion.div
+                layoutId="activeWorkspaceViewMode"
+                className="absolute inset-0 bg-[#182133] border border-[#2B3852] rounded-lg -z-10 shadow-sm"
+                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+              />
+            )}
             <Columns3 className="w-3.5 h-3.5 text-[#8B7CFF]" />
             <span>Studio (3-Zone)</span>
           </button>
@@ -163,12 +170,19 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               setIsRightCollapsed(true);
             }}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all select-none',
+              'relative flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors select-none z-10',
               viewMode === 'canvas-focus'
-                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852] shadow-sm'
+                ? 'text-[#F8FAFC]'
                 : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
+            {viewMode === 'canvas-focus' && (
+              <motion.div
+                layoutId="activeWorkspaceViewMode"
+                className="absolute inset-0 bg-[#182133] border border-[#2B3852] rounded-lg -z-10 shadow-sm"
+                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+              />
+            )}
             <SquareDashedBottomCode className="w-3.5 h-3.5 text-[#38BDF8]" />
             <span>Canvas Focus</span>
           </button>
@@ -179,12 +193,19 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               setIsRightCollapsed(false);
             }}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-all select-none',
+              'relative flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium transition-colors select-none z-10',
               viewMode === 'inspect-focus'
-                ? 'bg-[#182133] text-[#F8FAFC] border border-[#2B3852] shadow-sm'
+                ? 'text-[#F8FAFC]'
                 : 'text-[#94A3B8] hover:text-[#F8FAFC]'
             )}
           >
+            {viewMode === 'inspect-focus' && (
+              <motion.div
+                layoutId="activeWorkspaceViewMode"
+                className="absolute inset-0 bg-[#182133] border border-[#2B3852] rounded-lg -z-10 shadow-sm"
+                transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+              />
+            )}
             <BrainCircuit className="w-3.5 h-3.5 text-emerald-400" />
             <span>Deep Inspection</span>
           </button>
@@ -269,9 +290,11 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         {/* ======================================================== */}
         {/* LEFT PANEL: INPUT (Ink Canvas / Photo Upload)            */}
         {/* ======================================================== */}
-        <div
+        <motion.div
+          layout
+          transition={{ type: 'spring', stiffness: 350, damping: 32 }}
           className={cn(
-            'flex flex-col h-full min-h-0 overflow-hidden transition-all duration-300',
+            'flex flex-col h-full min-h-0 overflow-hidden',
             colSpans.left,
             mobileView === 'input' ? 'flex' : 'hidden lg:flex'
           )}
@@ -298,27 +321,31 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               />
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* ======================================================== */}
         {/* CENTER PANEL: RECOGNITION OUTPUT & LATEX EDITOR          */}
         {/* ======================================================== */}
-        <div
+        <motion.div
+          layout
+          transition={{ type: 'spring', stiffness: 350, damping: 32 }}
           className={cn(
-            'flex flex-col h-full min-h-0 overflow-hidden transition-all duration-300',
+            'flex flex-col h-full min-h-0 overflow-hidden',
             colSpans.center,
             mobileView === 'recognition' ? 'flex' : 'hidden lg:flex'
           )}
         >
           <RecognitionView workspace={workspace} actions={actions} />
-        </div>
+        </motion.div>
 
         {/* ======================================================== */}
         {/* RIGHT PANEL: INTELLIGENCE, ATTENTION & VERIFICATION      */}
         {/* ======================================================== */}
-        <div
+        <motion.div
+          layout
+          transition={{ type: 'spring', stiffness: 350, damping: 32 }}
           className={cn(
-            'flex flex-col h-full min-h-0 gap-2.5 overflow-y-auto pr-1 transition-all duration-300',
+            'flex flex-col h-full min-h-0 gap-2.5 overflow-y-auto pr-1',
             colSpans.right,
             mobileView === 'explainability' ? 'flex' : 'hidden lg:flex'
           )}
@@ -430,7 +457,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Expanded Deep-Dive Intelligence & Explainability Modal */}

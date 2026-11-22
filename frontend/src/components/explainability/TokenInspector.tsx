@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { TokenMetadata } from '../../types/api';
 import { TokenEdit } from '../../types/workspace';
 import { formatConfidence, getConfidenceColor } from '../../utils/latex';
+import { tokenSequenceVariants, tokenChipVariants } from '../../utils/motion';
 import { ChevronLeft, ChevronRight, Edit3 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
@@ -95,24 +97,38 @@ export const TokenInspector: React.FC<TokenInspectorProps> = ({
       </div>
 
       {/* Interactive Token Sequence Chips */}
-      <div className="flex flex-wrap gap-1.5 p-2 bg-[#090B10] rounded-lg border border-[#252D3B] max-h-36 overflow-y-auto">
+      <motion.div
+        variants={tokenSequenceVariants}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-wrap gap-1.5 p-2 bg-[#090B10] rounded-lg border border-[#252D3B] max-h-36 overflow-y-auto"
+      >
         {tokens.map((tokenMeta, idx) => {
           const isSelected = idx === activeTokenIndex;
           const edited = isTokenEdited(idx);
 
           return (
-            <button
+            <motion.button
+              variants={tokenChipVariants}
+              whileTap={{ scale: 0.95 }}
               key={idx}
               onClick={() => onSelectToken(idx)}
               className={cn(
-                'group relative px-2.5 py-1 rounded-md font-mono text-xs transition-all flex items-center gap-1.5 border select-none',
+                'group relative px-2.5 py-1 rounded-md font-mono text-xs transition-colors flex items-center gap-1.5 border select-none',
                 isSelected
-                  ? 'bg-[#8B7CFF]/20 text-[#8B7CFF] border-[#8B7CFF] shadow-glow-accent ring-1 ring-[#8B7CFF]'
+                  ? 'text-[#8B7CFF] border-[#8B7CFF]'
                   : edited
                   ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
                   : 'bg-[#151B27] text-[#F1F5F9] border-[#252D3B] hover:border-[#38BDF8]/50 hover:bg-[#1E2536]'
               )}
             >
+              {isSelected && (
+                <motion.span
+                  layoutId="activeTokenChipIndicator"
+                  className="absolute inset-0 rounded-md bg-[#8B7CFF]/20 border border-[#8B7CFF] shadow-[0_0_12px_rgba(139,124,255,0.45)] -z-10"
+                  transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                />
+              )}
               <span>{tokenMeta.token}</span>
               {edited && (
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Manually edited" />
@@ -120,10 +136,10 @@ export const TokenInspector: React.FC<TokenInspectorProps> = ({
               {tokenMeta.confidence < 0.75 && !edited && (
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400" title="Low confidence" />
               )}
-            </button>
+            </motion.button>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Active Token Details & Top-3 Alternatives Panel */}
       {activeToken ? (
@@ -154,6 +170,23 @@ export const TokenInspector: React.FC<TokenInspectorProps> = ({
             </div>
           </div>
 
+          {/* Animated Token Confidence Progress Bar */}
+          <div className="w-full bg-[#090B10] h-1.5 rounded-full overflow-hidden border border-[#212836]">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.round(activeToken.confidence * 100)}%` }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className={cn(
+                'h-full rounded-full',
+                activeToken.confidence >= 0.85
+                  ? 'bg-emerald-400'
+                  : activeToken.confidence >= 0.6
+                  ? 'bg-amber-400'
+                  : 'bg-rose-400'
+              )}
+            />
+          </div>
+
           {/* Top-3 Alternative Predictions */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
@@ -171,14 +204,16 @@ export const TokenInspector: React.FC<TokenInspectorProps> = ({
             {activeToken.alternatives && activeToken.alternatives.length > 0 ? (
               <div className="grid grid-cols-3 gap-1.5">
                 {activeToken.alternatives.map((alt, altIdx) => (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
                     key={altIdx}
                     onClick={() => {
                       if (activeTokenIndex !== null) {
                         onReplaceToken(activeTokenIndex, alt.token);
                       }
                     }}
-                    className="flex flex-col items-center justify-center p-2 rounded-lg bg-[#10141D] hover:bg-[#1E2536] border border-[#252D3B] hover:border-[#8B7CFF]/50 transition-all text-center group"
+                    className="flex flex-col items-center justify-center p-2 rounded-lg bg-[#10141D] hover:bg-[#1E2536] border border-[#252D3B] hover:border-[#8B7CFF]/50 transition-colors text-center group"
                   >
                     <span className="font-mono text-sm font-semibold text-[#F1F5F9] group-hover:text-[#8B7CFF]">
                       {alt.token}
@@ -186,7 +221,7 @@ export const TokenInspector: React.FC<TokenInspectorProps> = ({
                     <span className="text-[10px] font-mono text-[#94A3B8] mt-0.5">
                       {formatConfidence(alt.prob)}
                     </span>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             ) : (
