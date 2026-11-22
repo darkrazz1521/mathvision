@@ -78,6 +78,7 @@ export const MainApp: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isGlobalQrModalOpen, setIsGlobalQrModalOpen] = useState(false);
+  const [incomingPhoto, setIncomingPhoto] = useState<{ file: File; dataUrl: string } | null>(null);
 
   // Backend connection status
   const [isBackendConnected, setIsBackendConnected] = useState(false);
@@ -281,7 +282,9 @@ export const MainApp: React.FC = () => {
         u8arr[n] = bstr.charCodeAt(n);
       }
       const file = new File([u8arr], filename || 'phone_capture.jpg', { type: mime });
-      handleRecognize(file, dataUrl, 'photo');
+      // Do not auto-recognize: load into incomingPhoto so user can preview, crop, and rotate first
+      setIncomingPhoto({ file, dataUrl });
+      success('Photo Received from Phone', 'Loaded! You can crop or rotate, then click Recognize Photo.');
     } catch (e) {
       console.error('Failed to parse mobile photo:', e);
     }
@@ -503,6 +506,8 @@ export const MainApp: React.FC = () => {
               actions={workspaceActions}
               onRecognize={handleRecognize}
               onOpenQrSync={() => setIsGlobalQrModalOpen(true)}
+              incomingPhoto={incomingPhoto}
+              onClearIncomingPhoto={() => setIncomingPhoto(null)}
               isRecognizing={
                 processingStatus === 'preparing' ||
                 processingStatus === 'preprocessing' ||

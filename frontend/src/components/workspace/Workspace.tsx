@@ -34,6 +34,8 @@ interface WorkspaceProps {
   onRecognize: (fileOrBlob: Blob | File, previewUrl: string, explicitMode?: 'canvas' | 'photo') => void;
   isRecognizing: boolean;
   onOpenQrSync?: () => void;
+  incomingPhoto?: { file: File; dataUrl: string } | null;
+  onClearIncomingPhoto?: () => void;
 }
 
 export type WorkspaceViewMode = 'balanced' | 'canvas-focus' | 'inspect-focus';
@@ -44,6 +46,8 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   onRecognize,
   isRecognizing,
   onOpenQrSync,
+  incomingPhoto,
+  onClearIncomingPhoto,
 }) => {
   // Mobile / small-screen tab view selector
   const [mobileView, setMobileView] = useState<'input' | 'recognition' | 'explainability'>('input');
@@ -326,12 +330,14 @@ export const Workspace: React.FC<WorkspaceProps> = ({
             ) : (
               <PhotoUpload
                 onRecognize={(file, previewUrl) => {
-                  onRecognize(file, previewUrl);
+                  onRecognize(file, previewUrl, 'photo');
                   if (window.innerWidth < 1024) setMobileView('recognition');
                   setIsRightCollapsed(false);
                 }}
                 isRecognizing={isRecognizing}
                 preprocessedImage={prediction?.preprocessed_image}
+                incomingPhoto={incomingPhoto}
+                onClearIncomingPhoto={onClearIncomingPhoto}
               />
             )}
           </div>
