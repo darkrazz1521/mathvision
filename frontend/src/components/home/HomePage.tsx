@@ -68,6 +68,7 @@ interface HomePageProps {
   onOpenDocs: () => void;
   onOpenModelSpecs: () => void;
   onOpenShortcuts: () => void;
+  onPhotoReceivedFromPhone?: (dataUrl: string, filename: string) => void;
 }
 
 // 5 Interconnected Scientific Reality Domains
@@ -193,6 +194,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   onOpenDocs,
   onOpenModelSpecs,
   onOpenShortcuts,
+  onPhotoReceivedFromPhone,
 }) => {
   const { success } = useToast();
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -211,11 +213,15 @@ export const HomePage: React.FC<HomePageProps> = ({
     }
   };
 
-  const handlePhotoFromPhone = () => {
-    success('Photo Received from Phone', 'Transferring to studio workspace for inspection.');
-    setTimeout(() => {
-      onLaunchWorkspace();
-    }, 600);
+  const handlePhotoFromPhone = (dataUrl: string, filename: string) => {
+    success('Photo Received from Phone', 'Transferring equation to studio workspace...');
+    if (onPhotoReceivedFromPhone) {
+      onPhotoReceivedFromPhone(dataUrl, filename);
+    } else {
+      setTimeout(() => {
+        onLaunchWorkspace();
+      }, 600);
+    }
   };
 
   const handleCopyLatex = (str: string) => {

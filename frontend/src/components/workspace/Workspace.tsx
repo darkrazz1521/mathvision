@@ -24,14 +24,16 @@ import {
   Crosshair,
   ShieldCheck,
   Binary,
+  QrCode,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 interface WorkspaceProps {
   workspace: WorkspaceState;
   actions: WorkspaceActions;
-  onRecognize: (fileOrBlob: Blob | File, previewUrl: string) => void;
+  onRecognize: (fileOrBlob: Blob | File, previewUrl: string, explicitMode?: 'canvas' | 'photo') => void;
   isRecognizing: boolean;
+  onOpenQrSync?: () => void;
 }
 
 export type WorkspaceViewMode = 'balanced' | 'canvas-focus' | 'inspect-focus';
@@ -41,6 +43,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   actions,
   onRecognize,
   isRecognizing,
+  onOpenQrSync,
 }) => {
   // Mobile / small-screen tab view selector
   const [mobileView, setMobileView] = useState<'input' | 'recognition' | 'explainability'>('input');
@@ -119,6 +122,17 @@ export const Workspace: React.FC<WorkspaceProps> = ({
             activeTab={inputMode}
             onChange={(id) => actions.setInputMode(id as 'canvas' | 'photo')}
           />
+
+          {onOpenQrSync && (
+            <button
+              onClick={onOpenQrSync}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#8B7CFF]/15 text-[#8B7CFF] border border-[#8B7CFF]/40 hover:bg-[#8B7CFF]/25 transition-colors select-none"
+              title="Scan QR to capture photo using phone camera"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Phone QR</span>
+            </button>
+          )}
 
           {/* Quick Collapse Left Button */}
           <Tooltip content={isLeftCollapsed ? 'Show Input Panel' : 'Collapse Input Panel'}>

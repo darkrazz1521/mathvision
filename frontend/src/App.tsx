@@ -11,6 +11,7 @@ import { ModelSpecModal } from './components/settings/ModelSpecModal';
 import { DocsModal } from './components/docs/DocsModal';
 import { ShortcutsModal } from './components/docs/ShortcutsModal';
 import { MobileCameraCapture } from './components/upload/MobileCameraCapture';
+import { MobileQrModal } from './components/upload/MobileQrModal';
 import { Modal } from './components/ui/Modal';
 import { ToastProvider, useToast } from './components/ui/Toast';
 import {
@@ -76,6 +77,7 @@ export const MainApp: React.FC = () => {
   const [isModelSpecsOpen, setIsModelSpecsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isGlobalQrModalOpen, setIsGlobalQrModalOpen] = useState(false);
 
   // Backend connection status
   const [isBackendConnected, setIsBackendConnected] = useState(false);
@@ -205,7 +207,11 @@ export const MainApp: React.FC = () => {
   }, [info]);
 
   // Run recognition pipeline on input Blob/File
-  const handleRecognize = async (fileOrBlob: Blob | File, previewUrl: string) => {
+  const handleRecognize = async (fileOrBlob: Blob | File, previewUrl: string, explicitMode?: InputMode) => {
+    const activeMode = explicitMode || inputMode;
+    if (explicitMode && explicitMode !== inputMode) {
+      setInputMode(explicitMode);
+    }
     setInputImagePreview(previewUrl);
     setProcessingStatus('preparing');
     setCurrentStepMessage('Preparing high-contrast input image...');
@@ -220,7 +226,7 @@ export const MainApp: React.FC = () => {
 
         const result = await predictEquation({
           file: fileOrBlob,
-          mode: inputMode,
+          mode: activeMode,
           beam_width: beamWidth,
         });
 
@@ -255,6 +261,29 @@ export const MainApp: React.FC = () => {
           );
         }, 600);
       }, 500);
+    }
+  };
+
+  // Handle photo received from smartphone QR sync
+  const handlePhotoReceivedFromMobile = (dataUrl: string, filename: string) => {
+    setInputMode('photo');
+    navigateToTab('workspace');
+    setIsGlobalQrModalOpen(false);
+
+    try {
+      const arr = dataUrl.split(',');
+      const mimeMatch = arr[0]?.match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+      const bstr = atob((arr[1] || '').trim().replace(/\s/g, ''));
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const file = new File([u8arr], filename || 'phone_capture.jpg', { type: mime });
+      handleRecognize(file, dataUrl, 'photo');
+    } catch (e) {
+      console.error('Failed to parse mobile photo:', e);
     }
   };
 
@@ -354,6 +383,7 @@ export const MainApp: React.FC = () => {
           onOpenDocs={() => setIsDocsOpen(true)}
           onOpenModelSpecs={() => setIsModelSpecsOpen(true)}
           onOpenShortcuts={() => setIsShortcutsOpen(true)}
+          onPhotoReceivedFromPhone={handlePhotoReceivedFromMobile}
         />
 
         {/* Settings & Backend Connection Modal */}
@@ -455,6 +485,7 @@ export const MainApp: React.FC = () => {
               }}
               onOpenQrModal={() => {
                 setInputMode('photo');
+                setIsGlobalQrModalOpen(true);
                 navigateToTab('workspace');
               }}
               onOpenPlayground={() => navigateToTab('playground')}
@@ -471,6 +502,7 @@ export const MainApp: React.FC = () => {
               workspace={workspaceState}
               actions={workspaceActions}
               onRecognize={handleRecognize}
+              onOpenQrSync={() => setIsGlobalQrModalOpen(true)}
               isRecognizing={
                 processingStatus === 'preparing' ||
                 processingStatus === 'preprocessing' ||
@@ -611,6 +643,18 @@ export const MainApp: React.FC = () => {
             </button>
           </div>
         </div>
+      </Modal>
+      {/* Universal Mobile Camera QR Sync Modal */}
+      <Modal
+        isOpen={isGlobalQrModalOpen}
+        onClose={() => setIsGlobalQrModalOpen(false)}
+        maxWidth="md"
+      >
+        <MobileQrModal
+          isOpen={isGlobalQrModalOpen}
+          onClose={() => setIsGlobalQrModalOpen(false)}
+          onPhotoReceived={handlePhotoReceivedFromMobile}
+        />
       </Modal>
     </div>
   );

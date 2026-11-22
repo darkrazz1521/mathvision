@@ -29,19 +29,70 @@ export const MobileCameraCapture: React.FC<MobileCameraCaptureProps> = ({ sessio
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Check if API endpoint was passed in URL query
+  const searchParams = new URLSearchParams(window.location.search);
+  const customApi = searchParams.get('api') || undefined;
+
   const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
       alert('Please snap or select an image file.');
       return;
     }
-    const url = URL.createObjectURL(file);
-    setSelectedFile(file);
-    setPreviewUrl(url);
     setErrorMessage(null);
+
+    // Optimize and downscale large phone camera photos on device before upload
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxDim = 1600;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const optimizedFile = new File([blob], 'phone_capture.jpg', { type: 'image/jpeg' });
+                setSelectedFile(optimizedFile);
+                setPreviewUrl(canvas.toDataURL('image/jpeg', 0.85));
+              } else {
+                setSelectedFile(file);
+                setPreviewUrl(URL.createObjectURL(file));
+              }
+            },
+            'image/jpeg',
+            0.85
+          );
+        } catch {
+          setSelectedFile(file);
+          setPreviewUrl(URL.createObjectURL(file));
+        }
+      };
+      img.onerror = () => {
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRetake = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (previewUrl && !previewUrl.startsWith('data:')) URL.revokeObjectURL(previewUrl);
     setSelectedFile(null);
     setPreviewUrl(null);
     setIsSuccess(false);
@@ -54,7 +105,7 @@ export const MobileCameraCapture: React.FC<MobileCameraCaptureProps> = ({ sessio
     setErrorMessage(null);
 
     try {
-      const res = await uploadMobilePhoto(sessionId, selectedFile, selectedFile.name);
+      const res = await uploadMobilePhoto(sessionId, selectedFile, selectedFile.name, customApi);
       setIsUploading(false);
 
       if (res.ok) {

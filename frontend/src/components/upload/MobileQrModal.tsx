@@ -65,7 +65,7 @@ export const MobileQrModal: React.FC<MobileQrModalProps> = ({
     } else {
       const port = window.location.port ? `:${window.location.port}` : '';
       const protocol = window.location.protocol;
-      url = `${protocol}//${host}${port}/?mode=capture&session=${sessId}`;
+      url = `${protocol}//${host}${port}/?mode=capture&session=${sessId}&api=${encodeURIComponent(apiBase)}`;
     }
     setTargetUrl(url);
 
@@ -150,13 +150,18 @@ export const MobileQrModal: React.FC<MobileQrModalProps> = ({
     };
   }, [isOpen]);
 
-  // Poll for phone photo upload
+  // Poll for phone photo upload with concurrency protection
   useEffect(() => {
     if (!isOpen || !sessionId || hasReceived) return;
 
+    let isPolling = false;
+
     pollIntervalRef.current = setInterval(async () => {
+      if (isPolling) return;
+      isPolling = true;
+
       try {
-        const status = await checkMobileSessionStatus(sessionId);
+        const status = await checkMobileSessionStatus(sessionId, apiBase);
         if (status.has_image && status.image_b64) {
           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
           setHasReceived(true);
@@ -165,17 +170,19 @@ export const MobileQrModal: React.FC<MobileQrModalProps> = ({
           setTimeout(() => {
             onPhotoReceived(status.image_b64!, status.filename || 'phone_photo.jpg');
             onClose();
-          }, 1000);
+          }, 600);
         }
       } catch (e) {
         console.error('Poll error:', e);
+      } finally {
+        isPolling = false;
       }
-    }, 1500);
+    }, 1200);
 
     return () => {
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
-  }, [isOpen, sessionId, hasReceived, onPhotoReceived, onClose, success]);
+  }, [isOpen, sessionId, hasReceived, onPhotoReceived, onClose, success, apiBase]);
 
   // Handle selecting an IP from detected options
   const handleSelectIp = (ip: string) => {

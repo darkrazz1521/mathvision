@@ -21,17 +21,23 @@ interface PhotoUploadProps {
   preprocessedImage?: string | null;
 }
 
-// Convert base64 data URL to standard File object
+// Convert base64 data URL to standard File object safely
 function dataUrlToFile(dataUrl: string, filename: string): File {
-  const arr = dataUrl.split(',');
-  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
+  try {
+    const arr = dataUrl.split(',');
+    const mimeMatch = arr[0]?.match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const bstr = atob((arr[1] || '').trim().replace(/\s/g, ''));
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  } catch (err) {
+    console.error('Failed to convert base64 to File:', err);
+    return new File([new Uint8Array(0)], filename, { type: 'image/jpeg' });
   }
-  return new File([u8arr], filename, { type: mime });
 }
 
 export const PhotoUpload: React.FC<PhotoUploadProps> = ({
@@ -107,22 +113,32 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
   // Called when mobile phone uploads picture over QR sync
   const handlePhotoFromPhone = (dataUrl: string, filename: string) => {
-    const file = dataUrlToFile(dataUrl, filename);
-    setSelectedFile(file);
-    setPreviewUrl(dataUrl);
+    try {
+      const file = dataUrlToFile(dataUrl, filename);
+      setSelectedFile(file);
+      setPreviewUrl(dataUrl);
 
-    const img = new Image();
-    img.onload = () => {
-      setImageMeta({
-        width: img.naturalWidth,
-        height: img.naturalHeight,
-        sizeKb: Math.round(file.size / 1024),
-      });
-    };
-    img.src = dataUrl;
+      const img = new Image();
+      img.onload = () => {
+        setImageMeta({
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          sizeKb: Math.round(file.size / 1024),
+        });
+      };
+      img.src = dataUrl;
 
-    // Close QR modal and let the user inspect the received photo before recognizing
-    setIsQrModalOpen(false);
+      // Close QR modal
+      setIsQrModalOpen(false);
+
+      // Instantly trigger recognition pipeline so user sees the transferred equation recognizing immediately
+      if (file && file.size > 0) {
+        onRecognize(file, dataUrl);
+      }
+    } catch (err) {
+      console.error('Failed to process phone photo:', err);
+      setIsQrModalOpen(false);
+    }
   };
 
   return (

@@ -169,19 +169,26 @@ export async function createMobileSession(): Promise<{ session_id: string }> {
  * Check if the mobile phone has uploaded a photo to the session
  */
 export async function checkMobileSessionStatus(
-  sessionId: string
+  sessionId: string,
+  customBaseUrl?: string
 ): Promise<{ has_image: boolean; image_b64: string | null; filename: string | null }> {
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = customBaseUrl || getApiBaseUrl();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+
   try {
     const res = await fetch(`${baseUrl}/session/${sessionId}/status`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     if (res.ok) {
       return await res.json();
     }
     return { has_image: false, image_b64: null, filename: null };
   } catch {
+    clearTimeout(timeoutId);
     return { has_image: false, image_b64: null, filename: null };
   }
 }
@@ -192,23 +199,30 @@ export async function checkMobileSessionStatus(
 export async function uploadMobilePhoto(
   sessionId: string,
   file: File | Blob,
-  filename: string = 'phone_capture.jpg'
+  filename: string = 'phone_capture.jpg',
+  customBaseUrl?: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = customBaseUrl || getApiBaseUrl();
   const formData = new FormData();
   formData.append('file', file, filename);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
     const res = await fetch(`${baseUrl}/session/${sessionId}/upload`, {
       method: 'POST',
       body: formData,
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     if (res.ok) {
       return { ok: true };
     }
     const errData = await res.json().catch(() => ({}));
     return { ok: false, error: errData.detail || 'Upload failed' };
   } catch (err: unknown) {
+    clearTimeout(timeoutId);
     const msg = err instanceof Error ? err.message : 'Network error';
     return { ok: false, error: msg };
   }

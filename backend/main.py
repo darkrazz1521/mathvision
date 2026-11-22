@@ -410,15 +410,35 @@ async def upload_to_session(session_id: str, file: UploadFile = File(...)):
     if not image_bytes:
         raise HTTPException(status_code=400, detail="Empty image uploaded.")
 
-    content_type = file.content_type or "image/jpeg"
+    content_type = "image/jpeg"
+    # Normalize, auto-orient, and downscale massive mobile camera photos
+    # to clean high-quality JPEG (max dimension 1600px)
+    try:
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is not None and img.size > 0:
+            h, w = img.shape[:2]
+            max_dim = 1600
+            if max(h, w) > max_dim:
+                scale = max_dim / max(h, w)
+                img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+            
+            encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), 85]
+            success, enc_buf = cv2.imencode(".jpg", img, encode_params)
+            if success:
+                image_bytes = enc_buf.tobytes()
+    except Exception as e:
+        logger.warning(f"Image normalization warning in mobile upload: {e}")
+
     b64 = base64.b64encode(image_bytes).decode("utf-8")
     data_url = f"data:{content_type};base64,{b64}"
 
     ACTIVE_SESSIONS[session_id] = {
         "has_image": True,
         "image_b64": data_url,
-        "filename": file.filename or "phone_capture.jpg",
+        "filename": "phone_capture.jpg",
         "timestamp": time.time(),
+        "size": len(image_bytes),
     }
     return {"status": "ok", "session_id": session_id, "size": len(image_bytes)}
 
@@ -715,15 +735,69 @@ def mobile_capture_page(session: str = ""):
 
     function handleFile(file) {{
       if (!file) return;
-      selectedFile = file;
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '&#9203; Processing Photo...';
+
       const reader = new FileReader();
       reader.onload = function(e) {{
-        previewImg.src = e.target.result;
-        previewContainer.style.display = 'block';
-        initialState.style.display = 'none';
-        successState.style.display = 'none';
-        previewState.style.display = 'block';
-        errorBox.style.display = 'none';
+        const img = new Image();
+        img.onload = function() {{
+          try {{
+            const maxDim = 1600;
+            let w = img.width;
+            let h = img.height;
+            if (w > maxDim || h > maxDim) {{
+              if (w > h) {{
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+              }} else {{
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+              }}
+            }}
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            canvas.toBlob(function(blob) {{
+              if (blob) {{
+                selectedFile = new File([blob], "phone_capture.jpg", {{ type: "image/jpeg" }});
+                previewImg.src = canvas.toDataURL('image/jpeg', 0.85);
+              }} else {{
+                selectedFile = file;
+                previewImg.src = e.target.result;
+              }}
+              previewContainer.style.display = 'block';
+              initialState.style.display = 'none';
+              successState.style.display = 'none';
+              previewState.style.display = 'block';
+              errorBox.style.display = 'none';
+              uploadBtn.disabled = false;
+              uploadBtn.innerHTML = '&#128640; Send to MathVision Desktop';
+            }}, 'image/jpeg', 0.85);
+          }} catch(err) {{
+            selectedFile = file;
+            previewImg.src = e.target.result;
+            previewContainer.style.display = 'block';
+            initialState.style.display = 'none';
+            successState.style.display = 'none';
+            previewState.style.display = 'block';
+            errorBox.style.display = 'none';
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '&#128640; Send to MathVision Desktop';
+          }}
+        }};
+        img.onerror = function() {{
+          selectedFile = file;
+          previewImg.src = e.target.result;
+          previewContainer.style.display = 'block';
+          initialState.style.display = 'none';
+          previewState.style.display = 'block';
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = '&#128640; Send to MathVision Desktop';
+        }};
+        img.src = e.target.result;
       }};
       reader.readAsDataURL(file);
     }}
