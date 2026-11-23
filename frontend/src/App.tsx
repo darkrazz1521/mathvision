@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar, SidebarTab } from './components/layout/Sidebar';
 import { HomePage } from './components/home/HomePage';
@@ -97,6 +97,7 @@ export const MainApp: React.FC = () => {
   const [tokenEdits, setTokenEdits] = useState<TokenEdit[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [inputImagePreview, setInputImagePreview] = useState<string | null>(null);
+  const lastSubmissionRef = useRef<{ fileOrBlob: Blob | File; previewUrl: string; mode?: InputMode } | null>(null);
 
   // Explainability visual settings
   const [overlayOpacity, setOverlayOpacity] = useState<number>(0.85);
@@ -213,6 +214,7 @@ export const MainApp: React.FC = () => {
     if (explicitMode && explicitMode !== inputMode) {
       setInputMode(explicitMode);
     }
+    lastSubmissionRef.current = { fileOrBlob, previewUrl, mode: activeMode };
     setInputImagePreview(previewUrl);
     setProcessingStatus('preparing');
     setCurrentStepMessage('Preparing high-contrast input image...');
@@ -264,6 +266,18 @@ export const MainApp: React.FC = () => {
       }, 500);
     }
   };
+
+  const handleRetryRecognition = useCallback(() => {
+    if (lastSubmissionRef.current) {
+      handleRecognize(
+        lastSubmissionRef.current.fileOrBlob,
+        lastSubmissionRef.current.previewUrl,
+        lastSubmissionRef.current.mode
+      );
+    } else {
+      setProcessingStatus('idle');
+    }
+  }, [handleRecognize]);
 
   // Handle photo received from smartphone QR sync
   const handlePhotoReceivedFromMobile = (dataUrl: string, filename: string) => {
@@ -514,6 +528,7 @@ export const MainApp: React.FC = () => {
                 processingStatus === 'decoding' ||
                 processingStatus === 'verifying'
               }
+              onRetry={handleRetryRecognition}
             />
           )}
 

@@ -44,21 +44,32 @@ export const HandwritingCanvas: React.FC<HandwritingCanvasProps> = ({
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
+    let prevW = 0;
+    let prevH = 0;
+    let rafId: number | null = null;
+
     const updateSize = () => {
-      const rect = container.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        setupHighDpiCanvas(canvas, rect.width, rect.height);
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w > 0 && h > 0 && (Math.abs(w - prevW) > 1 || Math.abs(h - prevH) > 1)) {
+        prevW = w;
+        prevH = h;
+        setupHighDpiCanvas(canvas, w, h);
         redraw();
       }
     };
 
     updateSize();
     const observer = new ResizeObserver(() => {
-      updateSize();
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateSize);
     });
     observer.observe(container);
 
-    return () => observer.disconnect();
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      observer.disconnect();
+    };
   }, [redraw]);
 
   // Pointer event handlers

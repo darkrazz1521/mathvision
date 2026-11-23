@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { HandwritingCanvas } from '../canvas/HandwritingCanvas';
 import { PhotoUpload } from '../upload/PhotoUpload';
 import { RecognitionView } from '../recognition/RecognitionView';
@@ -36,6 +36,7 @@ interface WorkspaceProps {
   onOpenQrSync?: () => void;
   incomingPhoto?: { file: File; dataUrl: string } | null;
   onClearIncomingPhoto?: () => void;
+  onRetry?: () => void;
 }
 
 export type WorkspaceViewMode = 'balanced' | 'canvas-focus' | 'inspect-focus';
@@ -48,11 +49,12 @@ export const Workspace: React.FC<WorkspaceProps> = ({
   onOpenQrSync,
   incomingPhoto,
   onClearIncomingPhoto,
+  onRetry,
 }) => {
-  // Mobile / small-screen tab view selector
+  // Mobile / tablet segmented view selector (<1024px)
   const [mobileView, setMobileView] = useState<'input' | 'recognition' | 'explainability'>('input');
 
-  // Studio View Mode & Panel Collapse States
+  // Studio View Mode & Panel Collapse States (>=1024px)
   const [viewMode, setViewMode] = useState<WorkspaceViewMode>('balanced');
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
   const [isRightCollapsed, setIsRightCollapsed] = useState(false);
@@ -76,41 +78,211 @@ export const Workspace: React.FC<WorkspaceProps> = ({
       ? prediction.tokens[activeTokenIndex]
       : null;
 
-  // Compute dynamic column layout based on viewMode and collapsed panels
-  const getColSpan = () => {
+  // Determine explicit desktop grid areas and track sizing
+  const getDesktopGridStyle = (): React.CSSProperties => {
     if (viewMode === 'canvas-focus') {
+      if (isRightCollapsed) {
+        return {
+          display: 'grid',
+          gridTemplateAreas: '"input output"',
+          gridTemplateColumns: 'minmax(420px, 1.5fr) minmax(340px, 1fr)',
+        };
+      }
       return {
-        left: isLeftCollapsed ? 'hidden' : isRightCollapsed ? 'lg:col-span-8' : 'lg:col-span-7',
-        center: isLeftCollapsed ? 'lg:col-span-12' : isRightCollapsed ? 'lg:col-span-4' : 'lg:col-span-5',
-        right: isRightCollapsed ? 'hidden' : 'hidden', // Auto-hide right in canvas focus unless toggled
+        display: 'grid',
+        gridTemplateAreas: '"input output explain"',
+        gridTemplateColumns: 'minmax(380px, 1.35fr) minmax(320px, 1fr) minmax(280px, 0.85fr)',
       };
     }
 
     if (viewMode === 'inspect-focus') {
+      if (isLeftCollapsed) {
+        return {
+          display: 'grid',
+          gridTemplateAreas: '"output explain"',
+          gridTemplateColumns: 'minmax(340px, 1fr) minmax(440px, 1.45fr)',
+        };
+      }
       return {
-        left: isLeftCollapsed ? 'hidden' : 'lg:col-span-3',
-        center: isLeftCollapsed ? 'lg:col-span-4' : 'lg:col-span-4',
-        right: isRightCollapsed ? 'hidden' : isLeftCollapsed ? 'lg:col-span-8' : 'lg:col-span-5',
+        display: 'grid',
+        gridTemplateAreas: '"input output explain"',
+        gridTemplateColumns: 'minmax(280px, 0.85fr) minmax(320px, 1fr) minmax(400px, 1.4fr)',
       };
     }
 
-    // Balanced Mode (Studio 3-Zone):
+    // Default: Studio 3-Zone (Balanced)
     if (isLeftCollapsed && isRightCollapsed) {
-      return { left: 'hidden', center: 'lg:col-span-12', right: 'hidden' };
+      return {
+        display: 'grid',
+        gridTemplateAreas: '"output"',
+        gridTemplateColumns: '1fr',
+      };
     }
     if (isLeftCollapsed) {
-      return { left: 'hidden', center: 'lg:col-span-6', right: 'lg:col-span-6' };
+      return {
+        display: 'grid',
+        gridTemplateAreas: '"output explain"',
+        gridTemplateColumns: 'minmax(360px, 1fr) minmax(360px, 1fr)',
+      };
     }
     if (isRightCollapsed) {
-      return { left: 'lg:col-span-7', center: 'lg:col-span-5', right: 'hidden' };
+      return {
+        display: 'grid',
+        gridTemplateAreas: '"input output"',
+        gridTemplateColumns: 'minmax(380px, 1.25fr) minmax(340px, 1fr)',
+      };
     }
-    return { left: 'lg:col-span-4', center: 'lg:col-span-4', right: 'lg:col-span-4' };
+
+    return {
+      display: 'grid',
+      gridTemplateAreas: '"input output explain"',
+      gridTemplateColumns: 'minmax(300px, 1.1fr) minmax(330px, 1fr) minmax(300px, 1fr)',
+    };
   };
 
-  const colSpans = getColSpan();
+  const isLeftVisibleDesktop = !isLeftCollapsed;
+  const isCenterVisibleDesktop = true;
+  const isRightVisibleDesktop =
+    !isRightCollapsed && (viewMode !== 'canvas-focus' || !isRightCollapsed);
+
+  // Render Input Component (Digital Ink or Notebook Photo)
+  const renderInputPanel = () => (
+    <div className="flex-1 min-h-0 min-w-0 h-full w-full overflow-hidden shadow-sm rounded-xl box-border">
+      {inputMode === 'canvas' ? (
+        <HandwritingCanvas
+          onRecognize={(blob, previewUrl) => {
+            onRecognize(blob, previewUrl);
+            setMobileView('recognition');
+            setIsRightCollapsed(false);
+          }}
+          isRecognizing={isRecognizing}
+        />
+      ) : (
+        <PhotoUpload
+          onRecognize={(file, previewUrl) => {
+            onRecognize(file, previewUrl, 'photo');
+            setMobileView('recognition');
+            setIsRightCollapsed(false);
+          }}
+          isRecognizing={isRecognizing}
+          preprocessedImage={prediction?.preprocessed_image}
+          incomingPhoto={incomingPhoto}
+          onClearIncomingPhoto={onClearIncomingPhoto}
+        />
+      )}
+    </div>
+  );
+
+  // Render Explainability Panel Content
+  const renderExplainPanel = () => (
+    <div className="flex flex-col h-full min-h-0 min-w-0 w-full gap-2.5 overflow-y-auto pr-1 box-border">
+      {/* Panel Top Title Bar */}
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#0D111A] rounded-xl border border-[#212836] shrink-0 shadow-sm select-none">
+        <div className="flex items-center gap-2">
+          <BrainCircuit className="w-4 h-4 text-[#8B7CFF]" />
+          <h3 className="text-xs font-bold text-[#F8FAFC]">
+            Intelligence & Explainability
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono text-[#94A3B8]">
+            {prediction ? `${prediction.tokens.length} Symbols` : 'Standby'}
+          </span>
+
+          {prediction && (
+            <Tooltip content="Expand Full Deep-Dive Inspection">
+              <button
+                onClick={() => setIsExplainModalOpen(true)}
+                className="p-1 rounded-lg text-[#94A3B8] hover:text-[#8B7CFF] hover:bg-[#8B7CFF]/10 transition-colors"
+                aria-label="Expand Full Deep-Dive Inspection"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
+          )}
+        </div>
+      </div>
+
+      {prediction ? (
+        <div className="flex flex-col gap-2.5">
+          {/* Feature 1: Spatial Attention Spotlight */}
+          {prediction.preprocessed_image && (
+            <AttentionSpotlight
+              preprocessedImage={prediction.preprocessed_image}
+              activeToken={activeToken}
+              activeTokenIndex={activeTokenIndex}
+              tokens={prediction.tokens}
+              onSelectToken={actions.setActiveTokenIndex}
+              opacity={overlayOpacity}
+              onOpacityChange={(val) => actions.updateExplainabilityConfig({ overlayOpacity: val })}
+              showSpotlight={showSpotlight}
+              onToggleSpotlight={() => actions.updateExplainabilityConfig({ showSpotlight: !showSpotlight })}
+              showCrosshair={showCrosshair}
+              onToggleCrosshair={() => actions.updateExplainabilityConfig({ showCrosshair: !showCrosshair })}
+              showCoordinates={showCoordinates}
+              onToggleCoordinates={() => actions.updateExplainabilityConfig({ showCoordinates: !showCoordinates })}
+              spotlightRadius={spotlightRadius}
+              onRadiusChange={(val) => actions.updateExplainabilityConfig({ spotlightRadius: val })}
+            />
+          )}
+
+          {/* Feature 2: Token Inspector & Top-3 Alternatives */}
+          <TokenInspector
+            tokens={prediction.tokens}
+            activeTokenIndex={activeTokenIndex}
+            onSelectToken={actions.setActiveTokenIndex}
+            onReplaceToken={actions.replaceToken}
+            tokenEdits={tokenEdits}
+          />
+
+          {/* Feature 3: Mathematical & Symbolic Verification */}
+          <VerificationPanel
+            syntaxValid={prediction.syntax_valid}
+            sympy={prediction.sympy}
+            currentLatex={editedLatex}
+          />
+        </div>
+      ) : (
+        /* Standby State with Architectural Explanation & Guide */
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-6 text-center rounded-xl bg-[#0D111A] border border-[#212836] shadow-sm overflow-y-auto">
+          <div className="w-12 h-12 rounded-2xl bg-[#141A28] border border-[#212836] text-[#8B7CFF] flex items-center justify-center mb-3 shadow-md">
+            <BrainCircuit className="w-6 h-6 animate-pulse" />
+          </div>
+          <h4 className="text-sm font-bold text-[#F8FAFC]">
+            Neural Explainability Standby
+          </h4>
+          <p className="text-xs text-[#94A3B8] max-w-xs mt-1.5 leading-relaxed">
+            Draw an expression or upload a notebook photograph, then click <strong className="text-[#F8FAFC]">Recognize Equation</strong>.
+          </p>
+
+          <div className="mt-5 p-3 rounded-xl bg-[#080B11] border border-[#212836] text-left w-full max-w-xs space-y-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#38BDF8]">
+              <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+              <span>Explainability Features:</span>
+            </div>
+            <div className="space-y-1.5 text-[11px] text-[#94A3B8]">
+              <div className="flex items-start gap-2">
+                <Crosshair className="w-3.5 h-3.5 text-[#8B7CFF] shrink-0 mt-0.5" />
+                <span>Cross-attention 2D spatial spotlight per emitted token</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Binary className="w-3.5 h-3.5 text-[#38BDF8] shrink-0 mt-0.5" />
+                <span>Beam search alternative token probability inspection</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                <span>SymPy Computer Algebra System syntactic verification</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col h-full w-full overflow-hidden bg-[#090B10] text-[#F1F5F9]">
+    <div className="flex-1 min-h-0 min-w-0 flex flex-col h-full w-full overflow-hidden bg-[#090B10] text-[#F1F5F9]">
       {/* ======================================================== */}
       {/* STUDIO TOOLBAR: Layout Switcher, Collapses, Mode Pills   */}
       {/* ======================================================== */}
@@ -257,7 +429,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
         </div>
       </div>
 
-      {/* Mobile Segmented Navigation Header (<1024px tablet/mobile) */}
+      {/* Mobile / Tablet Segmented Navigation (<1024px) */}
       <div className="lg:hidden flex items-center justify-between p-2 bg-[#0D111A] border-b border-[#212836] shrink-0">
         <div className="flex items-center gap-1 bg-[#090B10] p-1 rounded-xl border border-[#212836] w-full justify-around">
           <button
@@ -283,7 +455,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({
           >
             <Sparkles className="w-3.5 h-3.5 text-[#38BDF8]" />
             <span>Output</span>
-            {prediction && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+            {(prediction || isRecognizing) && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
           </button>
           <button
             onClick={() => setMobileView('explainability')}
@@ -302,182 +474,72 @@ export const Workspace: React.FC<WorkspaceProps> = ({
       </div>
 
       {/* ======================================================== */}
-      {/* MAIN WORKSPACE 3-ZONE GRID                               */}
+      {/* DESKTOP 3-ZONE EXPLICIT CSS GRID (>=1024px)              */}
       {/* ======================================================== */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
-        {/* ======================================================== */}
-        {/* LEFT PANEL: INPUT (Ink Canvas / Photo Upload)            */}
-        {/* ======================================================== */}
-        <motion.div
-          layout
-          transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-          className={cn(
-            'flex flex-col h-full min-h-0 overflow-hidden',
-            colSpans.left,
-            mobileView === 'input' ? 'flex' : 'hidden lg:flex'
-          )}
-        >
-          <div className="flex-1 min-h-0 overflow-hidden shadow-sm rounded-xl">
-            {inputMode === 'canvas' ? (
-              <HandwritingCanvas
-                onRecognize={(blob, previewUrl) => {
-                  onRecognize(blob, previewUrl);
-                  if (window.innerWidth < 1024) setMobileView('recognition');
-                  setIsRightCollapsed(false);
-                }}
-                isRecognizing={isRecognizing}
-              />
-            ) : (
-              <PhotoUpload
-                onRecognize={(file, previewUrl) => {
-                  onRecognize(file, previewUrl, 'photo');
-                  if (window.innerWidth < 1024) setMobileView('recognition');
-                  setIsRightCollapsed(false);
-                }}
-                isRecognizing={isRecognizing}
-                preprocessedImage={prediction?.preprocessed_image}
-                incomingPhoto={incomingPhoto}
-                onClearIncomingPhoto={onClearIncomingPhoto}
-              />
-            )}
+      <div
+        className="flex-1 min-h-0 min-w-0 w-full p-3 gap-3 overflow-hidden hidden lg:grid box-border"
+        style={getDesktopGridStyle()}
+      >
+        {/* Panel 1: Input (Digital Ink / Notebook Photo) */}
+        {isLeftVisibleDesktop && (
+          <div
+            style={{ gridArea: 'input' }}
+            className="flex flex-col h-full min-h-0 min-w-0 w-full overflow-hidden box-border"
+          >
+            {renderInputPanel()}
           </div>
-        </motion.div>
+        )}
 
-        {/* ======================================================== */}
-        {/* CENTER PANEL: RECOGNITION OUTPUT & LATEX EDITOR          */}
-        {/* ======================================================== */}
-        <motion.div
-          layout
-          transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-          className={cn(
-            'flex flex-col h-full min-h-0 overflow-hidden',
-            colSpans.center,
-            mobileView === 'recognition' ? 'flex' : 'hidden lg:flex'
-          )}
-        >
-          <RecognitionView workspace={workspace} actions={actions} />
-        </motion.div>
-
-        {/* ======================================================== */}
-        {/* RIGHT PANEL: INTELLIGENCE, ATTENTION & VERIFICATION      */}
-        {/* ======================================================== */}
-        <motion.div
-          layout
-          transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-          className={cn(
-            'flex flex-col h-full min-h-0 gap-2.5 overflow-y-auto pr-1',
-            colSpans.right,
-            mobileView === 'explainability' ? 'flex' : 'hidden lg:flex'
-          )}
-        >
-          {/* Panel Top Title Bar */}
-          <div className="flex items-center justify-between px-3.5 py-2 bg-[#0D111A] rounded-xl border border-[#212836] shrink-0 shadow-sm select-none">
-            <div className="flex items-center gap-2">
-              <BrainCircuit className="w-4 h-4 text-[#8B7CFF]" />
-              <h3 className="text-xs font-bold text-[#F8FAFC]">
-                Intelligence & Explainability
-              </h3>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono text-[#94A3B8]">
-                {prediction ? `${prediction.tokens.length} Symbols` : 'Standby'}
-              </span>
-
-              {prediction && (
-                <Tooltip content="Expand Full Deep-Dive Inspection">
-                  <button
-                    onClick={() => setIsExplainModalOpen(true)}
-                    className="p-1 rounded-lg text-[#94A3B8] hover:text-[#8B7CFF] hover:bg-[#8B7CFF]/10 transition-colors"
-                    aria-label="Expand Full Deep-Dive Inspection"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  </button>
-                </Tooltip>
-              )}
-            </div>
+        {/* Panel 2: Recognition Output & LaTeX Editor */}
+        {isCenterVisibleDesktop && (
+          <div
+            style={{ gridArea: 'output' }}
+            className="flex flex-col h-full min-h-0 min-w-0 w-full overflow-hidden box-border"
+          >
+            <RecognitionView
+              workspace={workspace}
+              actions={actions}
+              onRetry={onRetry}
+            />
           </div>
+        )}
 
-          {prediction ? (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className="flex flex-col gap-2.5"
-            >
-              {/* Feature 1: Spatial Attention Spotlight */}
-              {prediction.preprocessed_image && (
-                <AttentionSpotlight
-                  preprocessedImage={prediction.preprocessed_image}
-                  activeToken={activeToken}
-                  activeTokenIndex={activeTokenIndex}
-                  tokens={prediction.tokens}
-                  onSelectToken={actions.setActiveTokenIndex}
-                  opacity={overlayOpacity}
-                  onOpacityChange={(val) => actions.updateExplainabilityConfig({ overlayOpacity: val })}
-                  showSpotlight={showSpotlight}
-                  onToggleSpotlight={() => actions.updateExplainabilityConfig({ showSpotlight: !showSpotlight })}
-                  showCrosshair={showCrosshair}
-                  onToggleCrosshair={() => actions.updateExplainabilityConfig({ showCrosshair: !showCrosshair })}
-                  showCoordinates={showCoordinates}
-                  onToggleCoordinates={() => actions.updateExplainabilityConfig({ showCoordinates: !showCoordinates })}
-                  spotlightRadius={spotlightRadius}
-                  onRadiusChange={(val) => actions.updateExplainabilityConfig({ spotlightRadius: val })}
-                />
-              )}
+        {/* Panel 3: Intelligence & Explainability */}
+        {isRightVisibleDesktop && (
+          <div
+            style={{ gridArea: 'explain' }}
+            className="flex flex-col h-full min-h-0 min-w-0 w-full overflow-hidden box-border"
+          >
+            {renderExplainPanel()}
+          </div>
+        )}
+      </div>
 
-              {/* Feature 2: Token Inspector & Top-3 Alternatives */}
-              <TokenInspector
-                tokens={prediction.tokens}
-                activeTokenIndex={activeTokenIndex}
-                onSelectToken={actions.setActiveTokenIndex}
-                onReplaceToken={actions.replaceToken}
-                tokenEdits={tokenEdits}
-              />
+      {/* ======================================================== */}
+      {/* MOBILE / TABLET SEGMENTED VIEW CONTAINER (<1024px)       */}
+      {/* ======================================================== */}
+      <div className="flex-1 min-h-0 min-w-0 w-full p-2.5 overflow-hidden flex flex-col lg:hidden box-border">
+        {mobileView === 'input' && (
+          <div className="flex flex-col h-full min-h-0 min-w-0 w-full overflow-hidden">
+            {renderInputPanel()}
+          </div>
+        )}
 
-              {/* Feature 3: Mathematical & Symbolic Verification */}
-              <VerificationPanel
-                syntaxValid={prediction.syntax_valid}
-                sympy={prediction.sympy}
-                currentLatex={editedLatex}
-              />
-            </motion.div>
-          ) : (
-            /* Standby State with Architectural Explanation & Guide */
-            <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-6 text-center rounded-xl bg-[#0D111A] border border-[#212836] shadow-sm overflow-y-auto">
-              <div className="w-12 h-12 rounded-2xl bg-[#141A28] border border-[#212836] text-[#8B7CFF] flex items-center justify-center mb-3 shadow-md">
-                <BrainCircuit className="w-6 h-6 animate-pulse" />
-              </div>
-              <h4 className="text-sm font-bold text-[#F8FAFC]">
-                Neural Explainability Standby
-              </h4>
-              <p className="text-xs text-[#94A3B8] max-w-xs mt-1.5 leading-relaxed">
-                Draw an expression or upload a notebook photograph, then click <strong className="text-[#F8FAFC]">Recognize Equation</strong>.
-              </p>
+        {mobileView === 'recognition' && (
+          <div className="flex flex-col h-full min-h-0 min-w-0 w-full overflow-hidden">
+            <RecognitionView
+              workspace={workspace}
+              actions={actions}
+              onRetry={onRetry}
+            />
+          </div>
+        )}
 
-              <div className="mt-5 p-3 rounded-xl bg-[#080B11] border border-[#212836] text-left w-full max-w-xs space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#38BDF8]">
-                  <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Explainability Features:</span>
-                </div>
-                <div className="space-y-1.5 text-[11px] text-[#94A3B8]">
-                  <div className="flex items-start gap-2">
-                    <Crosshair className="w-3.5 h-3.5 text-[#8B7CFF] shrink-0 mt-0.5" />
-                    <span>Cross-attention 2D spatial spotlight per emitted token</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Binary className="w-3.5 h-3.5 text-[#38BDF8] shrink-0 mt-0.5" />
-                    <span>Beam search alternative token probability inspection</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>SymPy Computer Algebra System syntactic verification</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </motion.div>
+        {mobileView === 'explainability' && (
+          <div className="flex flex-col h-full min-h-0 min-w-0 w-full overflow-hidden">
+            {renderExplainPanel()}
+          </div>
+        )}
       </div>
 
       {/* Expanded Deep-Dive Intelligence & Explainability Modal */}

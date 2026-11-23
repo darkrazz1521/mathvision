@@ -20,10 +20,10 @@ export function setupHighDpiCanvas(
   displayH: number
 ): CanvasRenderingContext2D | null {
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.round(displayW * dpr);
-  canvas.height = Math.round(displayH * dpr);
-  canvas.style.width = `${displayW}px`;
-  canvas.style.height = `${displayH}px`;
+  canvas.width = Math.max(1, Math.round(displayW * dpr));
+  canvas.height = Math.max(1, Math.round(displayH * dpr));
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
 
   const ctx = canvas.getContext('2d');
   if (ctx) {

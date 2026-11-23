@@ -165,46 +165,50 @@ export const AttentionSpotlight: React.FC<AttentionSpotlightProps> = ({
           />
 
           {/* Attention Spotlight Marker */}
-          {showSpotlight && hasCoords && (
-            <motion.div
-              key={`${activeTokenIndex}_${activeToken?.token}`}
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-              className="absolute pointer-events-none"
-              style={{
-                left: `${(activeToken!.x * 100).toFixed(2)}%`,
-                top: `${(activeToken!.y * 100).toFixed(2)}%`,
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              {/* Radial Attention Glow */}
-              <div
-                className="rounded-full pointer-events-none"
+          {showSpotlight && hasCoords && (() => {
+            const clampedX = Math.max(0.04, Math.min(0.96, activeToken!.x));
+            const clampedY = Math.max(0.06, Math.min(0.94, activeToken!.y));
+            return (
+              <motion.div
+                key={`${activeTokenIndex}_${activeToken?.token}`}
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+                className="absolute pointer-events-none"
                 style={{
-                  width: `${spotlightRadius * 2}px`,
-                  height: `${spotlightRadius * 2}px`,
+                  left: `${(clampedX * 100).toFixed(2)}%`,
+                  top: `${(clampedY * 100).toFixed(2)}%`,
                   transform: 'translate(-50%, -50%)',
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  background: `radial-gradient(circle, rgba(139, 124, 255, ${opacity}) 0%, rgba(56, 189, 248, ${opacity * 0.4}) 55%, transparent 75%)`,
-                  boxShadow: `0 0 16px 2px rgba(139, 124, 255, ${opacity * 0.7})`,
                 }}
-              />
+              >
+                {/* Radial Attention Glow */}
+                <div
+                  className="rounded-full pointer-events-none"
+                  style={{
+                    width: `${spotlightRadius * 2}px`,
+                    height: `${spotlightRadius * 2}px`,
+                    transform: 'translate(-50%, -50%)',
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    background: `radial-gradient(circle, rgba(139, 124, 255, ${opacity}) 0%, rgba(56, 189, 248, ${opacity * 0.4}) 55%, transparent 75%)`,
+                    boxShadow: `0 0 16px 2px rgba(139, 124, 255, ${opacity * 0.7})`,
+                  }}
+                />
 
-              {/* Crosshair Center Reticle */}
-              {showCrosshair && (
-                <>
-                  <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-full w-4 h-[1.5px] bg-[#8B7CFF]" />
-                  <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-full w-4 h-[1.5px] bg-[#8B7CFF]" />
-                  <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full w-[1.5px] h-4 bg-[#8B7CFF]" />
-                  <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-x-full w-[1.5px] h-4 bg-[#8B7CFF]" />
-                  <div className="w-2 h-2 rounded-full border border-white bg-[#8B7CFF] -translate-x-1/2 -translate-y-1/2" />
-                </>
-              )}
-            </motion.div>
-          )}
+                {/* Crosshair Center Reticle */}
+                {showCrosshair && (
+                  <>
+                    <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-full w-4 h-[1.5px] bg-[#8B7CFF]" />
+                    <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-full w-4 h-[1.5px] bg-[#8B7CFF]" />
+                    <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full w-[1.5px] h-4 bg-[#8B7CFF]" />
+                    <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-x-full w-[1.5px] h-4 bg-[#8B7CFF]" />
+                    <div className="w-2 h-2 rounded-full border border-white bg-[#8B7CFF] -translate-x-1/2 -translate-y-1/2" />
+                  </>
+                )}
+              </motion.div>
+            );
+          })()}
 
           {/* Floating Clamped Coordinate Badge */}
           {showSpotlight && hasCoords && showCoordinates && (
