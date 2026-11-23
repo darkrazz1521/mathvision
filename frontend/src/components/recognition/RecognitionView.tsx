@@ -75,7 +75,7 @@ export const RecognitionView: React.FC<RecognitionViewProps> = ({
               Recognition Output
             </h3>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#182133] text-[#38BDF8] border border-[#2B3852]">
-              v3-Final
+              v4-Final
             </span>
           </div>
         </div>

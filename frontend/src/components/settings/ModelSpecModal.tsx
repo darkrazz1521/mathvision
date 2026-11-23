@@ -4,17 +4,17 @@ import { Badge } from '../ui/Badge';
 
 export const ModelSpecModal: React.FC = () => {
   const specs = [
-    { label: 'Active Checkpoint', value: 'densenet_s8_v3_final.pth (v3-Final)', icon: Award },
+    { label: 'Active Checkpoint', value: 'mathvision_v4_final.pth (v4-Final)', icon: Award },
     { label: 'Encoder Architecture', value: 'DenseNet-121 (Dense Convolutional Network)', icon: Layers },
     { label: 'Spatial Stride', value: 'Stride-8 (H/8 × W/8 feature grid downsampling)', icon: Zap },
-    { label: 'Decoder Architecture', value: '3-Layer Pre-LN Transformer Decoder', icon: Cpu },
+    { label: 'Decoder Architecture', value: '3-Layer Coverage Multi-Head Attention Decoder', icon: Cpu },
     { label: 'Model Dimension (d_model)', value: '256 dimensions', icon: HardDrive },
-    { label: 'Attention Heads', value: '8 parallel cross-attention heads', icon: Zap },
+    { label: 'Attention Heads', value: '8 parallel cross-attention heads with 2D coverage conv', icon: Zap },
     { label: 'Vocabulary Size', value: '132 atomic LaTeX tokens (CROHME23)', icon: Award },
     { label: 'Auxiliary Supervisions', value: 'Dual-head: Symbol count + 6-class syntax head', icon: CheckCircle2 },
     { label: 'Training Augmentation', value: 'RealWorldMathAugmentor (Ruled lines, warps, shadows)', icon: Zap },
     { label: 'Inference Quantization', value: 'INT8 Dynamic Quantization (ONNX Runtime)', icon: HardDrive },
-    { label: 'Total Model Disk Size', value: '10.63 MB (Encoder 5.18 MB + Decoder 5.45 MB)', icon: HardDrive },
+    { label: 'Total Model Disk Size', value: '8.80 MB (Encoder 5.18 MB + Decoder 3.62 MB)', icon: HardDrive },
     { label: 'Target Execution Provider', value: 'CPUExecutionProvider (Low-power local execution)', icon: Cpu },
   ];
 
@@ -25,11 +25,11 @@ export const ModelSpecModal: React.FC = () => {
         <div className="flex items-center gap-2 mb-2">
           <Award className="w-5 h-5 text-[#8B7CFF]" />
           <h3 className="font-semibold text-sm text-[#F1F5F9]">
-            DenseNetHMER v3-Final Scientific Specification
+            DenseNetHMER v4-Final Scientific Specification
           </h3>
         </div>
         <p className="text-xs text-[#94A3B8] leading-relaxed">
-          MathVision utilizes a hybrid CNN-Transformer v3-Final architecture optimized for Handwritten Mathematical Expression Recognition (HMER). Trained across 42,000+ real and synthetic CROHME expressions with advanced real-world notebook paper augmentation, DenseNet-121 captures intricate mathematical stroke curves while the 3-layer transformer decoder with 2D positional encodings resolves non-linear spatial syntax.
+          MathVision utilizes a hybrid CNN-Transformer v4-Final architecture optimized for Handwritten Mathematical Expression Recognition (HMER). Featuring a 9-block DenseNet-121 backbone, 2D spatial positional encodings, and a 3-layer Transformer decoder with Coverage Multi-Head Attention (5×5 kernel 2D coverage memory), v4 completely eliminates repetitive token loops, handles complex multi-tier fractions and matrices, and runs in sub-120ms on low-power CPU.
         </p>
       </div>
 
@@ -78,25 +78,25 @@ export const ModelSpecModal: React.FC = () => {
         <div className="grid grid-cols-3 gap-2 mt-2">
           <div className="p-3 rounded-lg bg-[#090B10] border border-[#252D3B] text-center">
             <span className="text-[11px] text-[#94A3B8] block">Expression Rate (ExpRate)</span>
-            <span className="text-lg font-bold font-mono text-[#8B7CFF] mt-1 block">32.78%</span>
-            <span className="text-[10px] text-[#64748B] block mt-0.5">Zero symbol error rate</span>
+            <span className="text-lg font-bold font-mono text-[#8B7CFF] mt-1 block">34.08%</span>
+            <span className="text-[10px] text-emerald-400/90 block mt-0.5">+1.30% over v3 baseline</span>
           </div>
 
           <div className="p-3 rounded-lg bg-[#090B10] border border-[#252D3B] text-center">
             <span className="text-[11px] text-[#94A3B8] block">≤ 1 Error Rate</span>
-            <span className="text-lg font-bold font-mono text-[#38BDF8] mt-1 block">42.71%</span>
-            <span className="text-[10px] text-emerald-400/90 block mt-0.5">+1.29% over v2 baseline</span>
+            <span className="text-lg font-bold font-mono text-[#38BDF8] mt-1 block">45.65%</span>
+            <span className="text-[10px] text-emerald-400/90 block mt-0.5">+2.94% over v3 baseline</span>
           </div>
 
           <div className="p-3 rounded-lg bg-[#090B10] border border-[#252D3B] text-center">
             <span className="text-[11px] text-[#94A3B8] block">Character Error (CER)</span>
-            <span className="text-lg font-bold font-mono text-emerald-400 mt-1 block">36.37%</span>
-            <span className="text-[10px] text-emerald-400/90 block mt-0.5">-4.51% CER reduction</span>
+            <span className="text-lg font-bold font-mono text-emerald-400 mt-1 block">31.27%</span>
+            <span className="text-[10px] text-emerald-400/90 block mt-0.5">-5.10% CER reduction</span>
           </div>
         </div>
 
         <p className="text-[10px] text-[#64748B] mt-2 leading-snug">
-          <strong>v3-Final Benchmark:</strong> Evaluated on CROHME-2023 official validation set. Demonstrates state-of-the-art token alignment, reduced character error rates, and robust recognition across photographed notebook papers.
+          <strong>v4-Final Benchmark:</strong> Evaluated on CROHME-2023 official validation set with Coverage Multi-Head Attention. Demonstrates state-of-the-art token alignment, reduced character error rates, and robust recognition across photographed notebook papers.
         </p>
       </div>
     </div>

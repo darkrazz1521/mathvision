@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sympy.parsing.latex import parse_latex
 import sympy as sp
 
-app = FastAPI(title="MathVision HMER API", version="3.0")
+app = FastAPI(title="MathVision HMER API", version="4.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,28 +24,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. Load Vocabulary & INT8 ONNX Sessions (V3-Final DenseNet121-S8 + Transformer)
+# 1. Load Vocabulary & INT8 ONNX Sessions (V4-Final DenseNet121-S8 + Coverage Multi-Head Attention)
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 VOCAB_PATH = os.path.join(BASE_DIR, "vocab.json")
 if not os.path.exists(VOCAB_PATH):
     VOCAB_PATH = os.path.join(BASE_DIR, "..", "crohme23_packed", "vocab.json")
 
-# Primary: backend/models/encoder_int8.onnx (v3_final INT8)
+# Primary: backend/models/encoder_int8.onnx (v4_final INT8)
 ENC_PATH   = os.path.join(BASE_DIR, "models", "encoder_int8.onnx")
 DEC_PATH   = os.path.join(BASE_DIR, "models", "decoder_int8.onnx")
 
-# Fallback: checkpoints/encoder_v3_int8.onnx
+# Fallback: checkpoints/encoder_v4_int8.onnx or checkpoints/encoder_v3_int8.onnx
 if not os.path.exists(ENC_PATH):
-    alt_enc = os.path.join(BASE_DIR, "..", "checkpoints", "encoder_v3_int8.onnx")
-    if os.path.exists(alt_enc):
-        ENC_PATH = alt_enc
-if not os.path.exists(DEC_PATH):
-    alt_dec = os.path.join(BASE_DIR, "..", "checkpoints", "decoder_v3_int8.onnx")
-    if os.path.exists(alt_dec):
-        DEC_PATH = alt_dec
+    for candidate in ["encoder_v4_int8.onnx", "encoder_int8.onnx", "encoder_v3_int8.onnx"]:
+        alt_enc = os.path.join(BASE_DIR, "..", "checkpoints", candidate)
+        if os.path.exists(alt_enc):
+            ENC_PATH = alt_enc
+            break
 
-MODEL_VERSION = "v3_final"
-MODEL_CHECKPOINT = "densenet_s8_v3_final.pth"
+if not os.path.exists(DEC_PATH):
+    for candidate in ["decoder_v4_int8.onnx", "decoder_int8.onnx", "decoder_v3_int8.onnx"]:
+        alt_dec = os.path.join(BASE_DIR, "..", "checkpoints", candidate)
+        if os.path.exists(alt_dec):
+            DEC_PATH = alt_dec
+            break
+
+MODEL_VERSION = "v4_final"
+MODEL_CHECKPOINT = "mathvision_v4_final.pth"
 
 with open(VOCAB_PATH, "r", encoding="utf-8") as f:
     vocab_data = json.load(f)
@@ -53,6 +58,7 @@ with open(VOCAB_PATH, "r", encoding="utf-8") as f:
 VOCAB  = vocab_data["vocab"]
 TOK2ID = vocab_data["tok2id"]
 PAD_ID, SOS_ID, EOS_ID, UNK_ID = TOK2ID["<PAD>"], TOK2ID["<SOS>"], TOK2ID["<EOS>"], TOK2ID["<UNK>"]
+OPEN_B, CLOSE_B = TOK2ID.get("{", -1), TOK2ID.get("}", -1)
 
 opts = ort.SessionOptions()
 opts.intra_op_num_threads = 2
@@ -62,83 +68,73 @@ opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
 enc_sess = ort.InferenceSession(ENC_PATH, sess_options=opts, providers=["CPUExecutionProvider"])
 dec_sess = ort.InferenceSession(DEC_PATH, sess_options=opts, providers=["CPUExecutionProvider"])
 
+enc_in_name  = enc_sess.get_inputs()[0].name
+enc_out_name = enc_sess.get_outputs()[0].name
+
+dec_inputs   = [i.name for i in dec_sess.get_inputs()]
+dec_tgt_name = "tgt" if "tgt" in dec_inputs else ("ys" if "ys" in dec_inputs else dec_inputs[0])
+dec_mem_name = "memory" if "memory" in dec_inputs else dec_inputs[1]
+dec_out_name = dec_sess.get_outputs()[0].name
+dec_has_attn = len(dec_sess.get_outputs()) > 1
+
 # 2. Dual-Mode Image Preprocessing (Returns model tensor + displayable base64 PNG)
-def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 96):
+def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 96, max_w: int = 512):
     arr = np.frombuffer(image_bytes, np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_GRAYSCALE)
-    if img is None:
+    bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    if bgr is None:
         raise ValueError("Invalid image file.")
 
     max_dim = 1200
-    h0, w0 = img.shape
+    h0, w0 = bgr.shape[:2]
     if max(h0, w0) > max_dim:
         scale0 = max_dim / max(h0, w0)
-        img = cv2.resize(img, (int(w0 * scale0), int(h0 * scale0)), interpolation=cv2.INTER_AREA)
+        bgr = cv2.resize(bgr, (int(w0 * scale0), int(h0 * scale0)), interpolation=cv2.INTER_AREA)
 
     if mode == "photo":
-        # Remove uneven lighting / shadows via morphological background division
-        bg = cv2.GaussianBlur(img, (31, 31), 0)
-        norm = cv2.divide(img, np.maximum(bg, 1), scale=255)
-        # Adaptive threshold to isolate dark ink from ruled/grid lines
-        bin_img = cv2.adaptiveThreshold(
-            norm, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY, 25, 14
-        )
-        # Invert to binary ink (ink = 255 - bin_img)
-        ink = 255 - bin_img
+        # 1. Suppress blue notebook lines (use red channel where blue ink/lines fade)
+        b, g, r = cv2.split(bgr)
+        gray = np.minimum(r, g) if np.mean(b) > np.mean(r) + 5 else cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
 
-        # Remove horizontal ruled notebook lines using morphological opening with a wide horizontal kernel
-        h_kernel_len = max(40, img.shape[1] // 10)
-        h_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (h_kernel_len, 1))
-        h_lines = cv2.morphologyEx(ink, cv2.MORPH_OPEN, h_kernel)
-        ink = cv2.subtract(ink, h_lines)
+        # 2. Adaptive background normalization (removes shadows/folds)
+        bg = cv2.GaussianBlur(gray, (51, 51), 0)
+        norm = np.clip((gray.astype(np.float32) / (bg.astype(np.float32) + 1e-5)) * 255.0, 0, 255).astype(np.uint8)
 
-        # Remove vertical margin lines using morphological opening with a tall vertical kernel
-        v_kernel_len = max(40, img.shape[0] // 8)
-        v_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, v_kernel_len))
-        v_lines = cv2.morphologyEx(ink, cv2.MORPH_OPEN, v_kernel)
-        ink = cv2.subtract(ink, v_lines)
-
-        # Filter tiny paper noise specks using connectedComponentsWithStats (drop components with area < 15 px)
-        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(ink, connectivity=8)
-        cleaned_ink = np.zeros_like(ink)
-        for label_idx in range(1, num_labels):
-            area = stats[label_idx, cv2.CC_STAT_AREA]
-            if area >= 15:
-                cleaned_ink[labels == label_idx] = 255
-        ink = cleaned_ink
-
-        # Restore white-background/black-ink (255 - ink)
-        bin_img = 255 - ink
+        # 3. Auto-tight bounding box crop around handwriting
+        ink_mask = norm < 210
+        if np.any(ink_mask):
+            ys, xs = np.where(ink_mask)
+            y1, y2 = max(0, ys.min() - 8), min(norm.shape[0], ys.max() + 8)
+            x1, x2 = max(0, xs.min() - 8), min(norm.shape[1], xs.max() + 8)
+            cropped = norm[y1:y2, x1:x2]
+        else:
+            cropped = norm
     else:
-        # Clean digital canvas: ensure white background, black ink
-        if np.mean(img) < 127:
-            img = 255 - img
-        _, bin_img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)
+        # Digital canvas mode
+        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        if np.mean(gray) < 127:
+            gray = 255 - gray
+        _, bin_img = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+        ink_coords = np.column_stack(np.where(bin_img < 200))
+        if len(ink_coords) > 0:
+            y_min, x_min = ink_coords.min(axis=0)
+            y_max, x_max = ink_coords.max(axis=0)
+            pad = 12
+            y_min, x_min = max(0, y_min - pad), max(0, x_min - pad)
+            y_max, x_max = min(bin_img.shape[0], y_max + pad), min(bin_img.shape[1], x_max + pad)
+            cropped = bin_img[y_min:y_max, x_min:x_max]
+        else:
+            cropped = bin_img
 
-    # Tight crop around ink
-    ink_coords = np.column_stack(np.where(bin_img < 200))
-    if len(ink_coords) == 0:
-        raise ValueError("No handwriting detected in image.")
-
-    y_min, x_min = ink_coords.min(axis=0)
-    y_max, x_max = ink_coords.max(axis=0)
-    pad = 12
-    y_min, x_min = max(0, y_min - pad), max(0, x_min - pad)
-    y_max, x_max = min(bin_img.shape[0], y_max + pad), min(bin_img.shape[1], x_max + pad)
-    cropped = bin_img[y_min:y_max, x_min:x_max]
-
-    ink_density = float(np.mean(cropped < 200))
+    ink_density = float(np.mean(cropped < 200)) if cropped.size > 0 else 0.0
 
     # Resize to fixed height=96, preserving aspect ratio, width padded to multiple of 16
     ch, cw = cropped.shape
-    scale = (target_h - 12) / max(ch, 1)
-    new_w = max(16, min(int(cw * scale), 768))
-    resized = cv2.resize(cropped, (new_w, target_h - 12), interpolation=cv2.INTER_AREA)
+    new_w = max(16, min(max_w, int(round(cw * (target_h / max(ch, 1))))))
+    resized = cv2.resize(cropped, (new_w, target_h), interpolation=cv2.INTER_AREA)
 
-    padded_w = ((new_w + 16 + 15) // 16) * 16
+    padded_w = ((new_w + 15) // 16) * 16
     canvas = np.full((target_h, padded_w), 255, dtype=np.uint8)
-    canvas[6:6 + (target_h - 12), 8:8 + new_w] = resized
+    canvas[:, :new_w] = resized
 
     # Invert & normalize to [0, 1] for DenseNet
     tensor = (1.0 - (canvas.astype(np.float32) / 255.0))[None, None, :, :]
@@ -150,7 +146,11 @@ def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 9
 
 def softmax(x):
     e = np.exp(x - np.max(x))
-    return e / np.sum(e)
+    return e / (np.sum(e) + 1e-12)
+
+def log_softmax(x):
+    x = x - np.max(x)
+    return x - np.log(np.sum(np.exp(x)) + 1e-12)
 
 def check_latex_syntax(tokens):
     balance = 0
@@ -168,31 +168,50 @@ def verify_with_sympy(latex_str: str):
     except Exception:
         return {"valid": False, "simplified": None}
 
-# 3. Beam Search with Cross-Attention & Per-Token Confidence
-def decode_beam_search(memory, hp: int, wp: int, beam_width: int = 3, max_len: int = 65):
-    # Each beam: (score, token_ids, token_meta_list)
-    beams = [(0.0, [SOS_ID], [])]
+# 3. Syntax-Constrained Beam Search with Dynamic V4 Coverage Attention & Confidence
+def decode_beam_search(memory, hp: int, wp: int, beam_width: int = 5, max_len: int = 80, alpha: float = 0.6):
+    # Each beam: (score, token_ids, open_braces, finished, token_meta_list)
+    beams = [(0.0, [SOS_ID], 0, False, [])]
     completed = []
 
     for _ in range(max_len):
         candidates = []
-        for score, seq, meta in beams:
-            if seq[-1] == EOS_ID:
-                completed.append((score, seq, meta))
+        all_done = True
+        for score, seq, br, done, meta in beams:
+            if done:
+                candidates.append((score, seq, br, True, meta))
                 continue
+            all_done = False
 
-            ys = np.array([seq], dtype=np.int64)
-            logits, attn = dec_sess.run(None, {"ys": ys, "memory": memory})
-            probs = softmax(logits[0])
-            attn_map = attn[0].reshape(hp, wp)
+            tgt = np.array([seq], dtype=np.int64)
+            if dec_has_attn:
+                res = dec_sess.run(None, {dec_tgt_name: tgt, dec_mem_name: memory})
+                raw_logits = res[0]
+                attn_map = res[1][0].reshape(hp, wp)
+                peak_idx = int(np.argmax(attn_map))
+                py, px = divmod(peak_idx, wp)
+                norm_x = round((px + 0.5) / wp, 4)
+                norm_y = round((py + 0.5) / hp, 4)
+            else:
+                raw_logits = dec_sess.run([dec_out_name], {dec_tgt_name: tgt, dec_mem_name: memory})[0]
+                norm_x = None
+                norm_y = None
 
-            # Compute normalized (x, y) center of attention peak
-            peak_idx = int(np.argmax(attn_map))
-            py, px = divmod(peak_idx, wp)
-            norm_x = round((px + 0.5) / wp, 4)
-            norm_y = round((py + 0.5) / hp, 4)
+            step_logits = raw_logits[0, -1, :] if raw_logits.ndim == 3 else raw_logits[0]
+            step_logits_copy = step_logits.copy()
 
-            top_ids = np.argsort(probs)[::-1][:beam_width]
+            # LaTeX Syntax Constraints:
+            if br <= 0 and CLOSE_B >= 0:
+                step_logits_copy[CLOSE_B] = -1e9  # Prevent unmatched '}'
+            if br > 0:
+                step_logits_copy[EOS_ID] = -1e9   # Prevent premature EOS with unclosed '{'
+
+            probs = softmax(step_logits)
+            lprobs = log_softmax(step_logits_copy)
+
+            top_ids = np.argpartition(lprobs, -beam_width)[-beam_width:]
+            top_ids = top_ids[np.argsort(lprobs[top_ids])[::-1]]
+
             alts = [
                 {"token": VOCAB[int(i)], "prob": round(float(probs[int(i)]), 4)}
                 for i in top_ids if int(i) not in (PAD_ID, SOS_ID, EOS_ID)
@@ -201,7 +220,10 @@ def decode_beam_search(memory, hp: int, wp: int, beam_width: int = 3, max_len: i
             for tid in top_ids:
                 tid = int(tid)
                 p = float(probs[tid])
-                new_score = score + float(np.log(max(p, 1e-9)))
+                new_score = score + float(lprobs[tid])
+                new_br = br + (1 if tid == OPEN_B else (-1 if tid == CLOSE_B else 0))
+                is_eos = (tid == EOS_ID)
+
                 new_meta = meta + [{
                     "token": VOCAB[tid],
                     "confidence": round(p, 4),
@@ -209,29 +231,25 @@ def decode_beam_search(memory, hp: int, wp: int, beam_width: int = 3, max_len: i
                     "y": norm_y,
                     "alternatives": alts[:3],
                 }]
-                candidates.append((new_score, seq + [tid], new_meta))
+                candidates.append((new_score, seq + [tid], new_br, is_eos, new_meta))
 
-        # Early-Stop Fix: Stop as soon as beam_width beams hit <EOS>
-        if len(completed) >= beam_width:
+        if all_done:
             break
 
-        if not candidates:
-            break
-        # Length-normalized sorting
-        candidates.sort(key=lambda x: x[0] / (len(x[1]) ** 0.7), reverse=True)
+        candidates.sort(key=lambda x: x[0] / ((len(x[1]) ** alpha) + 1e-5), reverse=True)
         beams = candidates[:beam_width]
-        if all(b[1][-1] == EOS_ID for b in beams):
+
+        if all(b[3] for b in beams):
             completed.extend(beams)
             break
 
     all_cands = completed if completed else beams
-    all_cands.sort(key=lambda x: x[0] / (len(x[1]) ** 0.7), reverse=True)
-    top_cands = all_cands[:beam_width]
+    all_cands.sort(key=lambda x: x[0] / ((len(x[1]) ** alpha) + 1e-5), reverse=True)
 
     # Top-k Reranking with LaTeX syntax & SymPy validation bonus
     reranked = []
-    for score, seq, meta in top_cands:
-        norm_score = score / (len(seq) ** 0.7)
+    for score, seq, br, done, meta in all_cands[:beam_width]:
+        norm_score = score / ((len(seq) ** alpha) + 1e-5)
         cand_meta = [m for tid, m in zip(seq[1:], meta) if tid not in (PAD_ID, SOS_ID, EOS_ID)]
         cand_tokens = [m["token"] for m in cand_meta]
         cand_latex = " ".join(cand_tokens)
@@ -247,6 +265,15 @@ def decode_beam_search(memory, hp: int, wp: int, beam_width: int = 3, max_len: i
 
     reranked.sort(key=lambda x: x[0], reverse=True)
     _, best_seq, best_meta, latex_str, clean_meta = reranked[0]
+
+    # Assign smooth progressive L2R coordinates if no raw attention map was returned
+    N = len(clean_meta)
+    if N > 0:
+        for idx, m in enumerate(clean_meta):
+            if m.get("x") is None or m.get("y") is None:
+                m["x"] = round(0.08 + 0.84 * (idx + 0.5) / max(1, N), 3)
+                m["y"] = 0.50
+
     return latex_str, clean_meta
 
 # 4. API Endpoints
@@ -255,7 +282,7 @@ def root():
     return {
         "status": "ok",
         "service": "MathVision HMER API",
-        "version": "3.0",
+        "version": "4.0",
         "model_version": MODEL_VERSION,
         "checkpoint": MODEL_CHECKPOINT,
         "timestamp": time.time(),
@@ -266,7 +293,7 @@ def health():
     return {
         "status": "ok",
         "service": "MathVision HMER API",
-        "version": "3.0",
+        "version": "4.0",
         "model_version": MODEL_VERSION,
         "checkpoint": MODEL_CHECKPOINT,
         "vocab_size": len(VOCAB),

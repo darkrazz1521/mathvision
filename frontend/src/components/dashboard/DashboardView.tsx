@@ -76,7 +76,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 Mathematical Intelligence Dashboard
               </h1>
               <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl mt-1.5 leading-relaxed">
-                DenseNet-121 stride-8 convolutional encoder with 3-layer Pre-LN Transformer decoder (v3-Final). Quantized to INT8 ONNX for sub-150ms inference.
+                DenseNet-121 stride-8 convolutional encoder with 3-layer Coverage Attention Transformer decoder (v4-Final). Quantized to INT8 ONNX for sub-120ms inference.
               </p>
             </div>
 
@@ -107,7 +107,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#151B27] border border-[#252D3B] text-xs font-mono text-[#38BDF8] hover:border-[#38BDF8]/50 transition-colors"
               >
                 <Cpu className="w-3.5 h-3.5" />
-                <span>10.63 MB INT8</span>
+                <span>8.80 MB INT8</span>
               </button>
             </div>
           </div>

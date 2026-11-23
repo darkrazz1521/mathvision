@@ -177,7 +177,7 @@ const FAQS = [
   },
   {
     q: 'Can MathVision run inference locally on CPU?',
-    a: 'Yes. The DenseNet-121 encoder and Transformer decoder (v3-Final) have been quantized into INT8 ONNX binaries with a combined footprint of only 10.63 MB. Inference completes in approximately 120 ms on standard CPUs without requiring expensive GPU servers.',
+    a: 'Yes. The DenseNet-121 encoder and Coverage Multi-Head Attention Transformer decoder (v4-Final) have been quantized into INT8 ONNX binaries with a combined footprint of only 8.80 MB. Inference completes in approximately 120 ms on standard CPUs without requiring expensive GPU servers.',
   },
   {
     q: 'What is the CROHME-2023 benchmark standard?',
@@ -262,7 +262,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               MathVision
             </span>
             <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/40">
-              v3-Final HMER
+              v4-Final HMER
             </span>
           </div>
         </div>
@@ -463,13 +463,13 @@ export const HomePage: React.FC<HomePageProps> = ({
         >
           <div className="p-4 rounded-2xl bg-[#10141D]/80 border border-[#252D3B]/80 backdrop-blur-md transition-all hover:border-[#8B7CFF]/40 shadow-sm">
             <span className="text-2xl sm:text-3xl lg:text-4xl font-black font-mono text-[#8B7CFF] block">
-              10.63 MB
+              8.80 MB
             </span>
             <span className="text-xs font-semibold text-[#F1F5F9] mt-1.5 block">
               INT8 ONNX Footprint
             </span>
             <span className="text-[11px] text-[#64748B] block mt-0.5">
-              DenseNet-121 + v3 Decoder
+              DenseNet-121 + v4 Coverage Decoder
             </span>
           </div>
 
@@ -965,7 +965,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               Expression Rate (ExpRate)
             </span>
             <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-[#8B7CFF] block mt-3">
-              <AnimatedMetric value={32.78} suffix="%" />
+              <AnimatedMetric value={34.08} suffix="%" />
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
               Exact match zero-error mathematical expressions
@@ -980,7 +980,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               ≤ 1 Error Rate
             </span>
             <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-[#38BDF8] block mt-3">
-              <AnimatedMetric value={42.71} suffix="%" />
+              <AnimatedMetric value={45.65} suffix="%" />
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
               At most one single token correction required
@@ -995,7 +995,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               Character Error Rate (CER)
             </span>
             <span className="text-4xl sm:text-5xl lg:text-6xl font-black font-mono text-emerald-400 block mt-3">
-              <AnimatedMetric value={36.37} suffix="%" />
+              <AnimatedMetric value={31.27} suffix="%" />
             </span>
             <span className="text-xs text-[#64748B] block mt-2">
               Average symbol Levenshtein edit distance
@@ -1005,7 +1005,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
         <div className="mt-4 text-center">
           <span className="inline-block text-[11px] font-mono text-[#64748B] px-3 py-1 rounded-full bg-[#151B27]/50 border border-[#252D3B]/50">
-            Official CROHME-2023 Validation Set Benchmark • DenseNetHMER v3-Final Architecture
+            Official CROHME-2023 Validation Set Benchmark • DenseNetHMER v4-Final Architecture
           </span>
         </div>
 
