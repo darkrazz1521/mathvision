@@ -52,6 +52,31 @@ if not os.path.exists(DEC_PATH):
 MODEL_VERSION = "v4_final"
 MODEL_CHECKPOINT = "mathvision_v4_final.pth"
 
+# 1.1 V5 PyTorch Inference Engine (MathVision V5 BiBeam Deployment)
+v5_engine = None
+V5_CKPT_PATH = os.path.join(BASE_DIR, "models", "mathvision_v5_deploy.pt")
+if not os.path.exists(V5_CKPT_PATH):
+    alt_v5 = os.path.join(BASE_DIR, "..", "checkpoints", "mathvision_v5_deploy.pt")
+    if os.path.exists(alt_v5):
+        V5_CKPT_PATH = alt_v5
+
+try:
+    from .v5_engine import MathVisionV5Engine
+except ImportError:
+    try:
+        from v5_engine import MathVisionV5Engine
+    except ImportError:
+        MathVisionV5Engine = None
+
+if MathVisionV5Engine is not None and os.path.exists(V5_CKPT_PATH):
+    try:
+        v5_engine = MathVisionV5Engine(V5_CKPT_PATH, device="cpu")
+        MODEL_VERSION = "MathVision-V5-BiBeam"
+        MODEL_CHECKPOINT = os.path.basename(V5_CKPT_PATH)
+        print(f"Loaded MathVision V5 Inference Engine from {V5_CKPT_PATH}")
+    except Exception as e:
+        print(f"Warning: Failed to load V5 engine ({e}), falling back to V4 ONNX")
+
 with open(VOCAB_PATH, "r", encoding="utf-8") as f:
     vocab_data = json.load(f)
 
@@ -314,7 +339,7 @@ def alive():
 async def predict(
     file: UploadFile = File(...),
     mode: str = Form("canvas"),
-    beam_width: int = Form(3),
+    beam_width: int = Form(5),
 ):
     t0 = time.time()
     try:
@@ -323,6 +348,63 @@ async def predict(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    # Priority 1: High-Performance V5 Engine (MathVision V5 BiBeam)
+    if v5_engine is not None:
+        try:
+            arr = np.frombuffer(image_bytes, np.uint8)
+            bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+            if bgr is None:
+                raise ValueError("Could not decode image")
+            gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+            is_photo = (mode == "photo")
+            v5_res = v5_engine.predict(gray, is_photo=is_photo, bidirectional=True, beam_size=max(beam_width, 5))
+
+            latex_str = v5_res["latex"]
+            token_meta = v5_res["tokens"]
+            # Ensure each alternative token has both prob and confidence fields
+            for m in token_meta:
+                for alt in m.get("alternatives", []):
+                    if "prob" not in alt:
+                        alt["prob"] = alt.get("confidence", 0.0)
+
+            tokens = [m["token"] for m in token_meta]
+            syntax_ok = check_latex_syntax(tokens)
+            sympy_info = verify_with_sympy(latex_str) if syntax_ok else {"valid": False, "simplified": None}
+            avg_conf = v5_res["confidence"]
+
+            STRUCTURAL_TOKENS = {"{", "}", "(", ")", "\\left", "\\right"}
+            content_metas = [m for m in token_meta if m["token"] not in STRUCTURAL_TOKENS]
+            if content_metas:
+                content_confidences = [m["confidence"] for m in content_metas]
+                content_confidence = round(float(np.mean(content_confidences)), 4)
+                low_conf_ratio = round(float(np.mean([1.0 if c < 0.50 else 0.0 for c in content_confidences])), 4)
+            else:
+                content_confidence = avg_conf
+                low_conf_ratio = 0.0
+
+            is_ood = bool(content_confidence < 0.45 or low_conf_ratio > 0.45 or ink_density > 0.55)
+            warning = (
+                "Low confidence — input may not be a valid mathematical expression."
+                if is_ood else None
+            )
+
+            return {
+                "latex": latex_str,
+                "tokens": token_meta,
+                "avg_confidence": avg_conf,
+                "content_confidence": content_confidence,
+                "is_ood": is_ood,
+                "warning": warning,
+                "syntax_valid": syntax_ok,
+                "sympy": sympy_info,
+                "preprocessed_image": b64_img,
+                "model_version": v5_res["model_version"],
+                "latency_ms": round((time.time() - t0) * 1000, 1),
+            }
+        except Exception as err:
+            print(f"Warning: V5 inference failed ({err}), falling back to V4 ONNX: {err}")
+
+    # Fallback: V4 INT8 ONNX Engine
     memory = enc_sess.run(None, {"img": tensor})[0]
     hp, wp = h // 8, w // 8  # Stride-8 DenseNet feature grid
 
