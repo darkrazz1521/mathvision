@@ -118,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: 'model',
           label: 'Model Architecture',
           icon: Cpu,
-          badge: '8.8MB',
+          badge: '6.57M',
           badgeVariant: 'purple',
         },
         {
@@ -162,7 +162,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="font-extrabold text-sm text-[#F8FAFC] tracking-tight leading-none flex items-center gap-1.5">
                 MathVision
                 <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[#8B7CFF]/20 text-[#8B7CFF] border border-[#8B7CFF]/30">
-                  v4-Final
+                  v5.0-Final
                 </span>
               </span>
               <span className="text-[10px] text-[#94A3B8] font-mono mt-0.5 truncate">

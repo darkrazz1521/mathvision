@@ -20,9 +20,9 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
 }) => {
   const steps = [
     { id: 'preparing', label: 'Ingestion', icon: Scan },
-    { id: 'preprocessing', label: 'Binarize', icon: Layers },
-    { id: 'features', label: 'DenseNet', icon: Cpu },
-    { id: 'decoding', label: 'Decoder', icon: Binary },
+    { id: 'preprocessing', label: 'Preprocess', icon: Layers },
+    { id: 'features', label: 'MathDenseNet (s8)', icon: Cpu },
+    { id: 'decoding', label: 'Bi-Beam-5', icon: Binary },
     { id: 'verifying', label: 'SymPy', icon: Sparkles },
   ];
 

@@ -307,9 +307,11 @@ def root():
     return {
         "status": "ok",
         "service": "MathVision HMER API",
-        "version": "4.0",
+        "version": "5.0",
         "model_version": MODEL_VERSION,
         "checkpoint": MODEL_CHECKPOINT,
+        "params": "6.57M",
+        "size_mb": 13.3,
         "timestamp": time.time(),
     }
 
@@ -318,11 +320,19 @@ def health():
     return {
         "status": "ok",
         "service": "MathVision HMER API",
-        "version": "4.0",
+        "version": "5.0",
         "model_version": MODEL_VERSION,
         "checkpoint": MODEL_CHECKPOINT,
         "vocab_size": len(VOCAB),
-        "models_loaded": enc_sess is not None and dec_sess is not None,
+        "models_loaded": v5_engine is not None or (enc_sess is not None and dec_sess is not None),
+        "params": "6.57M",
+        "size_mb": 13.3,
+        "metrics": {
+            "strict_exprate": "41.30%",
+            "brace_norm_exprate": "45.12%",
+            "le1_error": "53.17%",
+            "tta_exprate": "42.48%",
+        },
         "timestamp": time.time(),
     }
 

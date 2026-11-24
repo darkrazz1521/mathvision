@@ -219,7 +219,7 @@ export const TokenInspector: React.FC<TokenInspectorProps> = ({
                       {alt.token}
                     </span>
                     <span className="text-[10px] font-mono text-[#94A3B8] mt-0.5">
-                      {formatConfidence(alt.prob)}
+                      {formatConfidence(alt.prob ?? alt.confidence ?? 0)}
                     </span>
                   </motion.button>
                 ))}

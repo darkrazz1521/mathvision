@@ -76,7 +76,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 Mathematical Intelligence Dashboard
               </h1>
               <p className="text-xs sm:text-sm text-[#94A3B8] max-w-xl mt-1.5 leading-relaxed">
-                DenseNet-121 stride-8 convolutional encoder with 3-layer Coverage Attention Transformer decoder (v4-Final). Quantized to INT8 ONNX for sub-120ms inference.
+                MathDenseNet stride-8 convolutional encoder with 3-layer Bidirectional Fusion Coverage Transformer decoder (v5.0-Final). Optimized for Render CPU with sub-second inference.
               </p>
             </div>
 
@@ -98,7 +98,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   )}
                 />
                 <span className="font-mono">
-                  {isBackendConnected ? 'FastAPI Render Online' : 'Local Fallback'}
+                  {isBackendConnected ? 'FastAPI Render Online (V5)' : 'Local Fallback'}
                 </span>
               </button>
 
@@ -107,7 +107,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#151B27] border border-[#252D3B] text-xs font-mono text-[#38BDF8] hover:border-[#38BDF8]/50 transition-colors"
               >
                 <Cpu className="w-3.5 h-3.5" />
-                <span>8.80 MB INT8</span>
+                <span>6.57M · 13MB FP16</span>
               </button>
             </div>
           </div>
@@ -119,12 +119,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-lg font-bold font-mono text-[#8B7CFF] mt-0.5 block">132 Tokens</span>
             </div>
             <div className="p-3 rounded-xl bg-[#090B10] border border-[#252D3B]">
-              <span className="text-[11px] text-[#94A3B8] uppercase font-mono block">CPU Latency</span>
-              <span className="text-lg font-bold font-mono text-[#38BDF8] mt-0.5 block">~120 ms</span>
+              <span className="text-[11px] text-[#94A3B8] uppercase font-mono block">CPU Inference</span>
+              <span className="text-lg font-bold font-mono text-[#38BDF8] mt-0.5 block">Bi-Beam-5</span>
             </div>
             <div className="p-3 rounded-xl bg-[#090B10] border border-[#252D3B]">
-              <span className="text-[11px] text-[#94A3B8] uppercase font-mono block">ExpRate (Exact)</span>
-              <span className="text-lg font-bold font-mono text-[#34D399] mt-0.5 block">32.78%</span>
+              <span className="text-[11px] text-[#94A3B8] uppercase font-mono block">ExpRate (Bi-Beam)</span>
+              <span className="text-lg font-bold font-mono text-[#34D399] mt-0.5 block">41.30%</span>
             </div>
             <div className="p-3 rounded-xl bg-[#090B10] border border-[#252D3B]">
               <span className="text-[11px] text-[#94A3B8] uppercase font-mono block">Equations Saved</span>

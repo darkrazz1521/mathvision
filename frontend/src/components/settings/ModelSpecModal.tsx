@@ -4,18 +4,18 @@ import { Badge } from '../ui/Badge';
 
 export const ModelSpecModal: React.FC = () => {
   const specs = [
-    { label: 'Active Checkpoint', value: 'mathvision_v4_final.pth (v4-Final)', icon: Award },
-    { label: 'Encoder Architecture', value: 'DenseNet-121 (Dense Convolutional Network)', icon: Layers },
-    { label: 'Spatial Stride', value: 'Stride-8 (H/8 × W/8 feature grid downsampling)', icon: Zap },
-    { label: 'Decoder Architecture', value: '3-Layer Coverage Multi-Head Attention Decoder', icon: Cpu },
-    { label: 'Model Dimension (d_model)', value: '256 dimensions', icon: HardDrive },
-    { label: 'Attention Heads', value: '8 parallel cross-attention heads with 2D coverage conv', icon: Zap },
-    { label: 'Vocabulary Size', value: '132 atomic LaTeX tokens (CROHME23)', icon: Award },
-    { label: 'Auxiliary Supervisions', value: 'Dual-head: Symbol count + 6-class syntax head', icon: CheckCircle2 },
-    { label: 'Training Augmentation', value: 'RealWorldMathAugmentor (Ruled lines, warps, shadows)', icon: Zap },
-    { label: 'Inference Quantization', value: 'INT8 Dynamic Quantization (ONNX Runtime)', icon: HardDrive },
-    { label: 'Total Model Disk Size', value: '8.80 MB (Encoder 5.18 MB + Decoder 3.62 MB)', icon: HardDrive },
-    { label: 'Target Execution Provider', value: 'CPUExecutionProvider (Low-power local execution)', icon: Cpu },
+    { label: 'Active Checkpoint', value: 'mathvision_v5_deploy.pt (v5.0-Final / Ep24)', icon: Award },
+    { label: 'Encoder Architecture', value: 'MathDenseNet (48 Bottleneck Layers, growth_rate=24)', icon: Layers },
+    { label: 'Spatial Feature Stride', value: 'Stride-8 (H/8 × W/8 downsampled grid, d_model=256)', icon: Zap },
+    { label: 'Decoder Architecture', value: '3-Layer Bidirectional Fusion Coverage Transformer', icon: Cpu },
+    { label: 'Decoding Paradigm', value: 'Bidirectional Beam-5 (L2R & R2L Joint Reranking, α=0.7)', icon: Zap },
+    { label: 'Attention Mechanism', value: 'Cumulative 2D Coverage Cross-Attention (5×5 depthwise conv)', icon: Zap },
+    { label: 'Vocabulary Size', value: '132 atomic LaTeX & Structural Tokens (CROHME23)', icon: Award },
+    { label: 'Training Supervision', value: 'PosFormer: 6-way Region + 6-way Depth + Global Count MLP', icon: CheckCircle2 },
+    { label: 'Dataset Composition', value: '90,559 Samples (CROHME23 2× oversampled + TexTeller Distilled)', icon: Layers },
+    { label: 'Training Engineering', value: 'PyTorch DDP on 2× Tesla T4 with zero-leak RAM trimming', icon: Zap },
+    { label: 'Model Footprint', value: '6.57M Params (~13 MB FP16 / ~26 MB FP32)', icon: HardDrive },
+    { label: 'Execution Runtime', value: 'FastAPI + Render CPU-Only PyTorch (torch.set_num_threads=2)', icon: Cpu },
   ];
 
   return (
@@ -25,11 +25,11 @@ export const ModelSpecModal: React.FC = () => {
         <div className="flex items-center gap-2 mb-2">
           <Award className="w-5 h-5 text-[#8B7CFF]" />
           <h3 className="font-semibold text-sm text-[#F1F5F9]">
-            DenseNetHMER v4-Final Scientific Specification
+            MathVision V5 (v5.0-Final) Scientific Specification
           </h3>
         </div>
         <p className="text-xs text-[#94A3B8] leading-relaxed">
-          MathVision utilizes a hybrid CNN-Transformer v4-Final architecture optimized for Handwritten Mathematical Expression Recognition (HMER). Featuring a 9-block DenseNet-121 backbone, 2D spatial positional encodings, and a 3-layer Transformer decoder with Coverage Multi-Head Attention (5×5 kernel 2D coverage memory), v4 completely eliminates repetitive token loops, handles complex multi-tier fractions and matrices, and runs in sub-120ms on low-power CPU.
+          MathVision V5 is a lightweight, CPU-deployable Handwritten Mathematical Expression Recognition (HMER) architecture trained entirely from scratch in PyTorch. Featuring a custom Stride-8 MathDenseNet encoder, 2D sinusoidal positional encodings, a 3-layer Bidirectional Fusion Coverage Transformer decoder with direction embeddings, and joint bidirectional reranking, V5 delivers state-of-the-art mathematical fidelity in a 6.57M parameter footprint optimized for Render CPU hosting.
         </p>
       </div>
 
@@ -37,7 +37,7 @@ export const ModelSpecModal: React.FC = () => {
       <div className="flex flex-col gap-2">
         <h4 className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] flex items-center gap-1.5">
           <Cpu className="w-3.5 h-3.5 text-[#38BDF8]" />
-          Neural Architecture Breakdown
+          V5 Neural Architecture Breakdown
         </h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -67,36 +67,42 @@ export const ModelSpecModal: React.FC = () => {
           <div className="flex items-center gap-2">
             <BarChart2 className="w-4 h-4 text-emerald-400" />
             <h4 className="text-xs font-semibold uppercase tracking-wider text-[#F1F5F9]">
-              CROHME-23 Official Validation Benchmarks
+              CROHME-23 Official Validation Benchmarks (1,702 Equations)
             </h4>
           </div>
           <Badge variant="neutral" size="sm">
-            Validation Split
+            Locked Ep 24 Baseline
           </Badge>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
           <div className="p-3 rounded-lg bg-[#090B10] border border-[#252D3B] text-center">
-            <span className="text-[11px] text-[#94A3B8] block">Expression Rate (ExpRate)</span>
-            <span className="text-lg font-bold font-mono text-[#8B7CFF] mt-1 block">34.08%</span>
-            <span className="text-[10px] text-emerald-400/90 block mt-0.5">+1.30% over v3 baseline</span>
+            <span className="text-[11px] text-[#94A3B8] block">Strict ExpRate</span>
+            <span className="text-lg font-bold font-mono text-[#8B7CFF] mt-1 block">41.30%</span>
+            <span className="text-[10px] text-emerald-400/90 block mt-0.5">42.48% (3-Scale TTA)</span>
+          </div>
+
+          <div className="p-3 rounded-lg bg-[#090B10] border border-[#252D3B] text-center">
+            <span className="text-[11px] text-[#94A3B8] block">Brace-Norm ExpRate</span>
+            <span className="text-lg font-bold font-mono text-[#38BDF8] mt-1 block">45.12%</span>
+            <span className="text-[10px] text-emerald-400/90 block mt-0.5">46.47% (3-Scale TTA)</span>
           </div>
 
           <div className="p-3 rounded-lg bg-[#090B10] border border-[#252D3B] text-center">
             <span className="text-[11px] text-[#94A3B8] block">≤ 1 Error Rate</span>
-            <span className="text-lg font-bold font-mono text-[#38BDF8] mt-1 block">45.65%</span>
-            <span className="text-[10px] text-emerald-400/90 block mt-0.5">+2.94% over v3 baseline</span>
+            <span className="text-lg font-bold font-mono text-emerald-400 mt-1 block">53.17%</span>
+            <span className="text-[10px] text-emerald-400/90 block mt-0.5">53.82% (3-Scale TTA)</span>
           </div>
 
           <div className="p-3 rounded-lg bg-[#090B10] border border-[#252D3B] text-center">
-            <span className="text-[11px] text-[#94A3B8] block">Character Error (CER)</span>
-            <span className="text-lg font-bold font-mono text-emerald-400 mt-1 block">31.27%</span>
-            <span className="text-[10px] text-emerald-400/90 block mt-0.5">-5.10% CER reduction</span>
+            <span className="text-[11px] text-[#94A3B8] block">Validation CER</span>
+            <span className="text-lg font-bold font-mono text-amber-400 mt-1 block">28.46%</span>
+            <span className="text-[10px] text-emerald-400/90 block mt-0.5">28.24% (3-Scale TTA)</span>
           </div>
         </div>
 
         <p className="text-[10px] text-[#64748B] mt-2 leading-snug">
-          <strong>v4-Final Benchmark:</strong> Evaluated on CROHME-2023 official validation set with Coverage Multi-Head Attention. Demonstrates state-of-the-art token alignment, reduced character error rates, and robust recognition across photographed notebook papers.
+          <strong>V5 Certified Deployment:</strong> Evaluated on CROHME-2023 official validation set under single-scale Bi-Beam-5 decoding. Incorporates length-normalized bidirectional joint reranking (α=0.7) and teacher-forced 2D cross-attention grounding extraction.
         </p>
       </div>
     </div>

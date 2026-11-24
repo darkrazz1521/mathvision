@@ -258,7 +258,7 @@ export const AttentionSpotlight: React.FC<AttentionSpotlightProps> = ({
         <div className="w-full flex items-center justify-between text-[10px] text-[#64748B] font-mono mt-2 pt-2 border-t border-[#1C2333] px-1">
           <span>Target: <strong className="text-[#8B7CFF]">{activeToken?.token || 'None'}</strong></span>
           <span>Coords: <strong className="text-[#CBD5E1]">{hasCoords ? `(${activeToken!.x.toFixed(2)}, ${activeToken!.y.toFixed(2)})` : 'N/A'}</strong></span>
-          <span className="text-[#475569]">DenseNet 2D Grounding</span>
+          <span className="text-[#475569]">Fusion Coverage 2D Grounding (Stride-8)</span>
         </div>
       </div>
     </div>

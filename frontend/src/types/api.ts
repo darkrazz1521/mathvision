@@ -4,15 +4,25 @@
 
 export interface HealthResponse {
   status: string;
+  service?: string;
   vocab_size: number;
   version?: string;
   model_version?: string;
   checkpoint?: string;
+  params?: string;
+  size_mb?: number;
+  metrics?: {
+    strict_exprate?: string;
+    brace_norm_exprate?: string;
+    le1_error?: string;
+    tta_exprate?: string;
+  };
 }
 
 export interface TokenAlternative {
   token: string;
-  prob: number;
+  prob?: number;
+  confidence?: number;
 }
 
 export interface TokenMetadata {

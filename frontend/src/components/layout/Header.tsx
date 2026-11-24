@@ -180,7 +180,7 @@ export const Header: React.FC<HeaderProps> = ({
         <Tooltip
           content={
             isBackendConnected
-              ? 'FastAPI HMER server online (v4-Final INT8 ONNX CPU execution)'
+              ? 'FastAPI HMER server online (v5.0-Final BiBeam PyTorch CPU execution)'
               : 'Backend offline. Running interactive simulation mode.'
           }
         >
@@ -207,7 +207,7 @@ export const Header: React.FC<HeaderProps> = ({
         </Tooltip>
 
         {/* Model Spec button */}
-        <Tooltip content="DenseNetHMER v4-Final Specs (8.80MB)">
+        <Tooltip content="MathVision V5 Architecture Specs (6.57M · 13MB)">
           <Button
             size="sm"
             variant="ghost"

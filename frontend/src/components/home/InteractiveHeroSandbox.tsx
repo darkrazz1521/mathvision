@@ -579,7 +579,7 @@ export const InteractiveHeroSandbox: React.FC<InteractiveHeroSandboxProps> = ({
                           className="flex items-center justify-between p-2 rounded-lg bg-[#090B10] border border-[#252D3B] text-xs font-mono"
                         >
                           <span className="text-[#F1F5F9] font-bold">{alt.token}</span>
-                          <span className="text-[#94A3B8]">{(alt.prob * 100).toFixed(1)}%</span>
+                          <span className="text-[#94A3B8]">{(((alt.prob ?? alt.confidence ?? 0)) * 100).toFixed(1)}%</span>
                         </div>
                       ))
                     ) : (

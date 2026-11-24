@@ -424,7 +424,7 @@ export const MainApp: React.FC = () => {
           isOpen={isModelSpecsOpen}
           onClose={() => setIsModelSpecsOpen(false)}
           title="Model Architecture & Benchmarks"
-          subtitle="DenseNet-121 + 3-Layer Coverage Transformer (CROHME23 v4-Final)"
+          subtitle="Stride-8 MathDenseNet + Bidirectional Fusion Coverage Transformer (CROHME23 v5.0-Final)"
           maxWidth="2xl"
         >
           <ModelSpecModal />
@@ -605,7 +605,7 @@ export const MainApp: React.FC = () => {
         isOpen={isModelSpecsOpen}
         onClose={() => setIsModelSpecsOpen(false)}
         title="Model Architecture & Benchmarks"
-        subtitle="DenseNet-121 + 3-Layer Coverage Transformer (CROHME23 v4-Final)"
+        subtitle="Stride-8 MathDenseNet + Bidirectional Fusion Coverage Transformer (CROHME23 v5.0-Final)"
         maxWidth="2xl"
       >
         <ModelSpecModal />
