@@ -222,8 +222,8 @@ class MathVisionV5Engine:
         """Canvas ya Notebook Photo ko tight-crop + pad + model tensor mein convert karta hai."""
         img = gray_img.copy()
         if is_photo:
-            blur = cv2.GaussianBlur(img, (5, 5), 0)
-            img = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 25, 12)
+            bg = cv2.GaussianBlur(img, (51, 51), 0)
+            img = np.clip((img.astype(np.float32) / (bg.astype(np.float32) + 1e-5)) * 255.0, 0, 255).astype(np.uint8)
         else:
             # Agar dark canvas (white ink on dark bg) aaye toh auto-invert to black ink on white bg
             if np.mean(img) < 127:

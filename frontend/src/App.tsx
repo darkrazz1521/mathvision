@@ -223,19 +223,39 @@ export const MainApp: React.FC = () => {
     const isAlive = await refreshBackendConnection();
 
     if (isAlive) {
-      try {
-        setProcessingStatus('preprocessing');
-        setCurrentStepMessage('Morphological background division & binarization...');
+      setProcessingStatus('preprocessing');
+      setCurrentStepMessage('Morphological background division & blue-line suppression...');
 
+      const stepTimer1 = setTimeout(() => {
+        setCurrentStepMessage('MathDenseNet feature extraction (Stride-8)...');
+      }, 1200);
+
+      const stepTimer2 = setTimeout(() => {
+        setProcessingStatus('decoding');
+        setCurrentStepMessage('Bidirectional Transformer decoding & coverage grounding...');
+      }, 3000);
+
+      const stepTimer3 = setTimeout(() => {
+        setCurrentStepMessage('Neural inference in progress (waking server if idle)...');
+      }, 9000);
+
+      try {
         const result = await predictEquation({
           file: fileOrBlob,
           mode: activeMode,
           beam_width: beamWidth,
         });
 
+        clearTimeout(stepTimer1);
+        clearTimeout(stepTimer2);
+        clearTimeout(stepTimer3);
+
         handleSetPrediction(result, previewUrl);
         success('Recognition Complete', `Decoded ${result.tokens.length} symbols in ${result.latency_ms} ms`);
       } catch (err: unknown) {
+        clearTimeout(stepTimer1);
+        clearTimeout(stepTimer2);
+        clearTimeout(stepTimer3);
         setProcessingStatus('error');
         const msg = err instanceof Error ? err.message : 'Recognition failed';
         setErrorMessage(msg);

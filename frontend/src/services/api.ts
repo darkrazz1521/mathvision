@@ -31,7 +31,7 @@ export async function checkApiHealth(
 ): Promise<{ ok: boolean; vocabSize?: number; error?: string; latencyMs?: number }> {
   const t0 = performance.now();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
     const res = await fetch(`${baseUrl}/health`, {
@@ -85,8 +85,8 @@ export async function predictEquation(
   formData.append('beam_width', (options.beam_width || 3).toString());
 
   const controller = new AbortController();
-  // Safe timeout for large photos and CPU inference (at least 30s)
-  const internalTimeout = setTimeout(() => controller.abort(), 45000);
+  // Extended timeout for Render CPU inference and potential cold-start wakeup (65s)
+  const internalTimeout = setTimeout(() => controller.abort(), 65000);
 
   // Link external signal if provided
   if (signal) {

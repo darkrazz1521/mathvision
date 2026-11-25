@@ -103,7 +103,7 @@ dec_out_name = dec_sess.get_outputs()[0].name
 dec_has_attn = len(dec_sess.get_outputs()) > 1
 
 # 2. Dual-Mode Image Preprocessing (Returns model tensor + displayable base64 PNG)
-def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 96, max_w: int = 512):
+def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 128, max_w: int = 512):
     arr = np.frombuffer(image_bytes, np.uint8)
     bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if bgr is None:
@@ -152,7 +152,7 @@ def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 9
 
     ink_density = float(np.mean(cropped < 200)) if cropped.size > 0 else 0.0
 
-    # Resize to fixed height=96, preserving aspect ratio, width padded to multiple of 16
+    # Resize to fixed height=128 (V5 Stride-8 optimal), preserving aspect ratio
     ch, cw = cropped.shape
     new_w = max(16, min(max_w, int(round(cw * (target_h / max(ch, 1))))))
     resized = cv2.resize(cropped, (new_w, target_h), interpolation=cv2.INTER_AREA)
@@ -167,7 +167,7 @@ def preprocess_image(image_bytes: bytes, mode: str = "canvas", target_h: int = 9
     # Encode preprocessed canvas for frontend overlay alignment
     _, png_buf = cv2.imencode(".png", canvas)
     b64_img = "data:image/png;base64," + base64.b64encode(png_buf).decode("utf-8")
-    return tensor, b64_img, target_h, padded_w, ink_density
+    return tensor, b64_img, target_h, padded_w, ink_density, canvas
 
 def softmax(x):
     e = np.exp(x - np.max(x))
@@ -354,20 +354,18 @@ async def predict(
     t0 = time.time()
     try:
         image_bytes = await file.read()
-        tensor, b64_img, h, w, ink_density = preprocess_image(image_bytes, mode=mode)
+        tensor, b64_img, h, w, ink_density, canvas = preprocess_image(image_bytes, mode=mode, target_h=128)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
     # Priority 1: High-Performance V5 Engine (MathVision V5 BiBeam)
     if v5_engine is not None:
         try:
-            arr = np.frombuffer(image_bytes, np.uint8)
-            bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-            if bgr is None:
-                raise ValueError("Could not decode image")
-            gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
-            is_photo = (mode == "photo")
-            v5_res = v5_engine.predict(gray, is_photo=is_photo, bidirectional=True, beam_size=max(beam_width, 5))
+            # Pass clean preprocessed canvas (blue lines suppressed & tight ink crop)
+            # Cap beam to 3 for sub-2.5s CPU latency on Render
+            effective_beam = min(max(beam_width, 1), 3)
+            use_bi = (effective_beam >= 2)
+            v5_res = v5_engine.predict(canvas, is_photo=False, bidirectional=use_bi, beam_size=effective_beam)
 
             latex_str = v5_res["latex"]
             token_meta = v5_res["tokens"]
