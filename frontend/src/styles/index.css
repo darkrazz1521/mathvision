@@ -36,16 +36,31 @@
 }
 
 /* Netlify deployment badge & development overlay suppression in workspace */
+netlify-drawer,
+#netlify-drawer,
+[data-netlify-drawer],
+.netlify-drawer,
+[class*="netlify-drawer"],
+[id*="netlify-drawer"],
 .netlify-badge,
 #netlify-badge,
 [data-netlify-badge],
 a[href*="netlify.com"][style*="fixed"],
 div:has(> a[href*="netlify.com"][style*="fixed"]),
 iframe[src*="netlify"],
-div[id*="netlify-identity"] {
+div[id*="netlify-identity"],
+div[style*="z-index: 2147483647"],
+[data-netlify-feedback] {
   display: none !important;
   visibility: hidden !important;
+  opacity: 0 !important;
   pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
 }
 
 /* Color grading atmosphere layers */

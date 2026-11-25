@@ -74,56 +74,71 @@ export async function pingAlive(baseUrl: string = getApiBaseUrl()): Promise<bool
  */
 export async function predictEquation(
   options: PredictRequestOptions,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  maxRetries: number = 2
 ): Promise<PredictResponse> {
+  let lastError: Error | null = null;
   const baseUrl = getApiBaseUrl();
-  const formData = new FormData();
 
-  const filename = options.file instanceof File ? options.file.name : 'expression.png';
-  formData.append('file', options.file, filename);
-  formData.append('mode', options.mode);
-  formData.append('beam_width', (options.beam_width || 3).toString());
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const formData = new FormData();
+    const filename = options.file instanceof File ? options.file.name : 'expression.png';
+    formData.append('file', options.file, filename);
+    formData.append('mode', options.mode);
+    formData.append('beam_width', (options.beam_width || 3).toString());
 
-  const controller = new AbortController();
-  // Extended timeout for Render CPU inference and potential cold-start wakeup (65s)
-  const internalTimeout = setTimeout(() => controller.abort(), 65000);
+    const controller = new AbortController();
+    // Extended timeout for Render CPU inference and cold-start wakeup (65s)
+    const internalTimeout = setTimeout(() => controller.abort(), 65000);
 
-  // Link external signal if provided
-  if (signal) {
-    signal.addEventListener('abort', () => controller.abort());
-  }
-
-  try {
-    const res = await fetch(`${baseUrl}/predict`, {
-      method: 'POST',
-      body: formData,
-      signal: controller.signal,
-    });
-    clearTimeout(internalTimeout);
-
-    if (!res.ok) {
-      let detail = `Error ${res.status}`;
-      try {
-        const errorJson = await res.json();
-        detail = errorJson.detail || detail;
-      } catch {
-        // use default detail
-      }
-      throw new Error(detail);
+    // Link external signal if provided
+    if (signal) {
+      signal.addEventListener('abort', () => controller.abort());
     }
 
-    const data: PredictResponse = await res.json();
-    return data;
-  } catch (err: unknown) {
-    clearTimeout(internalTimeout);
-    if (err instanceof Error) {
-      if (err.name === 'AbortError') {
-        throw new Error('Recognition request timed out. Please try again.');
+    try {
+      const res = await fetch(`${baseUrl}/predict`, {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+      clearTimeout(internalTimeout);
+
+      if (!res.ok) {
+        let detail = `Error ${res.status}`;
+        try {
+          const errorJson = await res.json();
+          detail = errorJson.detail || detail;
+        } catch {
+          // use default detail
+        }
+        throw new Error(detail);
       }
-      throw err;
+
+      const data: PredictResponse = await res.json();
+      return data;
+    } catch (err: unknown) {
+      clearTimeout(internalTimeout);
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          throw new Error('Recognition request timed out. Please try again.');
+        }
+        // Auto-retry on transient network drop or Render instance wakeup
+        if (err.message.includes('fetch') && attempt < maxRetries) {
+          lastError = err;
+          await new Promise((r) => setTimeout(r, 2200));
+          continue;
+        }
+        if (err.message.includes('fetch')) {
+          throw new Error('Backend server is waking up or reconnecting. Please try again in a few moments.');
+        }
+        throw err;
+      }
+      throw new Error('An unexpected network error occurred while communicating with backend.');
     }
-    throw new Error('An unexpected network error occurred while communicating with backend.');
   }
+
+  throw lastError || new Error('Backend server unavailable.');
 }
 
 /**
